@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.5.0 - FULL GUIDE EDITION</title>
+    <title>AMS Practice Player v1.5.1 - FINAL EDITION</title>
     
     <meta name="apple-mobile-web-app-title" content="AMS Player">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -119,13 +119,13 @@
         .menu-section-title { font-size: 0.75rem; color: var(--primary-color); text-transform: uppercase; letter-spacing: 1px; margin: 15px 0 10px; display: block; }
         .menu-item { display: flex; align-items: center; gap: 12px; color: var(--text-main); padding: 10px; text-decoration: none; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: background 0.2s; font-size: 0.9rem; }
         
-        /* ガイドモーダル内のスタイル調整 */
         .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 500px; background: var(--panel-bg); border: 1px solid var(--primary-color); border-radius: 16px; z-index: 4000; padding: 20px; box-shadow: 0 0 50px rgba(0,0,0,1); max-height: 85vh; overflow-y: auto; }
         .guide-box-inner { color: var(--text-main); line-height: 1.6; font-size: 0.85rem; }
         .guide-box-inner b { color: var(--primary-color); font-size: 1rem; display: block; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
         .guide-box-inner ul { padding-left: 18px; margin: 10px 0; }
         .guide-box-inner li { margin-bottom: 8px; }
         .guide-box-inner .guide-sub { color: var(--primary-color); font-weight: bold; margin-top: 15px; display: block; font-size: 0.9rem; }
+        .guide-box-inner .guide-note { color: #ff9999; font-size: 0.75rem; margin-top: 5px; display: block; }
 
         .title-area { text-align: center; margin-bottom: 15px; }
         .title-area h2 { color: var(--primary-color); font-size: 0.9rem; letter-spacing: 4px; margin: 0; font-weight: bold; text-transform: uppercase; }
@@ -552,7 +552,9 @@
                 <span class="guide-sub">4. 自動スピードアップ機能</span>
                 <ul><li>「⚡(ボルト)」ボタンをONにし「速度回数」を選択。ループを指定回数繰り返すごとに、自動でBPMが+0.05ずつ上がります（元のBPMまで）。</li></ul>
                 <span class="guide-sub">5. セルフ録音チェック</span>
-                <ul><li>「mic」ボタンで、再生しながら自分の音を録音。</li><li>録音データは波形の下に表示され、メイン音源と録音の音量を個別に調整できます。</li><li>「S(ソロ)」ボタンをONにすると、録音した音だけを聴くことができます。</li></ul>`,
+                <ul><li>「mic」ボタンで、再生しながら自分の音を録音。</li><li>録音データは波形の下に表示され、メイン音源と録音の音量を個別に調整できます。</li><li>「S(ソロ)」ボタンをONにすると、録音した音だけを聴くことができます。</li>
+                <li class="guide-note">※正確な録音と同期には、PCとオーディオインターフェースの利用を推奨します。</li>
+                <li class="guide-note">※モバイル端末（スマホ・タブレット）ではブラウザの仕様により、録音動作が不安定になる場合があります。</li></ul>`,
             guideYTContent: `<b>【YouTube Mode】フルガイド</b>
                 <span class="guide-sub">1. 動画読み込み</span>
                 <ul><li>YouTubeのURLを貼り付けて「LOAD」をタップ。</li><li>読み込んだ動画は「RECENT HISTORY」に保存され、履歴から素早く再読み込みできます。</li></ul>
@@ -577,7 +579,9 @@
                 <span class="guide-sub">4. Auto Speed Up</span>
                 <ul><li>Enable "Bolt" and set loop count to automatically increase BPM by +0.05 per interval.</li></ul>
                 <span class="guide-sub">5. Recording</span>
-                <ul><li>Record while playing. Adjust Main/Rec volume or use "Solo(S)" to hear only the recording.</li></ul>`,
+                <ul><li>Record while playing. Adjust Main/Rec volume or use "Solo(S)" to hear only the recording.</li>
+                <li class="guide-note">*Using a PC and Audio Interface is highly recommended for stable sync.</li>
+                <li class="guide-note">*Mobile devices may experience unstable recording due to browser limitations.</li></ul>`,
             guideYTContent: `<b>【YouTube Mode】Full Guide</b>
                 <span class="guide-sub">1. Load Video</span>
                 <ul><li>Paste URL and tap LOAD. Recently viewed videos are saved in History.</li></ul>
