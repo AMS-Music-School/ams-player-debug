@@ -203,19 +203,17 @@
 <div id="guideModalYT" class="modal"><div class="guide-box-inner" id="guideYTContent"></div><button class="clear-btn-ja" id="closeBtn2" style="width:100%; margin-top:20px;" onclick="closeModals()">閉じる</button></div>
 
 <div class="container">
-    <div class="title-area"><h2>AMS Practice Player</h2></div>
-    
     <div class="mode-tabs">
-        <button class="tab-btn active" id="tabFile" onclick="switchMode('file')">Audio File</button>
-        <button class="tab-btn" id="tabYT" onclick="switchMode('yt')">YouTube</button>
+        <button class="tab-btn active" id="fileModeTab" onclick="switchMode('file')">Audio File</button>
+        <button class="tab-btn" id="ytModeTab" onclick="switchMode('yt')">YouTube Mode</button>
     </div>
 
     <div id="fileSection" class="content-section active">
-        <label for="audioFile" class="custom-file-upload" id="fileLabel">
-            <span class="material-icons" style="vertical-align: middle; margin-right: 5px;">cloud_upload</span>
-            楽曲ファイルを選択 (MP3 / WAV)
+        <label class="custom-file-upload" id="fileUploadLabel">
+            <input type="file" id="fileInput" accept="audio/*">
+            <span class="material-icons" style="vertical-align: middle; margin-right: 5px;">library_music</span>
+            <span id="fileLabelText">Choose Audio File</span>
         </label>
-        <input type="file" id="audioFile" accept="audio/*">
 
         <div id="waveform-wrapper">
             <div id="waveform"></div>
@@ -223,212 +221,295 @@
         </div>
 
         <div class="waveform-label">
-            <span id="currentTime">0:00</span>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <span style="font-size:0.6rem; color:var(--text-dim);">BASE BPM: <span id="baseBpmDisplay" style="color:var(--primary-color);">---</span></span>
-                <span class="time-display" id="bpmDisplay">BPM ---</span>
-            </div>
+            <div class="time-display"><span id="currentTime">00:00.0</span> / <span id="duration">00:00.0</span></div>
+            <div class="loop-badge" id="loopBadge" onclick="showLoopList()"><span class="material-icons" style="font-size:14px;">repeat</span><span id="loopLabel">Loop: Off</span></div>
         </div>
 
         <div class="panel">
             <div class="row">
                 <span class="material-icons" style="color:var(--text-dim); font-size:1.2rem;">speed</span>
-                <input type="range" id="speed" min="0.5" max="1.5" step="0.01" value="1.0">
-                <span class="val-display" id="speedVal">1.00x</span>
-                <button class="reset-btn" onclick="resetSetting('speed', 1.0)">RESET</button>
+                <input type="range" id="speed" min="0.5" max="1.5" step="0.01" value="1.00">
+                <div class="val-display" id="speedVal">BPM: ---</div>
+                <button class="reset-btn" onclick="resetSetting('speed', 1)">1.0x</button>
             </div>
             <div class="row">
-                <span class="material-icons" style="color:var(--text-dim); font-size:1.2rem;">height</span>
+                <span class="material-icons" style="color:var(--text-dim); font-size:1.2rem;">music_note</span>
                 <input type="range" id="pitch" min="-12" max="12" step="1" value="0">
-                <span class="val-display" id="pitchVal">0 semitones</span>
-                <button class="reset-btn" onclick="resetSetting('pitch', 0)">RESET</button>
+                <div class="val-display" id="pitchVal">0.00x</div>
+                <button class="reset-btn" onclick="resetSetting('pitch', 0)">Reset</button>
             </div>
         </div>
 
         <div class="transport-controls">
-            <button class="btn-ctrl" id="loopBtn" onclick="toggleLoopMode()"><span class="material-icons">repeat</span></button>
-            <button class="btn-ctrl play-main" id="playBtn"><span class="material-icons" id="playIcon" style="font-size: 36px;">play_arrow</span></button>
-            <button class="btn-ctrl" id="speedUpBtn" onclick="toggleSpeedUp()"><span class="material-icons">trending_up</span></button>
+            <button class="btn-ctrl" onclick="wavesurfer.skip(-5)"><span class="material-icons">replay_5</span></button>
+            <button class="btn-ctrl play-main" id="playBtn"><span class="material-icons" id="playIcon">play_arrow</span></button>
+            <button class="btn-ctrl" onclick="wavesurfer.skip(5)"><span class="material-icons">forward_5</span></button>
+        </div>
+
+        <div class="panel">
+            <div class="row">
+                <button class="loop-btn-main" onclick="setLoopPoint('start')" id="btnA">SET A</button>
+                <button class="loop-btn-main" onclick="setLoopPoint('end')" id="btnB">SET B</button>
+                <button class="loop-btn-main" onclick="clearLoop()" id="btnClear">CLEAR</button>
+            </div>
+            <div class="row" style="margin-top:5px; justify-content: flex-start; gap: 20px;">
+                <label style="display:flex; align-items:center; gap:8px; font-size:0.8rem; cursor:pointer;">
+                    <input type="checkbox" id="countToggle" style="width:18px; height:18px; accent-color:var(--primary-color);"> <span id="countLabel">Count In</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; font-size:0.8rem; cursor:pointer;">
+                    <input type="checkbox" id="speedUpToggle" style="width:18px; height:18px; accent-color:var(--primary-color);"> <span id="speedUpLabel">Auto Speed Up</span>
+                </label>
+            </div>
         </div>
 
         <div class="panel panel-rec">
-            <div class="waveform-label" style="margin-bottom:5px;">
-                <span style="color:var(--recording-red); font-weight:bold; display:flex; align-items:center; gap:5px;">
-                    <span class="material-icons" style="font-size:14px;">fiber_manual_record</span> RECORDER
-                </span>
-                <span id="recTime" style="font-size:0.8rem;">0:00</span>
+            <div class="row">
+                <button class="btn-ctrl rec-btn" id="recBtn" onclick="toggleRecording()"><span class="material-icons">mic</span></button>
+                <div style="flex-grow:1;">
+                    <div id="recStatus" style="font-size:0.75rem; color:var(--recording-red); font-weight:bold; display:none;">RECORDING...</div>
+                    <div id="recWaveformLabel" style="font-size:0.7rem; color:var(--text-dim);">LAST RECORDING</div>
+                </div>
+                <button class="solo-btn" id="soloBtn" onclick="toggleSolo()">S</button>
             </div>
-            <div id="rec-waveform-wrapper"><div id="rec-waveform"></div></div>
-            <div class="row" style="margin-top:5px; justify-content: space-around;">
-                <button class="btn-ctrl rec-btn" id="recordBtn" onclick="toggleRecording()"><span class="material-icons">mic</span></button>
-                <button class="btn-ctrl" id="playRecBtn" onclick="playRecording()"><span class="material-icons">play_arrow</span></button>
-                <button class="solo-btn" id="soloBtn" onclick="toggleSolo()">SOLO</button>
-                <button class="btn-ctrl" id="downloadBtn" onclick="downloadRecording()"><span class="material-icons">download</span></button>
-            </div>
+            <div id="rec-waveform-wrapper"><div id="recWaveform"></div></div>
+            <div id="recList" style="max-height: 150px; overflow-y: auto; margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
         </div>
     </div>
 
     <div id="ytSection" class="content-section">
-        <div class="panel" style="padding:10px; margin-bottom:10px;">
+        <div class="panel" style="margin-bottom:10px;">
             <div class="row">
-                <input type="text" id="ytUrl" class="auth-input" placeholder="YouTube URLを貼り付け" style="flex:1; margin:0;">
-                <button class="email-btn" onclick="loadYouTube()" style="margin:0; padding:10px 15px;">LOAD</button>
+                <input type="text" id="ytUrl" class="auth-input" style="flex-grow:1;" placeholder="YouTube URL or Search">
+                <button class="email-btn" style="margin:0; padding:10px 20px;" onclick="searchYouTube()">GO</button>
             </div>
         </div>
-        <div id="ytPlayerContainer">
-            <div id="ytPlayer"></div>
-        </div>
-        <div class="panel" style="margin-top:10px;">
-            <div class="row">
-                <span class="material-icons" style="color:var(--text-dim); font-size:1.2rem;">speed</span>
-                <input type="range" id="ytSpeed" min="0.5" max="1.5" step="0.05" value="1.0" oninput="changeYTSpeed(this.value)">
-                <span class="val-display" id="ytSpeedVal">1.00x</span>
-            </div>
-            <div class="row" style="margin-top:10px; justify-content:center; gap:10px;">
-                <button class="loop-btn-main" onclick="setYTLoop('start')">START (A)</button>
-                <button class="loop-btn-main" onclick="setYTLoop('end')">END (B)</button>
-                <button class="clear-btn-ja" onclick="clearYTLoop()" style="padding:8px 15px;">CLEAR</button>
-            </div>
-        </div>
-        <div id="ytHistoryList" style="margin-top:15px;"></div>
+        <div id="ytPlayerContainer"></div>
+        <div id="ytHistory" style="margin-top:15px; display:flex; flex-direction:column; gap:10px;"></div>
     </div>
 </div>
 
+<div id="loopListModal" class="modal">
+    <div class="title-area"><h2>SAVED LOOPS</h2></div>
+    <div id="loopList" class="loop-list-container"></div>
+    <button class="clear-btn-ja" style="width:100%; margin-top:20px; justify-content:center;" onclick="closeModals()">CLOSE</button>
+</div>
+
 <script>
-    // --- Firebase Configuration (AMS PLAYER TEST) ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyAsS-p6B...", // User's actual key remains here
+    const firebaseConfig = { 
+        apiKey: "AIzaSyAs-XXXXXXXXXXXXXX",
         authDomain: "ams-practice-player.firebaseapp.com",
         projectId: "ams-practice-player",
         storageBucket: "ams-practice-player.appspot.com",
-        messagingSenderId: "338872583850",
-        appId: "1:338872583850:web:4b8408f614041b65552309"
+        messagingSenderId: "XXXXXXXXXXXX",
+        appId: "1:XXXXXXXXXXXX:web:XXXXXXXXXXXX"
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    let wavesurfer, wsRegions, recWaveSurfer;
-    let audioContext, recorder, audioChunks = [];
-    let isRecording = false, isSolo = false, recordedUrl = null;
-    let isSpeedUpEnabled = false, isCountEnabled = true, isLoopEnabled = true;
-    let baseBpm = 0;
-    let ytPlayer, ytLoopStart = null, ytLoopEnd = null, ytTimer;
+    let currentUser = null;
+    let isPremium = false;
 
-    const fmt = s => { const m = Math.floor(s/60); const ss = Math.floor(s%60); return `${m}:${ss<10?'0':''}${ss}`; };
+    auth.onAuthStateChanged(user => {
+        currentUser = user;
+        if (user) {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('userInfoDisplay').style.display = 'flex';
+            document.getElementById('userName').innerText = user.email.split('@')[0];
+            checkSubscription(user.email);
+            closeAuthOverlay();
+        } else {
+            document.getElementById('auth-section').style.display = 'block';
+            document.getElementById('userInfoDisplay').style.display = 'none';
+            isPremium = false;
+        }
+    });
 
-    // --- BPM Detection Engine (Integrated from index (12).html) ---
-    async function detectBPM(audioBuffer) {
-        const rawData = audioBuffer.getChannelData(0);
-        const sampleRate = audioBuffer.sampleRate;
-        const offlineCtx = new OfflineAudioContext(1, rawData.length, sampleRate);
-        const source = offlineCtx.createBufferSource();
-        source.buffer = audioBuffer;
-
-        const filter = offlineCtx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 150;
-        const peakFilter = offlineCtx.createBiquadFilter();
-        peakFilter.type = 'highpass';
-        peakFilter.frequency.value = 40;
-
-        source.connect(filter);
-        filter.connect(peakFilter);
-        peakFilter.connect(offlineCtx.destination);
-        source.start(0);
-
-        const renderedBuffer = await offlineCtx.startRendering();
-        const data = renderedBuffer.getChannelData(0);
-        
-        let peaks = [];
-        const threshold = 0.7;
-        for (let i = 0; i < data.length; i++) {
-            if (data[i] > threshold) {
-                peaks.push(i);
-                i += sampleRate / 4; // Skip 0.25s
+    async function checkSubscription(email) {
+        try {
+            const doc = await db.collection('users').doc(email).get();
+            if (doc.exists && doc.data().plan === 'premium') {
+                isPremium = true;
+            } else {
+                isPremium = false;
             }
+        } catch (e) { console.error(e); isPremium = false; }
+    }
+
+    function openAuthOverlay() { document.getElementById('auth-overlay').style.display = 'flex'; }
+    function closeAuthOverlay() { document.getElementById('auth-overlay').style.display = 'none'; }
+    function closeSubOverlay() { document.getElementById('subscription-overlay').style.display = 'none'; }
+
+    async function loginWithGoogle() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        try { await auth.signInWithPopup(provider); } catch (e) { alert(e.message); }
+    }
+
+    async function loginWithEmail() {
+        const email = document.getElementById('loginEmail').value;
+        const pass = document.getElementById('loginPassword').value;
+        if(!email || !pass) return alert("Email/Pass required");
+        try {
+            await auth.signInWithEmailAndPassword(email, pass);
+        } catch (e) {
+            if(e.code === 'auth/user-not-found') {
+                try { await auth.createUserWithEmailAndPassword(email, pass); } catch(e2) { alert(e2.message); }
+            } else { alert(e.message); }
+        }
+    }
+
+    function logout() { auth.signOut(); location.reload(); }
+    function redirectToCheckout() { window.open('https://square.link/u/XXXXXXXX', '_blank'); }
+
+    function toggleMenu(show) {
+        document.getElementById('sideMenu').classList.toggle('open', show);
+        document.getElementById('menuOverlay').style.display = show ? 'block' : 'none';
+    }
+
+    function switchMode(mode) {
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(mode + 'Section').classList.add('active');
+        document.getElementById(mode + 'ModeTab').classList.add('active');
+        if (mode === 'yt') {
+            if (wavesurfer && wavesurfer.isPlaying()) wavesurfer.pause();
+        }
+    }
+
+    function closeModals() {
+        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+    }
+
+    const translations = {
+        ja: {
+            fileLabel: "音声ファイルを選択", speed: "BPM", pitch: "キー固定 (x)", count: "カウントイン", speedUp: "自動スピードアップ",
+            guideFile: "<h3>Audio Fileモード</h3><p>自分の練習したい音源を読み込んでABループや録音、速度変更が可能です。BPMは自動解析されます。</p>",
+            guideYT: "<h3>YouTubeモード</h3><p>URLを入力してYouTube動画を再生します。履歴も保存されます。</p>"
+        },
+        en: {
+            fileLabel: "Choose Audio File", speed: "Speed", pitch: "Pitch", count: "Count In", speedUp: "Auto Speed Up",
+            guideFile: "<h3>Audio File Mode</h3><p>Load your audio, set AB loops, record, and change speed. BPM is auto-detected.</p>",
+            guideYT: "<h3>YouTube Mode</h3><p>Enter URL to play YouTube videos. History is saved.</p>"
+        }
+    };
+
+    function changeLanguage() {
+        const lang = document.getElementById('langSelect').value;
+        const t = translations[lang];
+        document.getElementById('fileLabelText').innerText = t.fileLabel;
+        document.getElementById('countLabel').innerText = t.count;
+        document.getElementById('speedUpLabel').innerText = t.speedUp;
+        document.getElementById('guideFileContent').innerHTML = t.guideFile;
+        document.getElementById('guideYTContent').innerHTML = t.guideYT;
+        applySettings();
+    }
+
+    function showGuide(type) {
+        closeModals();
+        document.getElementById('guideModal' + (type === 'file' ? 'File' : 'YT')).style.display = 'block';
+        toggleMenu(false);
+    }
+
+    let wavesurfer, wsRegions, recWaveSurfer;
+    let baseBPM = 0;
+    let isCountEnabled = false;
+    let isSpeedUpEnabled = false;
+    let mediaRecorder, audioChunks = [];
+    let isRecording = false;
+    let isSolo = false;
+
+    async function detectBPM(audioBuffer) {
+        const data = audioBuffer.getChannelData(0);
+        const sampleRate = audioBuffer.sampleRate;
+        const interval = 0.02 * sampleRate;
+        const peaks = [];
+        for (let i = 0; i < data.length; i += interval) {
+            let max = 0;
+            for (let j = i; j < i + interval && j < data.length; j++) {
+                if (Math.abs(data[j]) > max) max = Math.abs(data[j]);
+            }
+            peaks.push(max);
         }
 
-        if (peaks.length < 2) return 0;
-        let intervals = [];
-        for (let i = 1; i < peaks.length; i++) {
-            intervals.push(peaks[i] - peaks[i-1]);
+        const threshold = Math.max(...peaks) * 0.7;
+        const peakIndices = [];
+        peaks.forEach((p, i) => { if (p > threshold) peakIndices.push(i); });
+
+        const intervals = [];
+        for (let i = 1; i < peakIndices.length; i++) {
+            intervals.push(peakIndices[i] - peakIndices[i - 1]);
         }
+
+        if (intervals.length === 0) return 0;
         const avgInterval = intervals.reduce((a, b) => a + b) / intervals.length;
-        return Math.round(60 / (avgInterval / sampleRate));
+        const bpm = Math.round(60 / (avgInterval * 0.02));
+        return (bpm > 60 && bpm < 200) ? bpm : 120;
     }
 
-    function updateBPMDisplay() {
-        if (baseBpm > 0) {
-            const currentSpeed = parseFloat(document.getElementById('speed').value);
-            const currentBpm = Math.round(baseBpm * currentSpeed);
-            document.getElementById('bpmDisplay').innerText = `BPM ${currentBpm}`;
-            document.getElementById('baseBpmDisplay').innerText = baseBpm;
-        }
-    }
-
-    // --- App Core ---
     function startApp() {
         wavesurfer = WaveSurfer.create({
             container: '#waveform',
             waveColor: '#444',
-            progressColor: var('--primary-color'),
+            progressColor: '#d4a373',
             cursorColor: '#fff',
+            barWidth: 2,
             height: 120,
             responsive: true,
             normalize: true,
-            interact: true
-        });
-        wsRegions = wavesurfer.registerPlugin(WaveSurfer.Regions.create());
-
-        recWaveSurfer = WaveSurfer.create({
-            container: '#rec-waveform',
-            waveColor: '#ff4444',
-            progressColor: '#fff',
-            height: 60,
-            interact: false
         });
 
-        // File Loading
-        document.getElementById('audioFile').onchange = e => {
-            const file = e.target.files[0];
-            if (file) {
-                document.getElementById('fileLabel').innerText = file.name;
-                const url = URL.createObjectURL(file);
-                wavesurfer.load(url);
-                
-                // BPM Analysis Trigger
-                const reader = new FileReader();
-                reader.onload = async (event) => {
-                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                    const buffer = await ctx.decodeAudioData(event.target.result);
-                    baseBpm = await detectBPM(buffer);
-                    updateBPMDisplay();
-                };
-                reader.readAsArrayBuffer(file);
-            }
+        wsRegions = wavesurfer.registerPlugin(WaveSurfer.BasePlugin.create());
+
+        wavesurfer.on('ready', async () => {
+            document.getElementById('duration').innerText = fmt(wavesurfer.getDuration());
+            const buffer = wavesurfer.getDecodedData();
+            baseBPM = await detectBPM(buffer);
+            applySettings();
+        });
+
+        const fmt = s => {
+            const m = Math.floor(s / 60);
+            const ss = (s % 60).toFixed(1);
+            return `${m}:${ss.padStart(4, '0')}`;
         };
 
-        wavesurfer.on('ready', () => {
-            wsRegions.clearRegions();
-            wsRegions.addRegion({ start: 0, end: wavesurfer.getDuration(), color: 'rgba(212, 163, 115, 0.2)', id: 'loop' });
-        });
+        document.getElementById('fileInput').onchange = e => {
+            const file = e.target.files[0];
+            if (file) {
+                wavesurfer.loadBlob(file);
+                document.getElementById('fileLabelText').innerText = file.name;
+            }
+        };
 
         const applySettings = () => {
             const s = parseFloat(document.getElementById('speed').value);
             const p = parseFloat(document.getElementById('pitch').value);
-            wavesurfer.setPlaybackRate(s, true);
-            document.getElementById('speedVal').innerText = `${s.toFixed(2)}x`;
-            document.getElementById('pitchVal').innerText = `${p} semitones`;
-            updateBPMDisplay();
+            wavesurfer.setPlaybackRate(s);
             
-            // Apply pitch shift (requires Web Audio)
-            if(wavesurfer.backend && wavesurfer.backend.setPitch) wavesurfer.backend.setPitch(p);
+            const displayBPM = baseBPM ? Math.round(baseBPM * s) : '---';
+            document.getElementById('speedVal').innerText = `BPM: ${displayBPM}`;
+            document.getElementById('pitchVal').innerText = `${s.toFixed(2)}x`;
+            
+            isCountEnabled = document.getElementById('countToggle').checked;
+            isSpeedUpEnabled = document.getElementById('speedUpToggle').checked;
         };
 
         document.getElementById('speed').oninput = applySettings;
         document.getElementById('pitch').oninput = applySettings;
-        window.applySettings = applySettings;
+        document.getElementById('countToggle').onchange = applySettings;
+        document.getElementById('speedUpToggle').onchange = applySettings;
+
+        const runCountdown = () => new Promise(res => {
+            if (!isCountEnabled) return res();
+            const over = document.getElementById('countdown-overlay');
+            over.style.display = 'block';
+            let c = 4;
+            const timer = setInterval(() => {
+                over.innerText = c > 0 ? c : 'GO!';
+                if (c < 0) { clearInterval(timer); over.style.display = 'none'; res(); }
+                c--;
+            }, 500);
+        });
 
         document.getElementById('playBtn').onclick = async () => {
             if (wavesurfer.isPlaying()) { wavesurfer.pause(); } 
@@ -448,168 +529,132 @@
             if(r && t >= r.end) { 
                 if (isRecording) {
                     toggleRecording(); 
-                } else if(isLoopEnabled) {
+                } else {
                     wavesurfer.setTime(r.start); 
                     if (isSpeedUpEnabled) { 
                         const s = document.getElementById('speed'); 
                         s.value = Math.min(1.5, parseFloat(s.value) + 0.05).toFixed(2); 
                         applySettings(); 
                     }
-                } else {
-                    wavesurfer.pause();
                 }
             }
         });
 
+        window.setLoopPoint = (type) => {
+            const t = wavesurfer.getCurrentTime();
+            let r = wsRegions.getRegions()[0];
+            if (!r) {
+                r = wsRegions.addRegion({ start: t, end: Math.min(t + 5, wavesurfer.getDuration()), color: 'rgba(212, 163, 115, 0.3)' });
+            } else {
+                if (type === 'start') r.update({ start: t });
+                else r.update({ end: t });
+            }
+            document.getElementById('loopLabel').innerText = `Loop: ${fmt(r.start)}-${fmt(r.end)}`;
+        };
+
+        window.clearLoop = () => {
+            wsRegions.clearRegions();
+            document.getElementById('loopLabel').innerText = 'Loop: Off';
+        };
+
         window.resetSetting = (id, val) => { document.getElementById(id).value = val; applySettings(); };
         changeLanguage(); 
-        renderYTHistory();
-    }
-
-    // --- Remaining Utility Functions (Loop, Recording, Auth, YT etc.) ---
-    // All original index.html functions are preserved below...
-    // (Due to space, these are the logic triggers for remaining features)
-    
-    async function runCountdown() {
-        if (!isCountEnabled) return;
-        const overlay = document.getElementById('countdown-overlay');
-        overlay.style.display = 'block';
-        for (let i = 3; i > 0; i--) {
-            overlay.innerText = i;
-            await new Promise(r => setTimeout(r, 800));
-        }
-        overlay.style.display = 'none';
-    }
-
-    function toggleLoopMode() {
-        isLoopEnabled = !isLoopEnabled;
-        document.getElementById('loopBtn').classList.toggle('active', isLoopEnabled);
-    }
-
-    function toggleSpeedUp() {
-        isSpeedUpEnabled = !isSpeedUpEnabled;
-        document.getElementById('speedUpBtn').classList.toggle('active', isSpeedUpEnabled);
     }
 
     // Recording Logic
     async function toggleRecording() {
         if (!isRecording) {
+            if (!isPremium) { document.getElementById('subscription-overlay').style.display = 'flex'; return; }
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            recorder = new MediaRecorder(stream);
+            mediaRecorder = new MediaRecorder(stream);
             audioChunks = [];
-            recorder.ondataavailable = e => audioChunks.push(e.data);
-            recorder.onstop = () => {
-                const blob = new Blob(audioChunks, { type: 'audio/wav' });
-                recordedUrl = URL.createObjectURL(blob);
-                recWaveSurfer.load(recordedUrl);
-                document.getElementById('rec-waveform-wrapper').style.display = 'block';
-            };
-            recorder.start();
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = saveRecording;
+            mediaRecorder.start();
             isRecording = true;
-            document.getElementById('recordBtn').classList.add('recording');
+            document.getElementById('recBtn').classList.add('recording');
+            document.getElementById('recStatus').style.display = 'block';
+            if (!wavesurfer.isPlaying()) document.getElementById('playBtn').click();
         } else {
-            recorder.stop();
+            mediaRecorder.stop();
             isRecording = false;
-            document.getElementById('recordBtn').classList.remove('recording');
+            document.getElementById('recBtn').classList.remove('recording');
+            document.getElementById('recStatus').style.display = 'none';
+            wavesurfer.pause();
         }
     }
 
-    function playRecording() {
-        if (recordedUrl) recWaveSurfer.playPause();
+    function saveRecording() {
+        const blob = new Blob(audioChunks, { type: 'audio/wav' });
+        const url = URL.createObjectURL(blob);
+        if (!recWaveSurfer) {
+            recWaveSurfer = WaveSurfer.create({ container: '#recWaveform', waveColor: '#ff4444', progressColor: '#fff', height: 60, barWidth: 2 });
+            document.getElementById('rec-waveform-wrapper').style.display = 'block';
+        }
+        recWaveSurfer.load(url);
+        addRecToList(url);
+    }
+
+    function addRecToList(url) {
+        const container = document.getElementById('recList');
+        const div = document.createElement('div');
+        div.className = 'row';
+        div.style = "background:#222; padding:8px; border-radius:8px;";
+        const time = new Date().toLocaleTimeString();
+        div.innerHTML = `<span style="font-size:0.7rem; color:#888;">${time}</span>
+                         <button class="reset-btn" onclick="recWaveSurfer.load('${url}')">LOAD</button>
+                         <a href="${url}" download="practice_${Date.now()}.wav" class="material-icons" style="color:var(--primary-color); text-decoration:none; font-size:1.2rem;">download</a>`;
+        container.prepend(div);
     }
 
     function toggleSolo() {
         isSolo = !isSolo;
         document.getElementById('soloBtn').classList.toggle('active', isSolo);
-        wavesurfer.setVolume(isSolo ? 0 : 1);
+        wavesurfer.setMuted(isSolo);
     }
 
-    function downloadRecording() {
-        if (!recordedUrl) return;
-        const a = document.createElement('a');
-        a.href = recordedUrl;
-        a.download = `practice_rec_${Date.now()}.wav`;
-        a.click();
-    }
-
-    // UI/Menu/Auth Handlers
-    function toggleMenu(show) {
-        document.getElementById('sideMenu').classList.toggle('open', show);
-        document.getElementById('menuOverlay').style.display = show ? 'block' : 'none';
-    }
-
-    function switchMode(mode) {
-        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        if (mode === 'file') {
-            document.getElementById('fileSection').classList.add('active');
-            document.getElementById('tabFile').classList.add('active');
+    // YouTube Logic
+    function searchYouTube() {
+        let val = document.getElementById('ytUrl').value;
+        if (!val) return;
+        let id = "";
+        if (val.includes('v=')) id = val.split('v=')[1].split('&')[0];
+        else if (val.includes('youtu.be/')) id = val.split('youtu.be/')[1].split('?')[0];
+        
+        if (id) {
+            loadYT(id);
+            saveYTHistory(id);
         } else {
-            document.getElementById('ytSection').classList.add('active');
-            document.getElementById('tabYT').classList.add('active');
-            if(!ytPlayer) initYouTube();
+            window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(val)}`, '_blank');
         }
     }
 
-    // YouTube Logic (IFrame API)
-    function initYouTube() {
-        const tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        document.head.appendChild(tag);
+    function loadYT(id) {
+        document.getElementById('ytPlayerContainer').innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?enablejsapi=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
     }
 
-    window.onYouTubeIframeAPIReady = () => {
-        ytPlayer = new YT.Player('ytPlayer', {
-            events: { 'onStateChange': onYTStateChange }
+    function saveYTHistory(id) {
+        let history = JSON.parse(localStorage.getItem('ams_yt_history') || '[]');
+        if (!history.includes(id)) {
+            history.unshift(id);
+            localStorage.setItem('ams_yt_history', JSON.stringify(history.slice(0, 10)));
+            renderYTHistory();
+        }
+    }
+
+    function renderYTHistory() {
+        const container = document.getElementById('ytHistory');
+        const history = JSON.parse(localStorage.getItem('ams_yt_history') || '[]');
+        container.innerHTML = '<span class="menu-section-title">RECENT HISTORY</span>';
+        history.forEach(id => {
+            const div = document.createElement('div');
+            div.className = 'row panel';
+            div.style = "padding:10px; cursor:pointer;";
+            div.onclick = () => loadYT(id);
+            div.innerHTML = `<img src="https://img.youtube.com/vi/${id}/default.jpg" height="40" style="border-radius:4px;">
+                             <div style="flex-grow:1; font-size:0.7rem; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">Video ID: ${id}</div>`;
+            container.appendChild(div);
         });
-    };
-
-    function loadYouTube() {
-        const url = document.getElementById('ytUrl').value;
-        const vid = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
-        if (vid && ytPlayer) {
-            ytPlayer.loadVideoById(vid[1]);
-            saveToYTHistory(vid[1], url);
-        }
-    }
-
-    function onYTStateChange(event) {
-        if (event.data === YT.PlayerState.PLAYING) {
-            ytTimer = setInterval(() => {
-                const cur = ytPlayer.getCurrentTime();
-                if (ytLoopEnd && cur >= ytLoopEnd) ytPlayer.seekTo(ytLoopStart || 0);
-            }, 100);
-        } else {
-            clearInterval(ytTimer);
-        }
-    }
-
-    function setYTLoop(type) {
-        const t = ytPlayer.getCurrentTime();
-        if (type === 'start') ytLoopStart = t; else ytLoopEnd = t;
-    }
-
-    function clearYTLoop() { ytLoopStart = null; ytLoopEnd = null; }
-
-    function changeYTSpeed(v) {
-        if(ytPlayer) ytPlayer.setPlaybackRate(parseFloat(v));
-        document.getElementById('ytSpeedVal').innerText = `${parseFloat(v).toFixed(2)}x`;
-    }
-
-    // Auth & Subscription Placeholder functions
-    function openAuthOverlay() { document.getElementById('auth-overlay').style.display = 'flex'; }
-    function closeAuthOverlay() { document.getElementById('auth-overlay').style.display = 'none'; }
-    function logout() { auth.signOut().then(() => location.reload()); }
-
-    // Language handling
-    const langData = {
-        ja: { fileLabel: "楽曲ファイルを選択 (MP3 / WAV)", langTitle: "言語設定" },
-        en: { fileLabel: "Choose Audio File (MP3 / WAV)", langTitle: "Language" }
-    };
-    function changeLanguage() {
-        const l = document.getElementById('langSelect').value;
-        document.getElementById('fileLabel').childNodes[1].textContent = langData[l].fileLabel;
-        document.getElementById('langTitle').innerText = langData[l].langTitle;
     }
 
     window.addEventListener('DOMContentLoaded', startApp);
