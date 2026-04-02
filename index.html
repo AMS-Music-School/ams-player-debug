@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.4.0 - SYNC EDITION</title>
+    <title>AMS Practice Player v1.4.1 - STABLE SYNC</title>
     
     <meta name="apple-mobile-web-app-title" content="AMS Player">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -928,10 +928,24 @@
             }
         };
 
-        wavesurfer.on('play', () => document.getElementById('playIcon').innerText = 'pause');
-        wavesurfer.on('pause', () => { document.getElementById('playIcon').innerText = 'play_arrow'; });
+        // --- 軽量同期ロジック (STABLE SYNC EDITION) ---
+        
+        wavesurfer.on('play', () => {
+            document.getElementById('playIcon').innerText = 'pause';
+            if (recObjectURL && recWavesurfer) {
+                const offset = wavesurfer.getCurrentTime() - lastRecStartPos;
+                if (offset >= 0 && offset < recWavesurfer.getDuration()) {
+                    recWavesurfer.setTime(offset);
+                    recWavesurfer.play();
+                }
+            }
+        });
 
-        // 【双方向同期の核：メイン波形の操作を録音波形に同期】
+        wavesurfer.on('pause', () => {
+            document.getElementById('playIcon').innerText = 'play_arrow';
+            if (recWavesurfer) recWavesurfer.pause();
+        });
+
         wavesurfer.on('interaction', () => {
             if (recObjectURL && recWavesurfer) {
                 const currentTime = wavesurfer.getCurrentTime();
@@ -941,34 +955,48 @@
                 } else {
                     recWavesurfer.setTime(0);
                 }
+                if (wavesurfer.isPlaying()) recWavesurfer.play();
             }
         });
 
-        // 【双方向同期の核：録音波形の操作をメイン波形に同期】
         recWavesurfer.on('interaction', () => {
             const recTime = recWavesurfer.getCurrentTime();
             const targetMainTime = lastRecStartPos + recTime;
             if (targetMainTime <= wavesurfer.getDuration()) {
                 wavesurfer.setTime(targetMainTime);
             }
+            if (wavesurfer.isPlaying()) wavesurfer.play();
         });
         
         wavesurfer.on('timeupdate', t => {
             document.getElementById('currentTime').innerText = fmt(t);
             
-            // 再生中の厳密な同期
+            // 再生中のズレチェック（0.2秒以上のズレがある時だけ補正。頻繁なsetTimeを避ける）
             if (wavesurfer.isPlaying() && recWavesurfer && recWavesurfer.isPlaying()) {
-                const offset = t - lastRecStartPos;
-                if (Math.abs(recWavesurfer.getCurrentTime() - offset) > 0.05) {
-                    recWavesurfer.setTime(offset);
+                const expectedRecTime = t - lastRecStartPos;
+                const actualRecTime = recWavesurfer.getCurrentTime();
+                if (Math.abs(actualRecTime - expectedRecTime) > 0.2) {
+                    if (expectedRecTime >= 0 && expectedRecTime < recWavesurfer.getDuration()) {
+                        recWavesurfer.setTime(expectedRecTime);
+                    } else {
+                        recWavesurfer.pause();
+                    }
                 }
             }
 
             const r = wsRegions.getRegions()[0];
             if(r && t >= r.end) { 
-                if (isRecording) { toggleRecording(); } 
-                else {
+                if (isRecording) { 
+                    toggleRecording(); 
+                } else {
                     wavesurfer.setTime(r.start); 
+                    // ループ時は録音側も位置を合わせる
+                    if (recWavesurfer) {
+                        const loopOffset = r.start - lastRecStartPos;
+                        if (loopOffset >= 0 && loopOffset < recWavesurfer.getDuration()) {
+                            recWavesurfer.setTime(loopOffset);
+                        }
+                    }
                     if (isSpeedUpEnabled) { 
                         const s = document.getElementById('speed'); 
                         s.value = Math.min(1.5, parseFloat(s.value) + 0.05).toFixed(2); 
