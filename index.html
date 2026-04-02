@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.4.5 - LAYOUT OPTIMIZED</title>
+    <title>AMS Practice Player v1.4.6 - YT RESET FIXED</title>
     
     <meta name="apple-mobile-web-app-title" content="AMS Player">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -132,7 +132,6 @@
         .adj-btn { background: #333; border: none; color: #fff; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
         .loop-btn-main { background: var(--panel-bg); color: var(--text-main); border: 1px solid var(--primary-color); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
         
-        /* 均等配置用のコンテナ */
         .action-row-container { 
             display: flex; 
             justify-content: space-between; 
@@ -792,6 +791,7 @@
     const tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
 
+    // YouTube動画読み込み：動画切り替え時にループ情報をリセット
     function loadYouTube(manualUrl = null) {
         initAudioContext();
         const urlInput = document.getElementById('ytUrl'); const url = manualUrl || urlInput.value;
@@ -799,6 +799,20 @@
         const videoId = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.includes('be/') ? url.split('be/')[1].split('?')[0] : null;
         if (videoId) {
             currentYTId = videoId; document.getElementById('loopListYT').innerHTML = ""; 
+            
+            // 新しい動画読み込み時にループ変数を初期化
+            loopStart = 0;
+            loopEnd = 0;
+            isLooping = false;
+            document.getElementById('loopStartTxt').innerText = "00:00";
+            document.getElementById('loopEndTxt').innerText = "00:00";
+            const b = document.getElementById('toggleLoopBtn');
+            const lang = document.getElementById('langSelect').value || 'ja';
+            if(b) {
+                b.innerText = translations[lang].loopOff;
+                b.classList.remove('active');
+            }
+
             if (ytPlayer && ytPlayer.loadVideoById) ytPlayer.loadVideoById(videoId);
             else ytPlayer = new YT.Player('player', { videoId: videoId, events: { 'onReady': () => { updateYTInfo(); }, 'onStateChange': onPlayerStateChange } });
             urlInput.value = "";
@@ -1022,7 +1036,6 @@
         
         wavesurfer.on('timeupdate', t => {
             document.getElementById('currentTime').innerText = fmt(t);
-            
             if (wavesurfer.isPlaying() && recObjectURL && recWavesurfer && recWavesurfer.isPlaying()) {
                 const expectedRecTime = t - lastRecStartPos;
                 const actualRecTime = recWavesurfer.getCurrentTime();
@@ -1034,7 +1047,6 @@
                     }
                 }
             }
-
             const r = wsRegions.getRegions()[0];
             if(r && t >= r.end) { 
                 if (isRecording) { 
@@ -1047,11 +1059,9 @@
                             recWavesurfer.setTime(loopOffset);
                         }
                     }
-
                     if (isSpeedUpEnabled) { 
                         currentLoopCount++;
                         const targetCount = parseInt(document.getElementById('speedUpCount').value);
-                        
                         if (currentLoopCount >= targetCount) {
                             const sInput = document.getElementById('speed'); 
                             const currentVal = parseFloat(sInput.value);
