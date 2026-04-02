@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.3.8 - TEST EDITION</title>
+    <title>AMS Practice Player v1.3.5 - Subscription Edition</title>
     
-    <meta name="apple-mobile-web-app-title" content="AMS Player TEST">
+    <meta name="apple-mobile-web-app-title" content="AMS Player">
     <meta name="apple-mobile-web-app-capable" content="yes">
     
     <link rel="icon" href="icon.png?v=1.2.1" type="image/png">
@@ -137,8 +137,8 @@
 
 <div id="auth-overlay">
     <div class="login-card">
-        <div class="header-logo" style="font-size: 1.5rem; margin-bottom: 10px;">AMS PLAYER TEST</div>
-        <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom:20px;">テスト用アカウントでログイン</p>
+        <div class="header-logo" style="font-size: 1.5rem; margin-bottom: 10px;">AMS PLAYER</div>
+        <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom:20px;">アカウントにログインしてください</p>
         <button class="google-btn" onclick="loginWithGoogle()">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="G">
             Googleでログイン
@@ -155,7 +155,7 @@
 
 <div id="subscription-overlay">
     <div class="login-card">
-        <div class="header-logo" style="font-size: 1.5rem; margin-bottom: 10px;">PREMIUM PLAN (TEST)</div>
+        <div class="header-logo" style="font-size: 1.5rem; margin-bottom: 10px;">PREMIUM PLAN</div>
         <p style="font-size: 0.9rem; color: var(--text-main);">この機能を利用するには<br>サブスクリプションへの登録が必要です。</p>
         <button class="subscribe-btn" onclick="redirectToCheckout()">
             サブスクリプションを開始する
@@ -166,7 +166,7 @@
 </div>
 
 <header>
-    <div class="header-logo">AMS PLAYER <span style="font-size: 10px; color: red;">DEBUG</span></div>
+    <div class="header-logo">AMS PLAYER</div>
     <div style="display: flex; align-items: center; gap: 10px;">
         <div id="auth-section">
             <button id="headerLoginBtn" class="header-login-btn" onclick="openAuthOverlay()">LOGIN</button>
@@ -329,18 +329,16 @@
 </div>
 
 <script>
-    // --- 【重要】ここにテスト用プロジェクトのConfigを貼り付けてください ---
+    // --- Firebase Configuration ---
     const firebaseConfig = {
-        apiKey: "AIzaSyAHaRRponFdRJZMxWwV5kEiBMBrmKswtW0",
-        authDomain: "ams-player-test.firebaseapp.com",
-        projectId: "ams-player-test",
-        storageBucket: "ams-player-test.firebasestorage.app",
-        messagingSenderId: "371056740344",
-        appId: "1:371056740344:web:f440083382c8d97900780d",
-        measurementId: "G-V3VWGESN1Y"
+        apiKey: "AIzaSyDI4ReBg15LAaQbd-4slccBHOS9R69sLNU",
+        authDomain: "ams-player-e04bf.firebaseapp.com",
+        projectId: "ams-player-e04bf",
+        storageBucket: "ams-player-e04bf.firebasestorage.app",
+        messagingSenderId: "102274983236",
+        appId: "1:102274983236:web:f4334348391dde42dd6311",
+        measurementId: "G-GYHLQKN6SS"
     };
-    // ------------------------------------------------------------------
-
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
@@ -415,28 +413,39 @@
 
     async function checkSubscriptionStatus(user) {
         if (!user || !user.email) return false;
+        
         try {
-            const schoolDoc = await db.collection('SchoolMember').doc(user.email).get();
+            const schoolRef = db.collection('SchoolMember').doc(user.email);
+            const schoolDoc = await schoolRef.get();
+            
             if (schoolDoc.exists) {
                 const data = schoolDoc.data();
-                if (data.isSubscribed === true || data.isStudent === true) return true;
+                if (data.isSubscribed === true || data.isStudent === true) {
+                    console.log("Access granted via SchoolMember");
+                    return true;
+                }
             }
-            const userDoc = await db.collection('Users').doc(user.email).get();
+
+            const userRef = db.collection('Users').doc(user.email);
+            const userDoc = await userRef.get();
+            
             if (userDoc.exists) {
                 const userData = userDoc.data();
-                if (userData.isSubscribed === true) {
-                    if (userData.expirationDate) {
-                        const now = new Date();
-                        const expiration = userData.expirationDate.toDate();
-                        if (now < expiration) return true;
+                if (userData.isSubscribed === true && userData.expirationDate) {
+                    const now = new Date();
+                    const expiration = userData.expirationDate.toDate();
+                    if (now < expiration) {
+                        console.log("Subscription active until:", expiration);
+                        return true;
+                    } else {
+                        console.log("Subscription expired on:", expiration);
                         return false;
                     }
-                    return true; 
                 }
             }
             return false;
         } catch (e) {
-            console.error("Check error:", e);
+            console.error("Subscription check error:", e);
             return false;
         }
     }
@@ -454,9 +463,7 @@
             userInfo.style.display = 'flex';
             userNameSpan.innerText = user.displayName || user.email.split('@')[0];
             isSubscribed = await checkSubscriptionStatus(user);
-            if (isSubscribed) {
-                subOverlay.style.display = 'none';
-            }
+            if (isSubscribed) subOverlay.style.display = 'none';
             if (currentMode === 'file') renderLoopList('file');
             else renderLoopList('yt');
         } else {
@@ -474,7 +481,7 @@
             setStart: "開始位置", setEnd: "終了位置", loopOff: "ループ OFF", loopOn: "ループ ON",
             fileSelect: "ファイルを選択", saveLoop: "ループ保存",
             recPlay: "録音再生", recStop: "再生停止",
-            guideFileContent: "<b>【Audio File Mode】ガイド</b><ul><li>録音機能: 再生しながら録音できます。範囲指定時は終わりで自動停止します。</li><li>音量調整: メイン音源と録音音声を個別に調整可能。</li><li>ソロ(S): 録音音響のみを再生。</li></ul>",
+            guideFileContent: "<b>【Audio File Mode】ガイド</b><ul><li>録音機能: 再生しながら録音できます。客観的チェックに最適。</li><li>音量調整: メイン音源と録音音声を個別に調整可能。</li><li>ソロ(S): 録音音響のみを再生。</li></ul>",
             guideYTContent: "<b>【YouTube Mode】ガイド</b><ul><li>読み込み: URLを貼り付けてLOAD。</li><li>ループ: SET START/ENDで区間指定。</li><li>SAVE: ループを複数保存。</li></ul>"
         },
         en: {
@@ -483,7 +490,7 @@
             setStart: "SET START", setEnd: "SET END", loopOff: "LOOP OFF", loopOn: "LOOP ON",
             fileSelect: "Select Audio File", saveLoop: "Save Loop",
             recPlay: "Play Rec", recStop: "Stop Rec",
-            guideFileContent: "<b>【Audio File Mode】Guide</b><ul><li>Recording: Record while playing. Stops automatically at end of range.</li><li>Volume: Adjust Main/Rec levels.</li><li>Solo(S): Listen only to recording.</li></ul>",
+            guideFileContent: "<b>【Audio File Mode】Guide</b><ul><li>Recording: Record while playing.</li><li>Volume: Adjust Main/Rec levels.</li><li>Solo(S): Listen only to recording.</li></ul>",
             guideYTContent: "<b>【YouTube Mode】Guide</b><ul><li>Load: Paste URL and LOAD.</li><li>Loop: Press START/END.</li><li>SAVE: Store multiple loops.</li></ul>"
         }
     };
@@ -690,7 +697,13 @@
         if (!recWavesurfer || !recWavesurfer.getDuration()) return;
         initAudioContext();
         if (recWavesurfer.isPlaying()) { recWavesurfer.pause(); wavesurfer.pause(); } 
-        else { wavesurfer.setTime(lastRecStartPos); recWavesurfer.setTime(0); wavesurfer.play(); recWavesurfer.play(); }
+        else {
+            // 同期再生：メイン波形を録音開始位置に、録音波形を先頭にして同時に再生
+            wavesurfer.setTime(lastRecStartPos);
+            recWavesurfer.setTime(0);
+            wavesurfer.play();
+            recWavesurfer.play();
+        }
         updateRecPlayBtnUI();
     }
 
@@ -859,11 +872,7 @@
                     await wavesurfer.load(currentObjectURL); 
                     analyzeAudio(blob); 
                     renderLoopList('file');
-                    // 初回描画バグ対策
-                    setTimeout(() => {
-                        wavesurfer.drawBuffer();
-                        wavesurfer.zoom(Number(document.getElementById('zoomSlider').value));
-                    }, 100);
+                    requestAnimationFrame(() => wavesurfer.zoom(Number(document.getElementById('zoomSlider').value)));
                 };
                 reader.readAsArrayBuffer(file);
             } 
@@ -885,15 +894,8 @@
         wavesurfer.on('ready', () => { 
             document.getElementById('totalTime').innerText = fmt(wavesurfer.getDuration()); 
             applySettings(); 
-            wavesurfer.drawBuffer();
+            requestAnimationFrame(() => { wavesurfer.drawBuffer(); });
         });
-
-        recWavesurfer.on('interaction', (newTime) => {
-            if (lastRecStartPos !== undefined) {
-                wavesurfer.setTime(lastRecStartPos + newTime);
-            }
-        });
-
         recWavesurfer.on('finish', () => { wavesurfer.pause(); updateRecPlayBtnUI(); });
         
         document.getElementById('speed').oninput = applySettings;
@@ -915,19 +917,33 @@
         wavesurfer.on('play', () => document.getElementById('playIcon').innerText = 'pause');
         wavesurfer.on('pause', () => { document.getElementById('playIcon').innerText = 'play_arrow'; });
         
+        // メイン波形再生時の処理
         wavesurfer.on('timeupdate', t => {
             document.getElementById('currentTime').innerText = fmt(t);
             const r = wsRegions.getRegions()[0];
+            
             if(r && t >= r.end) { 
                 if (isRecording) {
+                    // 録音中の場合、リージョン終わりで自動停止
                     toggleRecording(); 
                 } else {
+                    // 録音中でない場合、通常通りループまたはBPMアップ処理
                     wavesurfer.setTime(r.start); 
                     if (isSpeedUpEnabled) { 
                         const s = document.getElementById('speed'); 
                         s.value = Math.min(1.5, parseFloat(s.value) + 0.05).toFixed(2); 
                         applySettings(); 
                     }
+                }
+            }
+
+            // 録音再生中の同期維持（ズレ防止）
+            if (recWavesurfer && recWavesurfer.isPlaying()) {
+                const recCurrent = recWavesurfer.getCurrentTime();
+                const expectedMainTime = lastRecStartPos + recCurrent;
+                // ズレが0.1秒を超えた場合に同期
+                if (Math.abs(t - expectedMainTime) > 0.1) {
+                    wavesurfer.setTime(expectedMainTime);
                 }
             }
         });
