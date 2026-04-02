@@ -127,7 +127,7 @@
         .menu-item { display: flex; align-items: center; gap: 12px; color: var(--text-main); padding: 10px; text-decoration: none; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: background 0.2s; font-size: 0.9rem; }
         .lang-select { width: 100%; background: #000; color: #fff; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; font-size: 0.85rem; outline: none; }
 
-        /* 追加：アカウント情報スタイル */
+        /* 追加：アカウント情報スタイル（完全維持用） */
         .account-box { background: #000; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border-color); }
         .account-info-item { margin-bottom: 10px; font-size: 0.75rem; }
         .account-label { color: var(--text-dim); display: block; margin-bottom: 2px; }
@@ -424,6 +424,7 @@
 
     let isSubscribed = false;
 
+    // モーダル・オーバーレイ操作
     function openAuthOverlay() { document.getElementById('auth-overlay').style.display = 'flex'; }
     function closeAuthOverlay() { document.getElementById('auth-overlay').style.display = 'none'; }
     function closeSubOverlay() { document.getElementById('subscription-overlay').style.display = 'none'; }
@@ -434,6 +435,7 @@
         if (show) toggleMenu(false);
     }
 
+    // Auth 関連
     function loginWithGoogle() {
         initAudioContext();
         const provider = new firebase.auth.GoogleAuthProvider();
@@ -463,7 +465,7 @@
 
     function logout() { auth.signOut().then(() => { location.reload(); }); }
 
-    // アカウント削除機能
+    // アカウント削除（追加分）
     async function deleteAccount() {
         const user = auth.currentUser;
         if (!user) return;
@@ -529,7 +531,6 @@
         const authOverlay = document.getElementById('auth-overlay');
         const subOverlay = document.getElementById('subscription-overlay');
         
-        // 追加：アカウント表示用要素
         const accBox = document.getElementById('accountInfoBox');
         const accName = document.getElementById('accName');
         const accEmail = document.getElementById('accEmail');
@@ -542,7 +543,6 @@
             userInfo.style.display = 'flex';
             userNameSpan.textContent = user.displayName || user.email.split('@')[0];
             
-            // アカウント情報の更新
             accBox.style.display = 'block';
             accName.textContent = user.displayName || "Not Set";
             accEmail.textContent = user.email;
@@ -553,6 +553,7 @@
             accPlan.style.color = isSubscribed ? "var(--primary-color)" : "var(--text-dim)";
 
             if (isSubscribed) subOverlay.style.display = 'none';
+            updateLoopList();
         } else {
             authSection.style.display = 'block';
             userInfo.style.display = 'none';
@@ -595,7 +596,7 @@
         const t = translations[lang];
         for(let id in t) { const el = document.getElementById(id); if(el) { if(el.tagName === 'INPUT') el.placeholder = t[id]; else el.innerHTML = t[id]; } }
         const spTxt = document.getElementById('spTxt');
-        if (spTxt.textContent.includes('BPM ---')) spTxt.textContent = "BPM ---"; else updateBpmDisplay(document.getElementById('speed').value);
+        if (spTxt && spTxt.textContent.includes('BPM ---')) spTxt.textContent = "BPM ---"; else if(spTxt) updateBpmDisplay(document.getElementById('speed').value);
         updateLoopList();
     }
 
@@ -687,9 +688,20 @@
 
         document.getElementById('zoomSlider').addEventListener('input', (e) => wavesurfer.zoom(parseFloat(e.target.value)));
         document.getElementById('resetZoomBtn').addEventListener('click', () => { document.getElementById('zoomSlider').value = 100; wavesurfer.zoom(100); });
+        
         document.getElementById('playBtn').addEventListener('click', () => {
             wavesurfer.playPause();
             document.getElementById('playIcon').textContent = wavesurfer.isPlaying() ? 'pause' : 'play_arrow';
+        });
+
+        document.getElementById('audioFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                wavesurfer.load(url);
+                document.getElementById('fileSelectBtn').textContent = file.name;
+                document.getElementById('loadStatus').textContent = "LOADING...";
+            }
         });
 
         window.resetSetting = (id, val) => { document.getElementById(id).value = val; applySettings(); };
@@ -703,7 +715,11 @@
         document.getElementById('pitchTxt').textContent = (document.getElementById('pitch').value > 0 ? '+' : '') + document.getElementById('pitch').value;
     }
 
-    function updateBpmDisplay(s) { document.getElementById('spTxt').textContent = "BPM " + Math.round(s * 100) + "%"; }
+    function updateBpmDisplay(s) { 
+        const el = document.getElementById('spTxt');
+        if(el) el.textContent = "BPM " + Math.round(s * 100) + "%"; 
+    }
+    
     function formatTime(s) { const m = Math.floor(s / 60); const ss = Math.floor(s % 60); return `${m.toString().padStart(2,'0')}:${ss.toString().padStart(2,'0')}`; }
     function varProp(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 
@@ -798,7 +814,7 @@
         wavesurfer.setVolume(isSolo ? 0 : document.getElementById('mainVolume').value);
     }
 
-    // --- YouTube Logic ---
+    // YouTube Logic
     let ytPlayer, ytLoopInterval;
     let ytLoop = { active: false, start: 0, end: 0 };
     const tag = document.createElement('script');
@@ -868,7 +884,7 @@
         updateYTLoopUI();
     }
 
-    // --- Loop Saving Logic ---
+    // Firestore Loop 保存・表示
     function saveLoop(mode) {
         const user = auth.currentUser;
         if (!user) { alert("Please login to save loops."); openAuthOverlay(); return; }
@@ -893,11 +909,18 @@
 
     function updateLoopList() {
         const user = auth.currentUser;
-        if (!user) { document.getElementById('loopListFile').innerHTML = ''; document.getElementById('loopListYT').innerHTML = ''; return; }
+        if (!user) { 
+            const fList = document.getElementById('loopListFile');
+            const yList = document.getElementById('loopListYT');
+            if(fList) fList.innerHTML = ''; 
+            if(yList) yList.innerHTML = ''; 
+            return; 
+        }
         db.collection('Loops').where('userId', '==', user.uid).orderBy('createdAt', 'desc').get().then(snap => {
             const fileList = document.getElementById('loopListFile');
             const ytList = document.getElementById('loopListYT');
-            fileList.innerHTML = ''; ytList.innerHTML = '';
+            if(fileList) fileList.innerHTML = ''; 
+            if(ytList) ytList.innerHTML = '';
             snap.forEach(doc => {
                 const data = doc.data();
                 const badge = document.createElement('div');
@@ -925,14 +948,15 @@
                         updateYTLoopUI();
                     }
                 };
-                if (data.mode === 'file') fileList.appendChild(badge); else ytList.appendChild(badge);
+                if (data.mode === 'file' && fileList) fileList.appendChild(badge); 
+                else if (data.mode === 'yt' && ytList) ytList.appendChild(badge);
             });
         });
     }
 
     function deleteLoop(id) { if (confirm("Delete this loop?")) db.collection('Loops').doc(id).delete().then(() => updateLoopList()); }
 
-    // --- History Logic ---
+    // History
     function saveToHistory(vid) {
         let history = JSON.parse(localStorage.getItem('yt_history') || '[]');
         history = [vid, ...history.filter(id => id !== vid)].slice(0, 10);
@@ -943,9 +967,9 @@
         const history = JSON.parse(localStorage.getItem('yt_history') || '[]');
         const container = document.getElementById('ytHistoryContainer');
         const list = document.getElementById('ytHistoryList');
-        if (history.length === 0) { container.style.display = 'none'; return; }
-        container.style.display = 'block';
-        list.innerHTML = history.map(vid => `<img src="https://img.youtube.com/vi/${vid}/default.jpg" data-vid="${vid}" style="height:50px; border-radius:4px; cursor:pointer; border:1px solid var(--border-color);">`).join('');
+        if (history.length === 0) { if(container) container.style.display = 'none'; return; }
+        if(container) container.style.display = 'block';
+        if(list) list.innerHTML = history.map(vid => `<img src="https://img.youtube.com/vi/${vid}/default.jpg" data-vid="${vid}" style="height:50px; border-radius:4px; cursor:pointer; border:1px solid var(--border-color);">`).join('');
     }
     function handleHistoryClick(e) { if (e.target.dataset.vid) { ytPlayer.loadVideoById(e.target.dataset.vid); ytLoop.active = false; updateYTLoopUI(); } }
     function clearYTHistory() { localStorage.removeItem('yt_history'); renderYTHistory(); }
@@ -962,7 +986,6 @@
     }
     function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
 
-    // Privacy & Legal Texts
     const privacyText = `<h3>プライバシーポリシー</h3><p>AMS Player（以下「当アプリ」）は、Google Firebaseを使用してユーザー認証およびデータの保存を行っています。</p><h3>収集する情報</h3><ul><li>メールアドレス（ログイン時）</li><li>ユーザーが保存したループ設定</li></ul><h3>利用目的</h3><p>保存されたループ設定の同期およびサブスクリプション状態の確認にのみ利用します。収集した情報を第三者に提供することはありません。</p>`;
     const legalText = `<h3>特定商取引法に基づく表記</h3><p><b>運営者:</b> 佐藤 浩</p><p><b>所在地:</b> 東京都町田市（詳細は請求により遅滞なく提供します）</p><p><b>提供時期:</b> 決済完了後、即時利用可能</p><p><b>返品・返金:</b> デジタルコンテンツの性質上、購入後の返金はできません。</p><p><b>解約:</b> 次回更新日までに手続きを完了してください。</p>`;
     document.getElementById('privacyPolicyInner').innerHTML = privacyText + `<button class="clear-btn-ja" onclick="togglePolicy('privacy', false)" style="width:100%; margin-top:20px;">閉じる</button>`;
