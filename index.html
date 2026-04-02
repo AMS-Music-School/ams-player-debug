@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.3.5 - Subscription Edition</title>
+    <title>AMS Practice Player v1.3.8 - Subscription Edition</title>
     
     <meta name="apple-mobile-web-app-title" content="AMS Player">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -411,49 +411,30 @@
         }
     }
 
-    // --- サブスク状態確認の修正版（32日間の期限チェック付き） ---
     async function checkSubscriptionStatus(user) {
         if (!user || !user.email) return false;
-        
         try {
-            // 1. まず SchoolMember (教室生徒用) を確認（手動設定のため期限なし）
-            const schoolRef = db.collection('SchoolMember').doc(user.email);
-            const schoolDoc = await schoolRef.get();
-            
+            const schoolDoc = await db.collection('SchoolMember').doc(user.email).get();
             if (schoolDoc.exists) {
                 const data = schoolDoc.data();
-                if (data.isSubscribed === true || data.isStudent === true) {
-                    console.log("Access granted via SchoolMember");
-                    return true;
-                }
+                if (data.isSubscribed === true || data.isStudent === true) return true;
             }
-
-            // 2. 次に Users (一般決済用) を確認
-            const userRef = db.collection('Users').doc(user.email);
-            const userDoc = await userRef.get();
-            
+            const userDoc = await db.collection('Users').doc(user.email).get();
             if (userDoc.exists) {
                 const userData = userDoc.data();
-                
-                // 有効期限のチェック
-                if (userData.isSubscribed === true && userData.expirationDate) {
-                    const now = new Date();
-                    const expiration = userData.expirationDate.toDate(); // TimestampをDateに変換
-
-                    if (now < expiration) {
-                        console.log("Subscription active until:", expiration);
-                        return true;
-                    } else {
-                        console.log("Subscription expired on:", expiration);
+                if (userData.isSubscribed === true) {
+                    if (userData.expirationDate) {
+                        const now = new Date();
+                        const expiration = userData.expirationDate.toDate();
+                        if (now < expiration) return true;
                         return false;
                     }
+                    return true; 
                 }
             }
-
-            console.log("No active subscription found for:", user.email);
             return false;
         } catch (e) {
-            console.error("Subscription check error:", e);
+            console.error("Check error:", e);
             return false;
         }
     }
@@ -470,16 +451,12 @@
             authSection.style.display = 'none';
             userInfo.style.display = 'flex';
             userNameSpan.innerText = user.displayName || user.email.split('@')[0];
-
             isSubscribed = await checkSubscriptionStatus(user);
-            
             if (isSubscribed) {
                 subOverlay.style.display = 'none';
             }
-            
             if (currentMode === 'file') renderLoopList('file');
             else renderLoopList('yt');
-            
         } else {
             userInfo.style.display = 'none';
             authSection.style.display = 'block';
@@ -495,7 +472,7 @@
             setStart: "開始位置", setEnd: "終了位置", loopOff: "ループ OFF", loopOn: "ループ ON",
             fileSelect: "ファイルを選択", saveLoop: "ループ保存",
             recPlay: "録音再生", recStop: "再生停止",
-            guideFileContent: "<b>【Audio File Mode】ガイド</b><ul><li>録音機能: 再生しながら録音できます。客観的チェックに最適。</li><li>音量調整: メイン音源と録音音声を個別に調整可能。</li><li>ソロ(S): 録音音響のみを再生。</li></ul>",
+            guideFileContent: "<b>【Audio File Mode】ガイド</b><ul><li>録音機能: 再生しながら録音できます。範囲指定時は終わりで自動停止します。</li><li>音量調整: メイン音源と録音音声を個別に調整可能。</li><li>ソロ(S): 録音音響のみを再生。</li></ul>",
             guideYTContent: "<b>【YouTube Mode】ガイド</b><ul><li>読み込み: URLを貼り付けてLOAD。</li><li>ループ: SET START/ENDで区間指定。</li><li>SAVE: ループを複数保存。</li></ul>"
         },
         en: {
@@ -504,7 +481,7 @@
             setStart: "SET START", setEnd: "SET END", loopOff: "LOOP OFF", loopOn: "LOOP ON",
             fileSelect: "Select Audio File", saveLoop: "Save Loop",
             recPlay: "Play Rec", recStop: "Stop Rec",
-            guideFileContent: "<b>【Audio File Mode】Guide</b><ul><li>Recording: Record while playing.</li><li>Volume: Adjust Main/Rec levels.</li><li>Solo(S): Listen only to recording.</li></ul>",
+            guideFileContent: "<b>【Audio File Mode】Guide</b><ul><li>Recording: Record while playing. Stops automatically at end of range.</li><li>Volume: Adjust Main/Rec levels.</li><li>Solo(S): Listen only to recording.</li></ul>",
             guideYTContent: "<b>【YouTube Mode】Guide</b><ul><li>Load: Paste URL and LOAD.</li><li>Loop: Press START/END.</li><li>SAVE: Store multiple loops.</li></ul>"
         }
     };
@@ -880,7 +857,11 @@
                     await wavesurfer.load(currentObjectURL); 
                     analyzeAudio(blob); 
                     renderLoopList('file');
-                    requestAnimationFrame(() => wavesurfer.zoom(Number(document.getElementById('zoomSlider').value)));
+                    // 初回ロード時の波形描画バグ対策: 確実に描画を走らせる
+                    setTimeout(() => {
+                        wavesurfer.drawBuffer();
+                        wavesurfer.zoom(Number(document.getElementById('zoomSlider').value));
+                    }, 100);
                 };
                 reader.readAsArrayBuffer(file);
             } 
@@ -902,8 +883,16 @@
         wavesurfer.on('ready', () => { 
             document.getElementById('totalTime').innerText = fmt(wavesurfer.getDuration()); 
             applySettings(); 
-            requestAnimationFrame(() => { wavesurfer.drawBuffer(); });
+            // 描画を強制
+            wavesurfer.drawBuffer();
         });
+
+        recWavesurfer.on('interaction', (newTime) => {
+            if (lastRecStartPos !== undefined) {
+                wavesurfer.setTime(lastRecStartPos + newTime);
+            }
+        });
+
         recWavesurfer.on('finish', () => { wavesurfer.pause(); updateRecPlayBtnUI(); });
         
         document.getElementById('speed').oninput = applySettings;
@@ -924,15 +913,20 @@
 
         wavesurfer.on('play', () => document.getElementById('playIcon').innerText = 'pause');
         wavesurfer.on('pause', () => { document.getElementById('playIcon').innerText = 'play_arrow'; });
+        
         wavesurfer.on('timeupdate', t => {
             document.getElementById('currentTime').innerText = fmt(t);
             const r = wsRegions.getRegions()[0];
             if(r && t >= r.end) { 
-                wavesurfer.setTime(r.start); 
-                if (isSpeedUpEnabled) { 
-                    const s = document.getElementById('speed'); 
-                    s.value = Math.min(1.5, parseFloat(s.value) + 0.05).toFixed(2); 
-                    applySettings(); 
+                if (isRecording) {
+                    toggleRecording(); 
+                } else {
+                    wavesurfer.setTime(r.start); 
+                    if (isSpeedUpEnabled) { 
+                        const s = document.getElementById('speed'); 
+                        s.value = Math.min(1.5, parseFloat(s.value) + 0.05).toFixed(2); 
+                        applySettings(); 
+                    }
                 }
             }
         });
