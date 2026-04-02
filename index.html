@@ -119,11 +119,24 @@
         .menu-section-title { font-size: 0.75rem; color: var(--primary-color); text-transform: uppercase; letter-spacing: 1px; margin: 15px 0 10px; display: block; }
         .menu-item { display: flex; align-items: center; gap: 12px; color: var(--text-main); padding: 10px; text-decoration: none; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: background 0.2s; font-size: 0.9rem; }
         
-        /* 新設：アカウント情報パネル */
-        .account-panel { background: #181818; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 20px; font-size: 0.8rem; }
-        .account-info-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+        /* アカウント情報アコーディオン */
+        .account-accordion { border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
+        .account-trigger { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 12px; background: #252525; cursor: pointer; font-size: 0.85rem; 
+            font-weight: bold; color: var(--primary-color);
+        }
+        .account-trigger .material-icons { transition: transform 0.3s; font-size: 18px; }
+        .account-content { 
+            background: #181818; padding: 0; max-height: 0; 
+            overflow: hidden; transition: max-height 0.3s ease-out, padding 0.3s;
+        }
+        .account-content.open { padding: 12px; max-height: 400px; }
+        .account-trigger.open .material-icons { transform: rotate(180deg); }
+
+        .account-info-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
         .account-info-label { font-size: 0.65rem; color: var(--primary-color); font-weight: bold; text-transform: uppercase; }
-        .account-info-val { color: var(--text-main); word-break: break-all; font-family: monospace; }
+        .account-info-val { color: var(--text-main); word-break: break-all; font-family: monospace; font-size: 0.8rem; }
         .plan-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; margin-top: 4px; }
         .plan-free { background: #444; color: #fff; }
         .plan-premium { background: var(--primary-color); color: #121212; }
@@ -263,30 +276,35 @@
         </button>
     </div>
 
-    <span class="menu-section-title" id="accountTitle">Account Info</span>
-    <div class="account-panel">
-        <div id="account-logged-in" style="display:none;">
-            <div class="account-info-row">
-                <span class="account-info-label" id="labelUserName">Username</span>
-                <span class="account-info-val" id="menuUserDisplayName">---</span>
-            </div>
-            <div class="account-info-row">
-                <span class="account-info-label" id="labelEmail">Sign-in Email</span>
-                <span class="account-info-val" id="menuUserEmail">---</span>
-            </div>
-            <div class="account-info-row">
-                <span class="account-info-label">UID</span>
-                <span class="account-info-val" id="menuUserID" style="font-size:0.6rem; opacity:0.6;">---</span>
-            </div>
-            <div class="account-info-row">
-                <span class="account-info-label" id="labelPlan">Plan Status</span>
-                <div id="menuUserPlan"><span class="plan-badge plan-free">FREE</span></div>
-            </div>
-            <button class="logout-btn" onclick="logout()" style="width:100%; margin-top:10px; padding:8px;" id="menuLogoutBtn">Logout</button>
+    <div class="account-accordion">
+        <div class="account-trigger" id="accountTrigger" onclick="toggleAccountAccordion()">
+            <span id="accountTitle">Account Info</span>
+            <span class="material-icons">expand_more</span>
         </div>
-        <div id="account-logged-out" style="text-align:center; padding:10px 0;">
-            <p style="font-size:0.75rem; color:var(--text-dim); margin-bottom:10px;" id="msgLoginRequired">ログインしていません</p>
-            <button class="header-login-btn" onclick="openAuthOverlay(); toggleMenu(false);" style="width:100%;">LOGIN</button>
+        <div class="account-content" id="accountContent">
+            <div id="account-logged-in" style="display:none;">
+                <div class="account-info-row">
+                    <span class="account-info-label" id="labelUserName">Username</span>
+                    <span class="account-info-val" id="menuUserDisplayName">---</span>
+                </div>
+                <div class="account-info-row">
+                    <span class="account-info-label" id="labelEmail">Email</span>
+                    <span class="account-info-val" id="menuUserEmail">---</span>
+                </div>
+                <div class="account-info-row">
+                    <span class="account-info-label">UID</span>
+                    <span class="account-info-val" id="menuUserID" style="font-size:0.6rem; opacity:0.6;">---</span>
+                </div>
+                <div class="account-info-row">
+                    <span class="account-info-label" id="labelPlan">Plan</span>
+                    <div id="menuUserPlan"><span class="plan-badge plan-free">FREE</span></div>
+                </div>
+                <button class="logout-btn" onclick="logout()" style="width:100%; margin-top:10px; padding:8px;" id="menuLogoutBtn">Logout</button>
+            </div>
+            <div id="account-logged-out" style="text-align:center; padding:10px 0;">
+                <p style="font-size:0.75rem; color:var(--text-dim); margin-bottom:10px;" id="msgLoginRequired">ログインしていません</p>
+                <button class="header-login-btn" onclick="openAuthOverlay(); toggleMenu(false);" style="width:100%;">LOGIN</button>
+            </div>
         </div>
     </div>
 
@@ -469,6 +487,14 @@
 
     let isSubscribed = false;
 
+    // アカウントアコーディオンの開閉処理
+    function toggleAccountAccordion() {
+        const trigger = document.getElementById('accountTrigger');
+        const content = document.getElementById('accountContent');
+        trigger.classList.toggle('open');
+        content.classList.toggle('open');
+    }
+
     function openAuthOverlay() {
         document.getElementById('auth-overlay').style.display = 'flex';
     }
@@ -626,7 +652,7 @@
         ja: {
             accountTitle: "アカウント情報",
             labelUserName: "ユーザー名",
-            labelEmail: "サインインアドレス",
+            labelEmail: "アドレス",
             labelPlan: "現在のプラン",
             msgLoginRequired: "ログインしていません",
             langTitle: "言語設定",
@@ -704,7 +730,7 @@
         en: {
             accountTitle: "Account Info",
             labelUserName: "Username",
-            labelEmail: "Sign-in Email",
+            labelEmail: "Email",
             labelPlan: "Plan Status",
             msgLoginRequired: "Not logged in",
             langTitle: "Language Settings",
@@ -768,7 +794,6 @@
         const lang = document.getElementById('langSelect').value;
         const t = translations[lang];
         
-        // アカウント情報ラベル
         document.getElementById('accountTitle').innerText = t.accountTitle;
         document.getElementById('labelUserName').innerText = t.labelUserName;
         document.getElementById('labelEmail').innerText = t.labelEmail;
@@ -815,6 +840,11 @@
     function toggleMenu(show) {
         document.getElementById('sideMenu').classList.toggle('open', show);
         document.getElementById('menuOverlay').style.display = show ? 'block' : 'none';
+        if (!show) {
+            // メニューを閉じる際、アコーディオンも閉じてリセットする
+            document.getElementById('accountTrigger').classList.remove('open');
+            document.getElementById('accountContent').classList.remove('open');
+        }
     }
 
     function showGuide(mode) {
