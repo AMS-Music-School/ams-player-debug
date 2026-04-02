@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.4.6 - YT RESET FIXED</title>
+    <title>AMS Practice Player v1.4.7 - UI VISIBILITY FIXED</title>
     
     <meta name="apple-mobile-web-app-title" content="AMS Player">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -132,6 +132,27 @@
         .adj-btn { background: #333; border: none; color: #fff; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
         .loop-btn-main { background: var(--panel-bg); color: var(--text-main); border: 1px solid var(--primary-color); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
         
+        /* 修正箇所: YouTubeループボタンの視認性強化 */
+        .yt-loop-btn-ui {
+            width: 140px;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--primary-color);
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: bold;
+            background: #000;
+            color: var(--primary-color);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .yt-loop-btn-ui.active {
+            background: var(--primary-color);
+            color: #000;
+        }
+
         .action-row-container { 
             display: flex; 
             justify-content: space-between; 
@@ -360,7 +381,7 @@
                 </div>
             </div>
             <div class="row" style="justify-content: center; gap: 10px;">
-                <button id="toggleLoopBtn" class="tab-btn" style="width:140px;" onclick="toggleLoop()">LOOP OFF</button>
+                <button id="toggleLoopBtn" class="yt-loop-btn-ui" onclick="toggleLoop()">LOOP OFF</button>
                 <button class="clear-btn-ja" onclick="saveLoop('yt')" id="saveLoopBtnYT" style="border: 1px solid var(--primary-color); border-radius: 6px; padding: 8px 12px; flex:none;">
                     <span class="material-icons" style="font-size:16px;">bookmark_add</span> SAVE
                 </button>
@@ -511,7 +532,7 @@
         ja: {
             langTitle: "言語設定", helpTitle: "ヘルプ & ガイド", guideFile: "Audio Fileモード ガイド", guideYT: "YouTubeモード ガイド",
             close: "閉じる", fit: "全体表示", clear: "選択解除", ready: "準備完了", analyzing: "解析中...",
-            setStart: "開始位置", setEnd: "終了位置", loopOff: "ループ OFF", loopOn: "ループ ON",
+            setStart: "開始位置", setEnd: "終了位置", loopOff: "LOOP OFF", loopOn: "LOOP ON",
             fileSelect: "ファイルを選択", saveLoop: "ループ保存", speedUpLabel: "速度回数",
             recPlay: "録音再生", recStop: "再生停止",
             guideFileContent: "<b>【Audio File Mode】ガイド</b><ul><li>録音機能: 再生しながら録音できます。範囲指定時は終わりで自動停止します。</li><li>音量調整: メイン音源と録音音声を個別に調整可能。</li><li>ソロ(S): 録音音響のみを再生。</li></ul>",
@@ -559,8 +580,9 @@
         if (fileLabel.innerText.includes("ファイル") || fileLabel.innerText.includes("Select")) fileLabel.innerText = t.fileSelect;
         const loadS = document.getElementById('loadStatus');
         if (loadS.innerText.includes("READY") || loadS.innerText.includes("準備")) loadS.innerText = t.ready;
-        const loopB = document.getElementById('toggleLoopBtn');
-        if(loopB) loopB.innerText = isLooping ? t.loopOn : t.loopOff;
+        
+        const b = document.getElementById('toggleLoopBtn');
+        if(b) b.innerText = isLooping ? t.loopOn : t.loopOff;
         updateRecPlayBtnUI();
     }
 
@@ -791,7 +813,6 @@
     const tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
 
-    // YouTube動画読み込み：動画切り替え時にループ情報をリセット
     function loadYouTube(manualUrl = null) {
         initAudioContext();
         const urlInput = document.getElementById('ytUrl'); const url = manualUrl || urlInput.value;
@@ -800,12 +821,11 @@
         if (videoId) {
             currentYTId = videoId; document.getElementById('loopListYT').innerHTML = ""; 
             
-            // 新しい動画読み込み時にループ変数を初期化
-            loopStart = 0;
-            loopEnd = 0;
-            isLooping = false;
+            loopStart = 0; loopEnd = 0; isLooping = false;
             document.getElementById('loopStartTxt').innerText = "00:00";
             document.getElementById('loopEndTxt').innerText = "00:00";
+            
+            // ループボタンのリセット
             const b = document.getElementById('toggleLoopBtn');
             const lang = document.getElementById('langSelect').value || 'ja';
             if(b) {
@@ -885,9 +905,13 @@
     };
 
     window.toggleLoop = () => { 
-        isLooping = !isLooping; const lang = document.getElementById('langSelect').value;
+        isLooping = !isLooping; 
+        const lang = document.getElementById('langSelect').value;
         const b = document.getElementById('toggleLoopBtn'); 
-        if(b) { b.innerText = isLooping ? translations[lang].loopOn : translations[lang].loopOff; b.classList.toggle('active', isLooping); }
+        if(b) { 
+            b.innerText = isLooping ? translations[lang].loopOn : translations[lang].loopOff; 
+            b.classList.toggle('active', isLooping); 
+        }
     };
 
     function saveLoop(mode) {
