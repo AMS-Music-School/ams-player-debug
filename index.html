@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.5.2 - OFFICIAL EDITION</title>
+    <title>AMS Practice Player v1.5.3 - OFFICIAL EDITION</title>
     
     <meta name="apple-mobile-web-app-title" content="AMS Player">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -203,30 +203,30 @@
 <div id="auth-overlay">
     <div class="login-card">
         <div class="header-logo" style="font-size: 1.5rem; margin-bottom: 10px;">AMS PLAYER</div>
-        <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom:20px;">テスト用アカウントでログイン</p>
+        <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom:20px;" id="authDesc">テスト用アカウントでログイン</p>
         <button class="google-btn" onclick="loginWithGoogle()">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="G">
-            Googleでログイン
+            <span id="googleLoginBtnTxt">Googleでログイン</span>
         </button>
-        <div class="auth-divider">または</div>
+        <div class="auth-divider" id="authDivider">または</div>
         <div class="auth-form">
             <input type="email" id="loginEmail" class="auth-input" placeholder="メールアドレス">
             <input type="password" id="loginPassword" class="auth-input" placeholder="パスワード">
-            <button class="email-btn" onclick="loginWithEmail()">ログイン / 新規登録</button>
+            <button class="email-btn" onclick="loginWithEmail()" id="emailLoginBtnTxt">ログイン / 新規登録</button>
         </div>
-        <button class="clear-btn-ja" onclick="closeAuthOverlay()" style="margin-top:25px; width:100%; justify-content:center;">閉じる</button>
+        <button class="clear-btn-ja" onclick="closeAuthOverlay()" style="margin-top:25px; width:100%; justify-content:center;" id="authCloseBtn">閉じる</button>
     </div>
 </div>
 
 <div id="subscription-overlay">
     <div class="login-card">
         <div class="header-logo" style="font-size: 1.5rem; margin-bottom: 10px;">PREMIUM PLAN</div>
-        <p style="font-size: 0.9rem; color: var(--text-main);">この機能を利用するには<br>サブスクリプションへの登録が必要です。</p>
-        <button class="subscribe-btn" onclick="redirectToCheckout()">
+        <p style="font-size: 0.9rem; color: var(--text-main);" id="subDesc">この機能を利用するには<br>サブスクリプションへの登録が必要です。</p>
+        <button class="subscribe-btn" onclick="redirectToCheckout()" id="subStartBtn">
             サブスクリプションを開始する
         </button>
-        <button class="clear-btn-ja" onclick="closeSubOverlay()" style="margin-top:15px; width:100%; justify-content:center;">閉じる</button>
-        <button class="logout-btn" onclick="logout()" style="margin-top:20px; display:block; width:100%;">別のカウントでログイン</button>
+        <button class="clear-btn-ja" onclick="closeSubOverlay()" style="margin-top:15px; width:100%; justify-content:center;" id="subCloseBtn">閉じる</button>
+        <button class="logout-btn" onclick="logout()" style="margin-top:20px; display:block; width:100%;" id="subLogoutBtn">別のカウントでログイン</button>
     </div>
 </div>
 
@@ -264,38 +264,18 @@
     <div class="menu-item" onclick="showGuide('yt')"><span class="material-icons">smart_display</span><span id="guideYTTitle">YouTubeモード ガイド</span></div>
     
     <span class="menu-section-title">Legal</span>
-    <div class="menu-item" onclick="togglePolicy('privacy', true)"><span class="material-icons">policy</span><span>Privacy Policy</span></div>
-    <div class="menu-item" onclick="togglePolicy('legal', true)"><span class="material-icons">gavel</span><span>特定商取引法に基づく表記</span></div>
+    <div class="menu-item" onclick="togglePolicy('privacy', true)"><span class="material-icons">policy</span><span id="privacyMenu">Privacy Policy</span></div>
+    <div class="menu-item" onclick="togglePolicy('legal', true)"><span class="material-icons">gavel</span><span id="legalMenu">特定商取引法に基づく表記</span></div>
 </div>
 
 <div id="privacyPolicyModal" class="policy-modal">
-    <div class="policy-content">
-        <h2 style="color:var(--primary-color); margin-top:0;">プライバシーポリシー</h2>
-        <p>Anderson Studios（以下「当スタジオ」）が運営する「AMS Music School」は、提供するアプリケーション「AMS Practice Player」（以下「本アプリ」）における個人情報の取扱いについて、以下の通り定めます。</p>
-        <h3>1. 取得する情報</h3>
-        <p>本アプリでは、Google認証によるメールアドレス・氏名、およびサービス利用に必要な決済ステータス（Square経由）を取得します。</p>
-        <h3>2. 利用目的</h3>
-        <p>取得した情報は、アカウント認証、サブスクリプション管理、ユーザーサポート、および本アプリの機能提供のみに利用します。</p>
-        <h3>3. 第三者提供</h3>
-        <p>法令に基づく場合を除き、同意なく第三者に提供しません。本アプリはインフラとしてGoogle Firebase、決済としてSquareを利用します。</p>
-        <h3>4. お問い合わせ</h3>
-        <p>運営：Anderson Studios (AMS Music School)<br>連絡先：ams.guitar.school@gmail.com</p>
-        <button class="clear-btn-ja" style="width:100%; margin-top:20px;" onclick="togglePolicy('privacy', false)">閉じる</button>
-    </div>
+    <div class="policy-content" id="privacyPolicyInner">
+        </div>
 </div>
 
 <div id="legalNoticeModal" class="policy-modal">
-    <div class="policy-content">
-        <h2 style="color:var(--primary-color); margin-top:0;">特定商取引法に基づく表記</h2>
-        <h3>運営者名</h3><p>芦田幸一 (Anderson Studios / AMS Music School)</p>
-        <h3>連絡先</h3><p>ams.guitar.school@gmail.com</p>
-        <h3>販売価格</h3><p>購入手続きの際に画面に表示される金額（税込）</p>
-        <h3>代金の支払時期および方法</h3><p>Square決済（クレジットカード等）による即時決済。サブスクリプションは各更新日に課金されます。</p>
-        <h3>役務の提供時期</h3><p>決済完了後、直ちにご利用いただけます。</p>
-        <h3>解約・返金ポリシー</h3>
-        <p>・商品の性質上、決済完了後の返金・返品は原則としてお受けできません。<br>・サブスクリプションの解約はいつでも可能です。解約後も有効期限までは引き続きサービスをご利用いただけます。<br>・日割り計算による返金は行っておりません。</p>
-        <button class="clear-btn-ja" style="width:100%; margin-top:20px;" onclick="togglePolicy('legal', false)">閉じる</button>
-    </div>
+    <div class="policy-content" id="legalNoticeInner">
+        </div>
 </div>
 
 <div id="guideModalFile" class="modal"><div class="guide-box-inner" id="guideFileContent"></div><button class="clear-btn-ja" id="closeBtn1" style="width:100%; margin-top:20px;" onclick="closeModals()">閉じる</button></div>
@@ -378,7 +358,7 @@
             </div>
             <div class="row" id="recControls" style="display:none; justify-content:center; gap:8px; margin-top:4px;">
                 <button class="clear-btn-ja rec-action-btn" onclick="playRecording()" id="playRecBtn" style="flex:none; padding:6px 15px;"><span class="material-icons" style="font-size:14px;">play_circle</span> 録音再生</button>
-                <button class="clear-btn-ja rec-action-btn" onclick="deleteRecording()" style="flex:none; padding:6px 15px; color:#ff5555;"><span class="material-icons" style="font-size:14px;">delete</span> 削除</button>
+                <button class="clear-btn-ja rec-action-btn" onclick="deleteRecording()" style="flex:none; padding:6px 15px; color:#ff5555;" id="recDelBtnTxt"><span class="material-icons" style="font-size:14px;">delete</span> 削除</button>
             </div>
         </div>
 
@@ -399,12 +379,12 @@
     <div id="yt-section" class="content-section">
         <div style="display:flex; gap:8px; margin-bottom:10px; background:var(--panel-bg); padding:10px; border-radius:10px; border: 1px solid var(--border-color);">
             <input type="text" id="ytUrl" placeholder="YouTube URL..." style="flex-grow:1; padding:10px; border:1px solid var(--border-color); background:#000; color:#fff; border-radius:6px; font-size:0.8rem;">
-            <button class="tab-btn active" style="flex:0; min-width:60px;" onclick="loadYouTube()">LOAD</button>
+            <button class="tab-btn active" style="flex:0; min-width:60px;" onclick="loadYouTube()" id="ytLoadBtnTxt">LOAD</button>
         </div>
         <div id="ytHistoryContainer" style="margin-bottom: 15px; display: none;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                <span style="font-size:0.7rem; color:var(--primary-color); font-weight:bold;">RECENT HISTORY</span>
-                <button class="reset-btn" onclick="clearYTHistory()" style="font-size:0.6rem;">Clear All</button>
+                <span style="font-size:0.7rem; color:var(--primary-color); font-weight:bold;" id="historyTitle">RECENT HISTORY</span>
+                <button class="reset-btn" onclick="clearYTHistory()" style="font-size:0.6rem;" id="historyClearBtn">Clear All</button>
             </div>
             <div id="ytHistoryList" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:8px;" onclick="handleHistoryClick(event)"></div>
         </div>
@@ -587,6 +567,30 @@
             setStart: "開始位置", setEnd: "終了位置", loopOff: "LOOP OFF", loopOn: "LOOP ON",
             fileSelect: "ファイルを選択", saveLoop: "ループ保存", speedUpLabel: "速度回数",
             recPlay: "録音再生", recStop: "再生停止",
+            privacyMenu: "Privacy Policy", legalMenu: "特定商取引法に基づく表記",
+            authDesc: "テスト用アカウントでログイン", googleBtn: "Googleでログイン", authDiv: "または", authEmail: "ログイン / 新規登録",
+            subDesc: "この機能を利用するには<br>サブスクリプションへの登録が必要です。", subStart: "サブスクリプションを開始する", subLogout: "別のカウントでログイン",
+            historyTitle: "最近の履歴", historyClear: "すべて消去", ytLoad: "読み込む", recDel: "削除",
+            privacyInner: `<h2 style="color:var(--primary-color); margin-top:0;">プライバシーポリシー</h2>
+                <p>Anderson Studios（以下「当スタジオ」）が運営する「AMS Music School」は、提供するアプリケーション「AMS Practice Player」（以下「本アプリ」）における個人情報の取扱いについて、以下の通り定めます。</p>
+                <h3>1. 取得する情報</h3>
+                <p>本アプリでは、Google認証によるメールアドレス・氏名、およびサービス利用に必要な決済ステータス（Square経由）を取得します。</p>
+                <h3>2. 利用目的</h3>
+                <p>取得した情報は、アカウント認証、サブスクリプション管理、ユーザーサポート、および本アプリの機能提供のみに利用します。</p>
+                <h3>3. 第三者提供</h3>
+                <p>法令に基づく場合を除き、同意なく第三者に提供しません。本アプリはインフラとしてGoogle Firebase、決済としてSquareを利用します。</p>
+                <h3>4. お問い合わせ</h3>
+                <p>運営：Anderson Studios (AMS Music School)<br>連絡先：ams.guitar.school@gmail.com</p>
+                <button class="clear-btn-ja" style="width:100%; margin-top:20px;" onclick="togglePolicy('privacy', false)">閉じる</button>`,
+            legalInner: `<h2 style="color:var(--primary-color); margin-top:0;">特定商取引法に基づく表記</h2>
+                <h3>運営者名</h3><p>芦田幸一 (Anderson Studios / AMS Music School)</p>
+                <h3>連絡先</h3><p>ams.guitar.school@gmail.com</p>
+                <h3>販売価格</h3><p>購入手続きの際に画面に表示される金額（税込）</p>
+                <h3>代金の支払時期および方法</h3><p>Square決済（クレジットカード等）による即時決済。サブスクリプションは各更新日に課金されます。</p>
+                <h3>役務の提供時期</h3><p>決済完了後、直ちにご利用いただけます。</p>
+                <h3>解約・返金ポリシー</h3>
+                <p>・商品の性質上、決済完了後の返金・返品は原則としてお受けできません。<br>・サブスクリプションの解約はいつでも可能です。解約後も有効期限までは引き続きサービスをご利用いただけます。<br>・日割り計算による返金は行っておりません。</p>
+                <button class="clear-btn-ja" style="width:100%; margin-top:20px;" onclick="togglePolicy('legal', false)">閉じる</button>`,
             guideFileContent: `<b>【Audio File Mode】フルガイド</b>
                 <span class="guide-sub">1. ファイル読み込み</span>
                 <ul><li>端末内の音楽ファイルを選択して解析。読み込み時にBPMが自動算出されます。</li></ul>
@@ -614,6 +618,30 @@
             setStart: "SET START", setEnd: "SET END", loopOff: "LOOP OFF", loopOn: "LOOP ON",
             fileSelect: "Select Audio File", saveLoop: "Save Loop", speedUpLabel: "Auto Speed",
             recPlay: "Play Rec", recStop: "Stop Rec",
+            privacyMenu: "Privacy Policy", legalMenu: "Commercial Transactions Act",
+            authDesc: "Login with test account", googleBtn: "Login with Google", authDiv: "OR", authEmail: "Login / Register",
+            subDesc: "Subscription is required to use this feature.", subStart: "Start Subscription", subLogout: "Login with another account",
+            historyTitle: "Recent History", historyClear: "Clear All", ytLoad: "LOAD", recDel: "Delete",
+            privacyInner: `<h2 style="color:var(--primary-color); margin-top:0;">Privacy Policy</h2>
+                <p>Anderson Studios ("We/Us") operating as "AMS Music School" establishes this Privacy Policy regarding the handling of personal information in the "AMS Practice Player" ("App").</p>
+                <h3>1. Collected Information</h3>
+                <p>The App collects email addresses and names via Google Authentication, and payment statuses via Square for subscription management.</p>
+                <h3>2. Purpose of Use</h3>
+                <p>Collected information is used solely for authentication, subscription management, user support, and delivering App features.</p>
+                <h3>3. Third-Party Sharing</h3>
+                <p>We do not share information with third parties without consent, except as required by law. The App utilizes Google Firebase and Square.</p>
+                <h3>4. Contact</h3>
+                <p>Operator: Anderson Studios (AMS Music School)<br>Contact: ams.guitar.school@gmail.com</p>
+                <button class="clear-btn-ja" style="width:100%; margin-top:20px;" onclick="togglePolicy('privacy', false)">Close</button>`,
+            legalInner: `<h2 style="color:var(--primary-color); margin-top:0;">Legal Notice</h2>
+                <h3>Operator</h3><p>Koichi Ashida (Anderson Studios / AMS Music School)</p>
+                <h3>Contact</h3><p>ams.guitar.school@gmail.com</p>
+                <h3>Pricing</h3><p>Displayed during the purchase process (Tax included).</p>
+                <h3>Payment</h3><p>Immediate payment via Square (Credit Card, etc.). Subscriptions are billed on each renewal date.</p>
+                <h3>Delivery</h3><p>Service is available immediately after payment completion.</p>
+                <h3>Refund Policy</h3>
+                <p>・Due to the nature of digital services, refunds are generally not accepted after payment.<br>・Subscriptions can be canceled at any time. The service remains active until the end of the current billing period.<br>・No pro-rated refunds are provided.</p>
+                <button class="clear-btn-ja" style="width:100%; margin-top:20px;" onclick="togglePolicy('legal', false)">Close</button>`,
             guideFileContent: `<b>【Audio File Mode】Full Guide</b>
                 <span class="guide-sub">1. Load Audio</span>
                 <ul><li>Select a file to analyze BPM automatically.</li></ul>
@@ -650,10 +678,16 @@
     function changeLanguage() {
         const lang = document.getElementById('langSelect').value || 'ja';
         const t = translations[lang] || translations['ja'];
+        
+        // メニュー類
         document.getElementById('langTitle').innerText = t.langTitle;
         document.getElementById('helpTitle').innerText = t.helpTitle;
         document.getElementById('guideFileTitle').innerText = t.guideFile;
         document.getElementById('guideYTTitle').innerText = t.guideYT;
+        document.getElementById('privacyMenu').innerText = t.privacyMenu;
+        document.getElementById('legalMenu').innerText = t.legalMenu;
+
+        // ボタン・ラベル
         document.getElementById('closeBtn1').innerText = t.close;
         document.getElementById('closeBtn2').innerText = t.close;
         document.getElementById('resetZoomBtn').innerText = t.fit;
@@ -662,15 +696,41 @@
         document.getElementById('speedUpLabel').innerText = t.speedUpLabel;
         document.getElementById('setStartBtn').innerText = t.setStart;
         document.getElementById('setEndBtn').innerText = t.setEnd;
+        
+        // ログイン・サブスク画面
+        document.getElementById('authDesc').innerText = t.authDesc;
+        document.getElementById('googleLoginBtnTxt').innerText = t.googleBtn;
+        document.getElementById('authDivider').innerText = t.authDiv;
+        document.getElementById('emailLoginBtnTxt').innerText = t.authEmail;
+        document.getElementById('authCloseBtn').innerText = t.close;
+        document.getElementById('subDesc').innerHTML = t.subDesc;
+        document.getElementById('subStartBtn').innerText = t.subStart;
+        document.getElementById('subCloseBtn').innerText = t.close;
+        document.getElementById('subLogoutBtn').innerText = t.subLogout;
+
+        // YouTube関連
+        document.getElementById('ytLoadBtnTxt').innerText = t.ytLoad;
+        document.getElementById('historyTitle').innerText = t.historyTitle;
+        document.getElementById('historyClearBtn').innerText = t.historyClear;
+
+        // ガイド・ポリシー内容
         document.getElementById('guideFileContent').innerHTML = t.guideFileContent;
         document.getElementById('guideYTContent').innerHTML = t.guideYTContent;
+        document.getElementById('privacyPolicyInner').innerHTML = t.privacyInner;
+        document.getElementById('legalNoticeInner').innerHTML = t.legalInner;
+
         const fileLabel = document.getElementById('fileSelectBtn');
         if (fileLabel.innerText.includes("ファイル") || fileLabel.innerText.includes("Select")) fileLabel.innerText = t.fileSelect;
+        
         const loadS = document.getElementById('loadStatus');
         if (loadS.innerText.includes("READY") || loadS.innerText.includes("準備")) loadS.innerText = t.ready;
         
         const b = document.getElementById('toggleLoopBtn');
         if(b) b.innerText = isLooping ? t.loopOn : t.loopOff;
+
+        const recDel = document.getElementById('recDelBtnTxt');
+        if(recDel) recDel.innerHTML = `<span class="material-icons" style="font-size:14px;">delete</span> ${t.recDel}`;
+
         updateRecPlayBtnUI();
     }
 
