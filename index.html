@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.4.3 - SPEED COUNTER</title>
+    <title>AMS Practice Player v1.4.4 - SPEED SYNC</title>
     
     <meta name="apple-mobile-web-app-title" content="AMS Player">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -131,7 +131,8 @@
         .loop-list-container { margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 10px; display: flex; flex-wrap: wrap; gap: 10px; }
         .adj-btn { background: #333; border: none; color: #fff; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
         .loop-btn-main { background: var(--panel-bg); color: var(--text-main); border: 1px solid var(--primary-color); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
-        .speedup-select { background: #333; color: var(--text-main); border: 1px solid var(--border-color); border-radius: 20px; padding: 5px 10px; font-size: 0.75rem; outline: none; }
+        .speedup-select { background: #333; color: var(--text-main); border: 1px solid var(--border-color); border-radius: 20px; padding: 5px 10px; font-size: 0.75rem; outline: none; transition: opacity 0.3s; }
+        .speedup-select:disabled { opacity: 0.3; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -241,7 +242,7 @@
         <div class="clear-btn-container" style="display:flex; justify-content:center; gap:10px; margin-bottom:10px; align-items:center;">
             <button class="clear-btn-ja" onclick="wsRegions.clearRegions()" id="clearRangeBtn"><span class="material-icons" style="font-size:16px;">layers_clear</span> 範囲解除</button>
             <button class="clear-btn-ja" onclick="saveLoop('file')" id="saveLoopBtn" style="border: 1px solid var(--primary-color);"><span class="material-icons" style="font-size:16px;">bookmark_add</span> ループ保存</button>
-            <select id="speedUpCount" class="speedup-select">
+            <select id="speedUpCount" class="speedup-select" disabled>
                 <option value="1">x1</option><option value="2">x2</option><option value="3">x3</option>
                 <option value="4">x4</option><option value="5">x5</option><option value="6">x6</option>
                 <option value="7">x7</option><option value="8">x8</option><option value="9">x9</option>
@@ -255,7 +256,7 @@
             <button class="btn-ctrl" onclick="wavesurfer.skip(-5)"><span class="material-icons">replay_5</span></button>
             <button class="btn-ctrl play-main" id="playBtn"><span class="material-icons" id="playIcon" style="font-size:35px;">play_arrow</span></button>
             <button class="btn-ctrl" onclick="wavesurfer.skip(5)"><span class="material-icons">forward_5</span></button>
-            <button class="btn-ctrl" id="speedUpToggleBtn" onclick="toggleFeature('speedup')"><span class="material-icons">speed</span></button>
+            <button class="btn-ctrl" id="speedUpToggleBtn" onclick="toggleFeature('speedup')"><span class="material-icons">bolt</span></button>
         </div>
 
         <div class="panel panel-rec">
@@ -501,7 +502,7 @@
     let mediaRecorder, recordedChunks = [];
     let isRecording = false, isSolo = false;
     let recObjectURL = null, recordedAudioBuffer = null, lastRecStartPos = 0;
-    let currentLoopCount = 0; // 追加：ループ回数カウント用
+    let currentLoopCount = 0;
 
     function changeLanguage() {
         const lang = document.getElementById('langSelect').value || 'ja';
@@ -581,7 +582,12 @@
             if (!isSubscribed) { document.getElementById('subscription-overlay').style.display = 'flex'; return; }
             isSpeedUpEnabled = !isSpeedUpEnabled; 
             document.getElementById('speedUpToggleBtn').classList.toggle('active', isSpeedUpEnabled); 
-            currentLoopCount = 0; // スピードアップONにした時にカウンタをリセット
+            
+            // スピードアップON/OFFに合わせてセレクトボックスを制御
+            const selectEl = document.getElementById('speedUpCount');
+            selectEl.disabled = !isSpeedUpEnabled;
+            
+            currentLoopCount = 0;
         }
     }
 
@@ -968,7 +974,7 @@
                 }
                 if (wavesurfer.isPlaying()) recWavesurfer.play();
             }
-            currentLoopCount = 0; // 手動で位置を変えたら回数リセット
+            currentLoopCount = 0; 
         });
 
         recWavesurfer.on('interaction', () => {
@@ -1009,7 +1015,6 @@
                         }
                     }
 
-                    // --- スピードアップ判定 (指定回数ごとに元のBPMまで) ---
                     if (isSpeedUpEnabled) { 
                         currentLoopCount++;
                         const targetCount = parseInt(document.getElementById('speedUpCount').value);
@@ -1017,12 +1022,11 @@
                         if (currentLoopCount >= targetCount) {
                             const sInput = document.getElementById('speed'); 
                             const currentVal = parseFloat(sInput.value);
-                            // 元のBPM(1.0倍)を上限として、0.05ずつアップ
                             if (currentVal < 1.0) {
                                 sInput.value = Math.min(1.0, currentVal + 0.05).toFixed(2);
                                 applySettings();
                             }
-                            currentLoopCount = 0; // 回数をリセット
+                            currentLoopCount = 0;
                         }
                     }
                 }
