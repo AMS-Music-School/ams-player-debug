@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.3.9 - TEST EDITION</title>
+    <title>AMS Practice Player v1.4.0 - TEST EDITION</title>
     
     <meta name="apple-mobile-web-app-title" content="AMS Player TEST">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -493,7 +493,7 @@
     let isCountEnabled = true, isSpeedUpEnabled = false;
     let mediaRecorder, recordedChunks = [];
     let isRecording = false, isSolo = false, isRecSyncPlaying = false;
-    let recObjectURL = null, recordedAudioBuffer = null, lastRecStartPos = 0;
+    let recObjectURL = null, lastRecStartPos = 0;
 
     function changeLanguage() {
         const lang = document.getElementById('langSelect').value || 'ja';
@@ -595,8 +595,6 @@
         try {
             const arrayBuffer = await blob.arrayBuffer();
             const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-            
-            // 無音区間カット
             const data = audioBuffer.getChannelData(0);
             let skip = 0; const threshold = 0.015;
             for (let i = 0; i < data.length; i += 100) { 
@@ -606,15 +604,8 @@
                 } 
             }
             firstSoundTime = skip;
-
-            // BPM解析
             const bpm = detectBPM(audioBuffer);
-            if (bpm > 0) { 
-                originalBpm = Math.round(bpm); 
-            } else { 
-                originalBpm = 120; 
-            }
-            
+            if (bpm > 0) { originalBpm = Math.round(bpm); } else { originalBpm = 120; }
             updateBpmDisplay();
             statusEl.innerText = translations[lang].ready;
             if(wavesurfer) wavesurfer.setTime(firstSoundTime);
@@ -628,9 +619,7 @@
         const currentSpeed = parseFloat(document.getElementById('speed').value);
         const currentBpm = Math.round(originalBpm * currentSpeed);
         const bpmEl = document.getElementById('spTxt');
-        if (bpmEl) {
-            bpmEl.innerText = "BPM " + (originalBpm > 0 ? currentBpm : "---");
-        }
+        if (bpmEl) bpmEl.innerText = "BPM " + (originalBpm > 0 ? currentBpm : "---");
     }
 
     function detectBPM(buffer) {
@@ -684,17 +673,14 @@
                 mediaRecorder = new MediaRecorder(stream, { mimeType });
                 recordedChunks = [];
                 mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
-                mediaRecorder.onstop = async () => {
+                mediaRecorder.onstop = () => {
                     const blob = new Blob(recordedChunks, { type: mimeType });
                     if (recObjectURL) URL.revokeObjectURL(recObjectURL);
                     recObjectURL = URL.createObjectURL(blob);
-                    const arrayBuffer = await blob.arrayBuffer();
-                    const ctx = initAudioContext();
-                    recordedAudioBuffer = await ctx.decodeAudioData(arrayBuffer);
                     document.getElementById('rec-waveform-wrapper').style.display = 'block';
                     document.getElementById('recVolControl').style.display = 'flex';
                     document.getElementById('recControls').style.display = 'flex';
-                    await recWavesurfer.load(recObjectURL); applyVolumes(); updateRecPlayBtnUI();
+                    recWavesurfer.load(recObjectURL); 
                     stream.getTracks().forEach(track => track.stop());
                 };
                 const region = wsRegions.getRegions()[0];
@@ -706,42 +692,35 @@
         }
     }
 
-    // 【修正箇所】録音再生の完全同期ロジック
     function syncRecTime() {
-        if (!isRecSyncPlaying || !recWavesurfer || !wavesurfer) return;
-        const mainCurrent = wavesurfer.getCurrentTime();
-        const recDuration = recWavesurfer.getDuration();
-        const targetRecTime = mainCurrent - lastRecStartPos;
-
-        // 録音範囲内の場合のみ再生・シーク
-        if (targetRecTime >= 0 && targetRecTime < recDuration) {
-            // ズレが0.1秒以上あれば補正
-            if (Math.abs(recWavesurfer.getCurrentTime() - targetRecTime) > 0.1) {
-                recWavesurfer.setTime(targetRecTime);
+        if (!isRecSyncPlaying || !recWavesurfer) return;
+        const mainTime = wavesurfer.getCurrentTime();
+        const relativeTime = mainTime - lastRecStartPos;
+        const duration = recWavesurfer.getDuration();
+        
+        if (relativeTime >= 0 && relativeTime < duration) {
+            // ズレが0.1秒以上あれば同期
+            if (Math.abs(recWavesurfer.getCurrentTime() - relativeTime) > 0.1) {
+                recWavesurfer.setTime(relativeTime);
             }
-            if (!recWavesurfer.isPlaying() && wavesurfer.isPlaying()) {
-                recWavesurfer.play();
-            }
+            if (!recWavesurfer.isPlaying() && wavesurfer.isPlaying()) recWavesurfer.play();
         } else {
-            // 範囲外なら停止
             if (recWavesurfer.isPlaying()) recWavesurfer.pause();
         }
     }
 
     function playRecording() {
-        if (!recWavesurfer || !recWavesurfer.getDuration()) return;
+        if (!recWavesurfer) return;
         initAudioContext();
-        if (isRecSyncPlaying) { 
+        if (isRecSyncPlaying) {
             isRecSyncPlaying = false;
-            recWavesurfer.pause(); 
-            wavesurfer.pause(); 
-        } 
-        else { 
+            wavesurfer.pause();
+            recWavesurfer.pause();
+        } else {
             isRecSyncPlaying = true;
-            wavesurfer.setTime(lastRecStartPos); 
-            recWavesurfer.setTime(0); 
-            wavesurfer.play(); 
-            // 録音側はsyncRecTimeが自動で開始させる
+            // メインの再生に合わせてsyncRecTimeが制御するため、ここでは再生位置セットと開始のみ
+            if (wavesurfer.getCurrentTime() < lastRecStartPos) wavesurfer.setTime(lastRecStartPos);
+            wavesurfer.play();
         }
         updateRecPlayBtnUI();
     }
@@ -752,7 +731,7 @@
             document.getElementById('rec-waveform-wrapper').style.display = 'none';
             document.getElementById('recControls').style.display = 'none';
             if (recObjectURL) URL.revokeObjectURL(recObjectURL);
-            recObjectURL = null; recordedAudioBuffer = null; recWavesurfer.empty();
+            recObjectURL = null; recWavesurfer.empty();
             updateRecPlayBtnUI();
         }
     }
@@ -911,10 +890,7 @@
                 if (currentObjectURL) URL.revokeObjectURL(currentObjectURL);
                 currentObjectURL = URL.createObjectURL(blob); 
                 wavesurfer.load(currentObjectURL);
-                wavesurfer.once('decode', () => {
-                    analyzeAudio(blob);
-                    renderLoopList('file');
-                });
+                wavesurfer.once('decode', () => { analyzeAudio(blob); renderLoopList('file'); });
             } 
         };
 
@@ -923,37 +899,17 @@
             const media = wavesurfer.getMediaElement();
             if (media) {
                 media.preservesPitch = true;
-                if (media.detune !== undefined) { 
-                    media.detune = p * 100; 
-                    wavesurfer.setPlaybackRate(s); 
-                } else { 
-                    if (p !== 0) { 
-                        media.preservesPitch = false; 
-                        wavesurfer.setPlaybackRate(s * Math.pow(2, p / 12)); 
-                    } else wavesurfer.setPlaybackRate(s); 
-                }
+                if (media.detune !== undefined) { media.detune = p * 100; wavesurfer.setPlaybackRate(s); } 
+                else { if (p !== 0) { media.preservesPitch = false; wavesurfer.setPlaybackRate(s * Math.pow(2, p / 12)); } else wavesurfer.setPlaybackRate(s); }
             }
-            // 録音側の速度もメインに合わせる
             if (recWavesurfer) recWavesurfer.setPlaybackRate(s);
             updateBpmDisplay(); 
             document.getElementById('pitchTxt').innerText = (p > 0 ? "+" : "") + p; 
             applyVolumes();
         };
 
-        wavesurfer.on('ready', () => { 
-            document.getElementById('totalTime').innerText = fmt(wavesurfer.getDuration()); 
-            applySettings(); 
-        });
+        wavesurfer.on('ready', () => { document.getElementById('totalTime').innerText = fmt(wavesurfer.getDuration()); applySettings(); });
 
-        // 録音再生終了時の処理
-        recWavesurfer.on('finish', () => { 
-            if (isRecSyncPlaying) {
-                isRecSyncPlaying = false;
-                wavesurfer.pause();
-                updateRecPlayBtnUI();
-            }
-        });
-        
         document.getElementById('speed').oninput = applySettings;
         document.getElementById('pitch').onmousedown = document.getElementById('pitch').ontouchstart = (e) => {
             if (!isSubscribed) { e.preventDefault(); document.getElementById('subscription-overlay').style.display = 'flex'; }
@@ -972,21 +928,22 @@
 
         wavesurfer.on('play', () => {
             document.getElementById('playIcon').innerText = 'pause';
-            updateRecPlayBtnUI();
+            if (isRecSyncPlaying && recWavesurfer) syncRecTime();
         });
         wavesurfer.on('pause', () => { 
-            document.getElementById('playIcon').innerText = 'play_arrow';
+            document.getElementById('playIcon').innerText = 'play_arrow'; 
             if (recWavesurfer.isPlaying()) recWavesurfer.pause();
-            if (isRecSyncPlaying) {
-                isRecSyncPlaying = false;
-                updateRecPlayBtnUI();
-            }
         });
         
+        // 【修正】シーク（波形クリック）時の同期を即座に反映
+        wavesurfer.on('interaction', () => {
+            if (isRecSyncPlaying && recWavesurfer) syncRecTime();
+        });
+
         wavesurfer.on('timeupdate', t => {
             document.getElementById('currentTime').innerText = fmt(t);
             
-            // 録音同期中なら追従
+            // 録音同期ロジック
             if (isRecSyncPlaying) syncRecTime();
 
             const r = wsRegions.getRegions()[0];
