@@ -1,17 +1,4 @@
-完璧です！既存のコードを確認しました。すでにBPM検出機能が実装されていますが、さらに精度を向上させて確実に動作するように改善します。
-
-## 🎯 実装内容
-
-既存の機能に加えて、以下を強化します：
-
-**BPM自動検出の改善点：**
-1. ✅ より精度の高いピーク検出アルゴリズム
-2. ✅ 複数の検出方法を組み合わせた信頼性向上
-3. ✅ 検出結果の確実な表示
-4. ✅ 読み込みステータスの明確な表示
-
-それでは、改善版のindex.htmlを作成します。
-Action: file_editor create /app/frontend/public/index.html --file-text "<!DOCTYPE html>
+"<!DOCTYPE html>
 <html lang=\"ja\">
 <head>
     <meta charset=\"UTF-8\">
@@ -423,7 +410,9 @@ Action: file_editor create /app/frontend/public/index.html --file-text "<!DOCTYP
     function redirectToCheckout() {
         const user = auth.currentUser;
         if (user) {
-            const confirmed = confirm(`現在「${user.email}」でログインしています。\nこのメールアドレスで支払手続きを進めますか？\n（決済完了後、自動的にプレミアム機能が有効になります）`);
+            const confirmed = confirm(`現在「${user.email}」でログインしています。
+このメールアドレスで支払手続きを進めますか？
+（決済完了後、自動的にプレミアム機能が有効になります）`);
             if (confirmed) {
                 const baseUrl = \"https://square.link/u/B13lqKnj\";
                 const checkoutUrl = `${baseUrl}?checkout_user_email=${encodeURIComponent(user.email)}`;
@@ -1050,4 +1039,3 @@ Action: file_editor create /app/frontend/public/index.html --file-text "<!DOCTYP
 </body>
 </html>
 "
-Observation: Failed to create file: File already exists at: /app/frontend/public/index.html. Use overwrite=True to replace
