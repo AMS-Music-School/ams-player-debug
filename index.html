@@ -490,7 +490,7 @@
 
     let wavesurfer, wsRegions, recWavesurfer, ytPlayer, loopInterval;
     let loopStart = 0, loopEnd = 0, isLooping = false, currentMode = 'file';
-    let audioCtx, firstSoundTime = 0, originalBpm = 120;
+    let audioCtx, firstSoundTime = 0, originalBpm = 0;
     let currentObjectURL = null, currentFileName = "", currentYTId = "";
     let isCountEnabled = true, isSpeedUpEnabled = false;
     let mediaRecorder, recordedChunks = [];
@@ -607,9 +607,10 @@
         } catch (e) { statusEl.innerText = translations[lang].ready; } finally { tempCtx.close(); }
     }
 
+    // --- ③ 初期表示のままだとBPMが出ない問題を修正 ---
     function updateBpmDisplay() {
         const currentSpeed = parseFloat(document.getElementById('speed').value);
-        const currentBpm = Math.round(originalBpm * currentSpeed);
+        const currentBpm = originalBpm ? Math.round(originalBpm * currentSpeed) : '---';
         document.getElementById('spTxt').innerText = "BPM " + currentBpm;
     }
 
@@ -847,32 +848,21 @@
         document.getElementById('mainVolume').oninput = applyVolumes;
         document.getElementById('recVolume').oninput = applyVolumes;
 
-        // --- 修正箇所: BPM解析を確実に実行するロジック ---
+        // --- ① ファイル読み込み時に解析を実行 ---
         document.getElementById('audioFile').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            initAudioContext();
             currentFileName = file.name;
-            document.getElementById('fileSelectBtn').innerText = currentFileName;
 
             if (currentObjectURL) URL.revokeObjectURL(currentObjectURL);
             currentObjectURL = URL.createObjectURL(file);
 
             await wavesurfer.load(currentObjectURL);
 
-            // BPM解析を実行
+            // ★ これが抜けてる
             analyzeAudio(file);
-            
-            renderLoopList('file');
-            
-            // 描画バグ対策
-            setTimeout(() => {
-                wavesurfer.drawBuffer();
-                wavesurfer.zoom(Number(document.getElementById('zoomSlider').value));
-            }, 100);
         });
-        // ----------------------------------------------
 
         const applySettings = () => {
             const s = parseFloat(document.getElementById('speed').value), p = parseInt(document.getElementById('pitch').value);
@@ -891,6 +881,7 @@
             document.getElementById('totalTime').innerText = fmt(wavesurfer.getDuration()); 
             applySettings(); 
             wavesurfer.drawBuffer();
+            renderLoopList('file');
         });
 
         recWavesurfer.on('interaction', (newTime) => {
@@ -901,7 +892,15 @@
 
         recWavesurfer.on('finish', () => { wavesurfer.pause(); updateRecPlayBtnUI(); });
         
-        document.getElementById('speed').oninput = applySettings;
+        // --- ② speed変更時にBPM表示を更新 ---
+        document.getElementById('speed').addEventListener('input', () => {
+            if (wavesurfer) {
+                const speed = parseFloat(document.getElementById('speed').value);
+                wavesurfer.setPlaybackRate(speed);
+            }
+            updateBpmDisplay(); // ★ これがないとBPM変わらない
+        });
+
         document.getElementById('pitch').onmousedown = document.getElementById('pitch').ontouchstart = (e) => {
             if (!isSubscribed) { e.preventDefault(); document.getElementById('subscription-overlay').style.display = 'flex'; }
         };
@@ -940,6 +939,8 @@
         window.resetSetting = (id, val) => { document.getElementById(id).value = val; applySettings(); };
         changeLanguage(); 
         renderYTHistory();
+        // 初期描画のBPMをセット
+        updateBpmDisplay();
     }
     window.addEventListener('DOMContentLoaded', startApp);
 </script>
