@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.3.8 - Subscription Edition</title>
+    <title>AMS Practice Player v1.3.8 - TEST EDITION</title>
     
-    <meta name="apple-mobile-web-app-title" content="AMS Player">
+    <meta name="apple-mobile-web-app-title" content="AMS Player TEST">
     <meta name="apple-mobile-web-app-capable" content="yes">
     
     <link rel="icon" href="icon.png?v=1.2.1" type="image/png">
@@ -137,8 +137,8 @@
 
 <div id="auth-overlay">
     <div class="login-card">
-        <div class="header-logo" style="font-size: 1.5rem; margin-bottom: 10px;">AMS PLAYER</div>
-        <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom:20px;">アカウントにログインしてください</p>
+        <div class="header-logo" style="font-size: 1.5rem; margin-bottom: 10px;">AMS PLAYER TEST</div>
+        <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom:20px;">テスト用アカウントでログイン</p>
         <button class="google-btn" onclick="loginWithGoogle()">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="G">
             Googleでログイン
@@ -155,7 +155,7 @@
 
 <div id="subscription-overlay">
     <div class="login-card">
-        <div class="header-logo" style="font-size: 1.5rem; margin-bottom: 10px;">PREMIUM PLAN</div>
+        <div class="header-logo" style="font-size: 1.5rem; margin-bottom: 10px;">PREMIUM PLAN (TEST)</div>
         <p style="font-size: 0.9rem; color: var(--text-main);">この機能を利用するには<br>サブスクリプションへの登録が必要です。</p>
         <button class="subscribe-btn" onclick="redirectToCheckout()">
             サブスクリプションを開始する
@@ -166,7 +166,7 @@
 </div>
 
 <header>
-    <div class="header-logo">AMS PLAYER</div>
+    <div class="header-logo">AMS PLAYER <span style="font-size: 10px; color: red;">DEBUG</span></div>
     <div style="display: flex; align-items: center; gap: 10px;">
         <div id="auth-section">
             <button id="headerLoginBtn" class="header-login-btn" onclick="openAuthOverlay()">LOGIN</button>
@@ -329,16 +329,18 @@
 </div>
 
 <script>
-    // --- Firebase Configuration ---
+    // --- 【重要】ここにテスト用プロジェクトのConfigを貼り付けてください ---
     const firebaseConfig = {
-        apiKey: "AIzaSyDI4ReBg15LAaQbd-4slccBHOS9R69sLNU",
-        authDomain: "ams-player-e04bf.firebaseapp.com",
-        projectId: "ams-player-e04bf",
-        storageBucket: "ams-player-e04bf.firebasestorage.app",
-        messagingSenderId: "102274983236",
-        appId: "1:102274983236:web:f4334348391dde42dd6311",
-        measurementId: "G-GYHLQKN6SS"
+        apiKey: "YOUR_TEST_API_KEY",
+        authDomain: "ams-player-test.firebaseapp.com",
+        projectId: "ams-player-test",
+        storageBucket: "ams-player-test.appspot.com",
+        messagingSenderId: "YOUR_ID",
+        appId: "YOUR_APP_ID",
+        measurementId: "YOUR_G_ID"
     };
+    // ------------------------------------------------------------------
+
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
@@ -857,7 +859,7 @@
                     await wavesurfer.load(currentObjectURL); 
                     analyzeAudio(blob); 
                     renderLoopList('file');
-                    // 初回ロード時の波形描画バグ対策: 確実に描画を走らせる
+                    // 初回描画バグ対策
                     setTimeout(() => {
                         wavesurfer.drawBuffer();
                         wavesurfer.zoom(Number(document.getElementById('zoomSlider').value));
@@ -883,7 +885,6 @@
         wavesurfer.on('ready', () => { 
             document.getElementById('totalTime').innerText = fmt(wavesurfer.getDuration()); 
             applySettings(); 
-            // 描画を強制
             wavesurfer.drawBuffer();
         });
 
