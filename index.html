@@ -329,7 +329,7 @@
 </div>
 
 <script>
-    // --- 【重要】ここにテスト用プロジェクトのConfigを貼り付けてください ---
+    // --- 【Firebase 設定】 ---
     const firebaseConfig = {
         apiKey: "AIzaSyAHaRRponFdRJZMxWwV5kEiBMBrmKswtW0",
         authDomain: "ams-player-test.firebaseapp.com",
@@ -339,7 +339,7 @@
         appId: "1:371056740344:web:f440083382c8d97900780d",
         measurementId: "G-V3VWGESN1Y"
     };
-    // ------------------------------------------------------------------
+    // ----------------------
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -614,18 +614,41 @@
     }
 
     function detectBPM(buffer) {
-        const data = buffer.getChannelData(0), sampleRate = buffer.sampleRate, step = 200, energy = [];
+        const data = buffer.getChannelData(0);
+        const sampleRate = buffer.sampleRate;
+        const step = 200; 
+        const energy = [];
+        
         for (let i = 0; i < data.length; i += step) {
-            let sum = 0; for(let j=0; j<step && (i+j)<data.length; j++) sum += data[i+j] * data[i+j];
-            energy.push(Math.sqrt(sum/step));
+            let sum = 0;
+            const end = Math.min(i + step, data.length);
+            for (let j = i; j < end; j++) sum += data[j] * data[j];
+            energy.push(Math.sqrt(sum / (end - i)));
         }
-        let bestBpm = 0, maxCorrelation = 0;
-        const minInterval = Math.floor((60 / 200) * (sampleRate / step)), maxInterval = Math.floor((60 / 60) * (sampleRate / step));
-        for (let interval = minInterval; interval <= maxInterval; interval++) {
-            let correlation = 0; for (let i = 0; i < Math.min(energy.length - interval, 10000); i++) correlation += energy[i] * energy[i + interval];
-            if (correlation > maxCorrelation) { maxCorrelation = correlation; bestBpm = 60 / (interval * step / sampleRate); }
+
+        let bestBpm = 0;
+        let maxCorrelation = -1;
+        
+        for (let bpm = 60; bpm <= 200; bpm++) {
+            const interval = Math.round((60 / bpm) * (sampleRate / step));
+            if (interval <= 0 || interval >= energy.length) continue;
+            
+            let correlation = 0;
+            let count = 0;
+            const scanLimit = Math.min(energy.length - interval, 10000);
+            for (let i = 0; i < scanLimit; i++) {
+                correlation += energy[i] * energy[i + interval];
+                count++;
+            }
+            if (count > 0) {
+                correlation /= count;
+                if (correlation > maxCorrelation) {
+                    maxCorrelation = correlation;
+                    bestBpm = bpm;
+                }
+            }
         }
-        return (bestBpm < 50 || bestBpm > 250) ? 0 : bestBpm;
+        return bestBpm;
     }
 
     function playBeep(isLast) {
@@ -859,7 +882,6 @@
                     await wavesurfer.load(currentObjectURL); 
                     analyzeAudio(blob); 
                     renderLoopList('file');
-                    // 初回描画バグ対策
                     setTimeout(() => {
                         wavesurfer.drawBuffer();
                         wavesurfer.zoom(Number(document.getElementById('zoomSlider').value));
