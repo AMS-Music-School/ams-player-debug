@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.4.2 - STABLE SYNC</title>
+    <title>AMS Practice Player v1.4.3 - SPEED COUNTER</title>
     
     <meta name="apple-mobile-web-app-title" content="AMS Player">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -131,6 +131,7 @@
         .loop-list-container { margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 10px; display: flex; flex-wrap: wrap; gap: 10px; }
         .adj-btn { background: #333; border: none; color: #fff; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
         .loop-btn-main { background: var(--panel-bg); color: var(--text-main); border: 1px solid var(--primary-color); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
+        .speedup-select { background: #333; color: var(--text-main); border: 1px solid var(--border-color); border-radius: 20px; padding: 5px 10px; font-size: 0.75rem; outline: none; }
     </style>
 </head>
 <body>
@@ -237,9 +238,15 @@
             </div>
         </div>
 
-        <div class="clear-btn-container" style="display:flex; justify-content:center; gap:10px; margin-bottom:10px;">
+        <div class="clear-btn-container" style="display:flex; justify-content:center; gap:10px; margin-bottom:10px; align-items:center;">
             <button class="clear-btn-ja" onclick="wsRegions.clearRegions()" id="clearRangeBtn"><span class="material-icons" style="font-size:16px;">layers_clear</span> 範囲解除</button>
             <button class="clear-btn-ja" onclick="saveLoop('file')" id="saveLoopBtn" style="border: 1px solid var(--primary-color);"><span class="material-icons" style="font-size:16px;">bookmark_add</span> ループ保存</button>
+            <select id="speedUpCount" class="speedup-select">
+                <option value="1">x1</option><option value="2">x2</option><option value="3">x3</option>
+                <option value="4">x4</option><option value="5">x5</option><option value="6">x6</option>
+                <option value="7">x7</option><option value="8">x8</option><option value="9">x9</option>
+                <option value="10">x10</option>
+            </select>
         </div>
         <div id="loopListFile" class="loop-list-container"></div>
         
@@ -494,6 +501,7 @@
     let mediaRecorder, recordedChunks = [];
     let isRecording = false, isSolo = false;
     let recObjectURL = null, recordedAudioBuffer = null, lastRecStartPos = 0;
+    let currentLoopCount = 0; // 追加：ループ回数カウント用
 
     function changeLanguage() {
         const lang = document.getElementById('langSelect').value || 'ja';
@@ -559,7 +567,7 @@
         const mVol = parseFloat(document.getElementById('mainVolume').value);
         const rVol = parseFloat(document.getElementById('recVolume').value);
         if (isSolo) wavesurfer.setMuted(true); else { wavesurfer.setMuted(false); wavesurfer.setVolume(mVol); }
-        if (recWavesurfer && recObjectURL) recWavesurfer.setVolume(rVol); // recObjectURLがある場合のみ
+        if (recWavesurfer && recObjectURL) recWavesurfer.setVolume(rVol); 
         document.getElementById('mainVolTxt').innerText = Math.round(mVol * 100) + "%";
         document.getElementById('recVolTxt').innerText = Math.round(rVol * 100) + "%";
     }
@@ -573,6 +581,7 @@
             if (!isSubscribed) { document.getElementById('subscription-overlay').style.display = 'flex'; return; }
             isSpeedUpEnabled = !isSpeedUpEnabled; 
             document.getElementById('speedUpToggleBtn').classList.toggle('active', isSpeedUpEnabled); 
+            currentLoopCount = 0; // スピードアップONにした時にカウンタをリセット
         }
     }
 
@@ -730,27 +739,13 @@
 
     function deleteRecording() {
         if (confirm("削除しますか？")) {
-            // UIを隠す
             document.getElementById('rec-waveform-wrapper').style.display = 'none';
             document.getElementById('recControls').style.display = 'none';
             document.getElementById('recVolControl').style.display = 'none';
-            
-            // 録音側の再生を完全停止
-            if (recWavesurfer) {
-                recWavesurfer.pause();
-                recWavesurfer.empty();
-            }
-
-            // オブジェクトURLとバッファを破棄
-            if (recObjectURL) {
-                URL.revokeObjectURL(recObjectURL);
-                recObjectURL = null;
-            }
+            if (recWavesurfer) { recWavesurfer.pause(); recWavesurfer.empty(); }
+            if (recObjectURL) { URL.revokeObjectURL(recObjectURL); recObjectURL = null; }
             recordedAudioBuffer = null;
-            
-            // メイン側のミュート設定（ソロモード）をリセット
-            isSolo = false;
-            document.getElementById('soloBtn').classList.remove('active');
+            isSolo = false; document.getElementById('soloBtn').classList.remove('active');
             applyVolumes();
         }
     }
@@ -893,7 +888,7 @@
         wsRegions = wavesurfer.registerPlugin(WaveSurfer.Regions.create());
         wsRegions.enableDragSelection({ color: 'rgba(212, 163, 115, 0.2)' });
         
-        wsRegions.on('region-created', r => { if(wsRegions.getRegions().length > 1) wsRegions.getRegions()[0].remove(); wavesurfer.setTime(r.start); });
+        wsRegions.on('region-created', r => { if(wsRegions.getRegions().length > 1) wsRegions.getRegions()[0].remove(); wavesurfer.setTime(r.start); currentLoopCount = 0; });
         
         document.getElementById('zoomSlider').oninput = (e) => wavesurfer.zoom(Number(e.target.value));
         document.getElementById('resetZoomBtn').onclick = () => { wavesurfer.zoom(0); document.getElementById('zoomSlider').value = 100; };
@@ -946,8 +941,6 @@
             }
         };
 
-        // --- 同期ロジック (録音データがない場合の安全策を強化) ---
-        
         wavesurfer.on('play', () => {
             document.getElementById('playIcon').innerText = 'pause';
             if (recObjectURL && recWavesurfer) {
@@ -975,6 +968,7 @@
                 }
                 if (wavesurfer.isPlaying()) recWavesurfer.play();
             }
+            currentLoopCount = 0; // 手動で位置を変えたら回数リセット
         });
 
         recWavesurfer.on('interaction', () => {
@@ -990,7 +984,6 @@
         wavesurfer.on('timeupdate', t => {
             document.getElementById('currentTime').innerText = fmt(t);
             
-            // 再生中のズレチェック（録音データがある時だけ動作）
             if (wavesurfer.isPlaying() && recObjectURL && recWavesurfer && recWavesurfer.isPlaying()) {
                 const expectedRecTime = t - lastRecStartPos;
                 const actualRecTime = recWavesurfer.getCurrentTime();
@@ -1009,17 +1002,28 @@
                     toggleRecording(); 
                 } else {
                     wavesurfer.setTime(r.start); 
-                    // ループ時は録音側も位置を合わせる（データがある時のみ）
                     if (recObjectURL && recWavesurfer) {
                         const loopOffset = r.start - lastRecStartPos;
                         if (loopOffset >= 0 && loopOffset < recWavesurfer.getDuration()) {
                             recWavesurfer.setTime(loopOffset);
                         }
                     }
+
+                    // --- スピードアップ判定 (指定回数ごとに元のBPMまで) ---
                     if (isSpeedUpEnabled) { 
-                        const s = document.getElementById('speed'); 
-                        s.value = Math.min(1.5, parseFloat(s.value) + 0.05).toFixed(2); 
-                        applySettings(); 
+                        currentLoopCount++;
+                        const targetCount = parseInt(document.getElementById('speedUpCount').value);
+                        
+                        if (currentLoopCount >= targetCount) {
+                            const sInput = document.getElementById('speed'); 
+                            const currentVal = parseFloat(sInput.value);
+                            // 元のBPM(1.0倍)を上限として、0.05ずつアップ
+                            if (currentVal < 1.0) {
+                                sInput.value = Math.min(1.0, currentVal + 0.05).toFixed(2);
+                                applySettings();
+                            }
+                            currentLoopCount = 0; // 回数をリセット
+                        }
                     }
                 }
             }
