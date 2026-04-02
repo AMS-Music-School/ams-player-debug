@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.3.8 - TEST EDITION</title>
+    <title>AMS Practice Player v1.3.9 - TEST EDITION</title>
     
     <meta name="apple-mobile-web-app-title" content="AMS Player TEST">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -706,11 +706,32 @@
         }
     }
 
+    // 【同期修正箇所】再生位置を元音源に完全に同期させる
     function playRecording() {
         if (!recWavesurfer || !recWavesurfer.getDuration()) return;
         initAudioContext();
-        if (recWavesurfer.isPlaying()) { recWavesurfer.pause(); wavesurfer.pause(); } 
-        else { wavesurfer.setTime(lastRecStartPos); recWavesurfer.setTime(0); wavesurfer.play(); recWavesurfer.play(); }
+        if (recWavesurfer.isPlaying()) { 
+            recWavesurfer.pause(); 
+            wavesurfer.pause(); 
+        } 
+        else { 
+            // 現在のwavesurfer位置と録音開始位置の差分を計算
+            const currentTime = wavesurfer.getCurrentTime();
+            const offset = currentTime - lastRecStartPos;
+            
+            // 録音データの範囲内であれば同期して再生開始
+            if (offset >= 0 && offset < recWavesurfer.getDuration()) {
+                recWavesurfer.setTime(offset);
+                wavesurfer.play(); 
+                recWavesurfer.play();
+            } else {
+                // 範囲外（録音より前の位置など）なら先頭から
+                wavesurfer.setTime(lastRecStartPos);
+                recWavesurfer.setTime(0);
+                wavesurfer.play();
+                recWavesurfer.play();
+            }
+        }
         updateRecPlayBtnUI();
     }
 
@@ -867,11 +888,10 @@
         document.getElementById('mainVolume').oninput = applyVolumes;
         document.getElementById('recVolume').oninput = applyVolumes;
 
-        // 【修正箇所】ファイル選択時の処理フローを改善
         document.getElementById('audioFile').onchange = async e => { 
             const file = e.target.files[0];
             if(file) { 
-                initAudioContext(); // コンテキスト初期化
+                initAudioContext();
                 currentFileName = file.name; 
                 document.getElementById('fileSelectBtn').innerText = currentFileName;
                 
@@ -879,10 +899,8 @@
                 if (currentObjectURL) URL.revokeObjectURL(currentObjectURL);
                 currentObjectURL = URL.createObjectURL(blob); 
                 
-                // 読み込み開始
                 wavesurfer.load(currentObjectURL);
                 
-                // 【重要】decode完了イベントで解析を実行
                 wavesurfer.once('decode', () => {
                     analyzeAudio(blob);
                     renderLoopList('file');
@@ -915,7 +933,11 @@
             applySettings(); 
         });
 
-        recWavesurfer.on('finish', () => { wavesurfer.pause(); updateRecPlayBtnUI(); });
+        // 録音再生終了時
+        recWavesurfer.on('finish', () => { 
+            wavesurfer.pause(); 
+            updateRecPlayBtnUI(); 
+        });
         
         document.getElementById('speed').oninput = applySettings;
         document.getElementById('pitch').onmousedown = document.getElementById('pitch').ontouchstart = (e) => {
@@ -936,13 +958,26 @@
         wavesurfer.on('play', () => document.getElementById('playIcon').innerText = 'pause');
         wavesurfer.on('pause', () => { document.getElementById('playIcon').innerText = 'play_arrow'; });
         
+        // 【ループ・停止制御の修正箇所】
         wavesurfer.on('timeupdate', t => {
             document.getElementById('currentTime').innerText = fmt(t);
+            
+            // 録音再生中の同期維持（再生ボタン時も適用）
+            if (recWavesurfer && recWavesurfer.isPlaying()) {
+                const offset = t - lastRecStartPos;
+                // 大きくズレた場合のみ補正（負荷軽減）
+                if (Math.abs(recWavesurfer.getCurrentTime() - offset) > 0.1) {
+                    recWavesurfer.setTime(offset);
+                }
+            }
+
             const r = wsRegions.getRegions()[0];
             if(r && t >= r.end) { 
                 if (isRecording) {
+                    // 【修正】録音中は範囲末尾で停止（ループしない）
                     toggleRecording(); 
                 } else {
+                    // 通常再生時はループ
                     wavesurfer.setTime(r.start); 
                     if (isSpeedUpEnabled) { 
                         const s = document.getElementById('speed'); 
