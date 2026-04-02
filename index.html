@@ -340,7 +340,7 @@
 </div>
 
 <script>
-    // Firebase Configuration
+    // Firebase Configuration - テスト用プロジェクト
     const firebaseConfig = {
         apiKey: \"AIzaSyAHaRRponFdRJZMxWwV5kEiBMBrmKswtW0\",
         authDomain: \"ams-player-test.firebaseapp.com\",
@@ -357,15 +357,25 @@
 
     let isSubscribed = false;
 
-    function openAuthOverlay() { document.getElementById('auth-overlay').style.display = 'flex'; }
-    function closeAuthOverlay() { document.getElementById('auth-overlay').style.display = 'none'; }
-    function closeSubOverlay() { document.getElementById('subscription-overlay').style.display = 'none'; }
+    function openAuthOverlay() {
+        document.getElementById('auth-overlay').style.display = 'flex';
+    }
+
+    function closeAuthOverlay() {
+        document.getElementById('auth-overlay').style.display = 'none';
+    }
+    
+    function closeSubOverlay() {
+        document.getElementById('subscription-overlay').style.display = 'none';
+    }
 
     function loginWithGoogle() {
         initAudioContext(); 
         const provider = new firebase.auth.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
-        auth.signInWithPopup(provider).then(() => closeAuthOverlay()).catch(e => alert(\"ログインエラー: \" + e.message));
+        auth.signInWithPopup(provider).then(() => {
+            closeAuthOverlay();
+        }).catch(e => alert(\"ログインエラー: \" + e.message));
     }
 
     function loginWithEmail() {
@@ -375,7 +385,9 @@
         
         initAudioContext();
         auth.signInWithEmailAndPassword(email, password)
-            .then(() => closeAuthOverlay())
+            .then(() => {
+                closeAuthOverlay();
+            })
             .catch((error) => {
                 if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
                     if(confirm(\"アカウントが見つかりません。この内容で新しく登録しますか？\")) {
@@ -383,11 +395,17 @@
                             .then(() => closeAuthOverlay())
                             .catch(e => alert(\"登録エラー: \" + e.message));
                     }
-                } else { alert(\"ログインエラー: \" + error.message); }
+                } else {
+                    alert(\"ログインエラー: \" + error.message);
+                }
             });
     }
 
-    function logout() { auth.signOut().then(() => location.reload()); }
+    function logout() {
+        auth.signOut().then(() => {
+            location.reload();
+        });
+    }
 
     function redirectToCheckout() {
         const user = auth.currentUser;
@@ -397,7 +415,8 @@
 （決済完了後、自動的にプレミアム機能が有効になります）`);
             if (confirmed) {
                 const baseUrl = \"https://square.link/u/B13lqKnj\";
-                window.location.href = `${baseUrl}?checkout_user_email=${encodeURIComponent(user.email)}`;
+                const checkoutUrl = `${baseUrl}?checkout_user_email=${encodeURIComponent(user.email)}`;
+                window.location.href = checkoutUrl;
             }
         } else {
             alert(\"先にログインしてください。\");
@@ -447,7 +466,9 @@
             userInfo.style.display = 'flex';
             userNameSpan.innerText = user.displayName || user.email.split('@')[0];
             isSubscribed = await checkSubscriptionStatus(user);
-            if (isSubscribed) subOverlay.style.display = 'none';
+            if (isSubscribed) {
+                subOverlay.style.display = 'none';
+            }
             if (currentMode === 'file') renderLoopList('file');
             else renderLoopList('yt');
         } else {
@@ -648,7 +669,7 @@
         
         // エネルギーの変化からピークを検出
         const peaks = [];
-        const threshold = Math.max(...energyValues) * 0.6;
+        const threshold = Math.max(...energyValues) * 0.6; // 適応的閾値
         
         for (let i = 1; i < energyValues.length - 1; i++) {
             if (energyValues[i] > energyValues[i-1] && 
@@ -666,7 +687,7 @@
             intervals.push(peaks[i] - peaks[i-1]);
         }
         
-        // 最も一般的な間隔を見つける
+        // 最も一般的な間隔を見つける（オートコレレーション風）
         const minBPM = 60, maxBPM = 200;
         const minInterval = Math.floor((60 / maxBPM) / 0.01);
         const maxInterval = Math.floor((60 / minBPM) / 0.01);
@@ -677,6 +698,7 @@
         for (let testInterval = minInterval; testInterval <= maxInterval; testInterval++) {
             let score = 0;
             for (let interval of intervals) {
+                // 許容範囲内のマッチをカウント
                 const ratio = interval / testInterval;
                 if (Math.abs(ratio - Math.round(ratio)) < 0.1) {
                     score += 1;
@@ -846,7 +868,6 @@
     }
 
     const fmt = (s) => `${Math.floor(s/60).toString().padStart(2,'0')}:${Math.floor(s%60).toString().padStart(2,'0')}`;
-    
     window.setLoopPoint = (t) => {
         const now = ytPlayer.getCurrentTime();
         if (t === 'start') { loopStart = Math.floor(now); document.getElementById('loopStartTxt').innerText = fmt(loopStart); }
@@ -925,8 +946,7 @@
             const file = e.target.files[0];
             if(file) { 
                 initAudioContext();
-                currentFileName = file.name; 
-                document.getElementById('fileSelectBtn').innerText = currentFileName;
+                currentFileName = file.name; document.getElementById('fileSelectBtn').innerText = currentFileName;
                 const reader = new FileReader();
                 reader.onload = async (event) => {
                     const blob = new Blob([event.target.result], { type: file.type });
@@ -937,6 +957,7 @@
                     analyzeAudio(blob); 
                     
                     renderLoopList('file');
+                    // 初回描画バグ対策
                     setTimeout(() => {
                         wavesurfer.drawBuffer();
                         wavesurfer.zoom(Number(document.getElementById('zoomSlider').value));
