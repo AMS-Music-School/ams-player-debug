@@ -329,6 +329,7 @@
 </div>
 
 <script>
+    // --- 【重要】ここにテスト用プロジェクトのConfigを貼り付けてください ---
     const firebaseConfig = {
         apiKey: "AIzaSyAHaRRponFdRJZMxWwV5kEiBMBrmKswtW0",
         authDomain: "ams-player-test.firebaseapp.com",
@@ -338,6 +339,7 @@
         appId: "1:371056740344:web:f440083382c8d97900780d",
         measurementId: "G-V3VWGESN1Y"
     };
+    // ------------------------------------------------------------------
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -598,27 +600,11 @@
             let skip = 0; const threshold = 0.015;
             for (let i = 0; i < data.length; i += 100) { if (Math.abs(data[i]) > threshold) { skip = i / audioBuffer.sampleRate; break; } }
             firstSoundTime = skip;
-            
-            // BPM解析実行
             const bpm = detectBPM(audioBuffer);
-            if (bpm > 0) { 
-                originalBpm = Math.round(bpm); 
-            } else {
-                originalBpm = 120; // 失敗時はデフォルト
-            }
-            
+            if (bpm > 0) { originalBpm = Math.round(bpm); updateBpmDisplay(); }
             statusEl.innerText = translations[lang].ready;
             if(wavesurfer) wavesurfer.setTime(firstSoundTime);
-            
-            // 解析完了後にUIを更新
-            updateBpmDisplay();
-            if (typeof applySettings === "function") applySettings();
-            
-        } catch (e) { 
-            statusEl.innerText = translations[lang].ready; 
-        } finally { 
-            tempCtx.close(); 
-        }
+        } catch (e) { statusEl.innerText = translations[lang].ready; } finally { tempCtx.close(); }
     }
 
     function updateBpmDisplay() {
@@ -629,22 +615,17 @@
 
     function detectBPM(buffer) {
         const data = buffer.getChannelData(0), sampleRate = buffer.sampleRate, step = 200, energy = [];
-        // 短時間エネルギーの計算
         for (let i = 0; i < data.length; i += step) {
             let sum = 0; for(let j=0; j<step && (i+j)<data.length; j++) sum += data[i+j] * data[i+j];
             energy.push(Math.sqrt(sum/step));
         }
         let bestBpm = 0, maxCorrelation = 0;
-        // 60BPM〜200BPMの範囲を探索
-        const minInterval = Math.floor((60 / 220) * (sampleRate / step)), maxInterval = Math.floor((60 / 50) * (sampleRate / step));
+        const minInterval = Math.floor((60 / 200) * (sampleRate / step)), maxInterval = Math.floor((60 / 60) * (sampleRate / step));
         for (let interval = minInterval; interval <= maxInterval; interval++) {
-            let correlation = 0; 
-            // 処理を軽くするため先頭から一定区間のみで自己相関
-            const limit = Math.min(energy.length - interval, 15000);
-            for (let i = 0; i < limit; i++) correlation += energy[i] * energy[i + interval];
+            let correlation = 0; for (let i = 0; i < Math.min(energy.length - interval, 10000); i++) correlation += energy[i] * energy[i + interval];
             if (correlation > maxCorrelation) { maxCorrelation = correlation; bestBpm = 60 / (interval * step / sampleRate); }
         }
-        return (bestBpm < 40 || bestBpm > 250) ? 0 : bestBpm;
+        return (bestBpm < 50 || bestBpm > 250) ? 0 : bestBpm;
     }
 
     function playBeep(isLast) {
@@ -854,8 +835,6 @@
         if (allLoops[key]) { allLoops[key].splice(index, 1); localStorage.setItem(storageKey, JSON.stringify(allLoops)); renderLoopList(mode); }
     };
 
-    let applySettings;
-
     function startApp() {
         wavesurfer = WaveSurfer.create({ container: '#waveform', waveColor: '#333', progressColor: '#d4a373', height: 120, barWidth: 2, normalize: true });
         recWavesurfer = WaveSurfer.create({ container: '#rec-waveform', waveColor: '#552222', progressColor: '#ff4444', height: 80, barWidth: 2, normalize: true });
@@ -878,9 +857,9 @@
                     const blob = new Blob([event.target.result], { type: file.type });
                     currentObjectURL = URL.createObjectURL(blob); 
                     await wavesurfer.load(currentObjectURL); 
-                    // ここでBPM解析を開始
                     analyzeAudio(blob); 
                     renderLoopList('file');
+                    // 初回描画バグ対策
                     setTimeout(() => {
                         wavesurfer.drawBuffer();
                         wavesurfer.zoom(Number(document.getElementById('zoomSlider').value));
@@ -890,7 +869,7 @@
             } 
         };
 
-        applySettings = () => {
+        const applySettings = () => {
             const s = parseFloat(document.getElementById('speed').value), p = parseInt(document.getElementById('pitch').value);
             const media = wavesurfer.getMediaElement();
             if (media) {
