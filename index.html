@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.3.8 - TEST EDITION</title>
+    <title>AMS Practice Player v1.3.9 - TEST EDITION</title>
     
     <meta name="apple-mobile-web-app-title" content="AMS Player TEST">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -492,7 +492,7 @@
     let currentObjectURL = null, currentFileName = "", currentYTId = "";
     let isCountEnabled = true, isSpeedUpEnabled = false;
     let mediaRecorder, recordedChunks = [];
-    let isRecording = false, isSolo = false;
+    let isRecording = false, isSolo = false, isRecSyncPlaying = false;
     let recObjectURL = null, recordedAudioBuffer = null, lastRecStartPos = 0;
 
     function changeLanguage() {
@@ -524,7 +524,7 @@
         const lang = document.getElementById('langSelect').value;
         const t = translations[lang] || translations['ja'];
         const btn = document.getElementById('playRecBtn');
-        if (recWavesurfer && recWavesurfer.isPlaying()) btn.innerHTML = `<span class="material-icons" style="font-size:14px;">stop_circle</span> ${t.recStop}`;
+        if (isRecSyncPlaying) btn.innerHTML = `<span class="material-icons" style="font-size:14px;">stop_circle</span> ${t.recStop}`;
         else if(btn) btn.innerHTML = `<span class="material-icons" style="font-size:14px;">play_circle</span> ${t.recPlay}`;
     }
 
@@ -706,20 +706,54 @@
         }
     }
 
+    // 【修正箇所】録音再生の完全同期ロジック
+    function syncRecTime() {
+        if (!isRecSyncPlaying || !recWavesurfer || !wavesurfer) return;
+        const mainCurrent = wavesurfer.getCurrentTime();
+        const recDuration = recWavesurfer.getDuration();
+        const targetRecTime = mainCurrent - lastRecStartPos;
+
+        // 録音範囲内の場合のみ再生・シーク
+        if (targetRecTime >= 0 && targetRecTime < recDuration) {
+            // ズレが0.1秒以上あれば補正
+            if (Math.abs(recWavesurfer.getCurrentTime() - targetRecTime) > 0.1) {
+                recWavesurfer.setTime(targetRecTime);
+            }
+            if (!recWavesurfer.isPlaying() && wavesurfer.isPlaying()) {
+                recWavesurfer.play();
+            }
+        } else {
+            // 範囲外なら停止
+            if (recWavesurfer.isPlaying()) recWavesurfer.pause();
+        }
+    }
+
     function playRecording() {
         if (!recWavesurfer || !recWavesurfer.getDuration()) return;
         initAudioContext();
-        if (recWavesurfer.isPlaying()) { recWavesurfer.pause(); wavesurfer.pause(); } 
-        else { wavesurfer.setTime(lastRecStartPos); recWavesurfer.setTime(0); wavesurfer.play(); recWavesurfer.play(); }
+        if (isRecSyncPlaying) { 
+            isRecSyncPlaying = false;
+            recWavesurfer.pause(); 
+            wavesurfer.pause(); 
+        } 
+        else { 
+            isRecSyncPlaying = true;
+            wavesurfer.setTime(lastRecStartPos); 
+            recWavesurfer.setTime(0); 
+            wavesurfer.play(); 
+            // 録音側はsyncRecTimeが自動で開始させる
+        }
         updateRecPlayBtnUI();
     }
 
     function deleteRecording() {
         if (confirm("削除しますか？")) {
+            isRecSyncPlaying = false;
             document.getElementById('rec-waveform-wrapper').style.display = 'none';
             document.getElementById('recControls').style.display = 'none';
             if (recObjectURL) URL.revokeObjectURL(recObjectURL);
             recObjectURL = null; recordedAudioBuffer = null; recWavesurfer.empty();
+            updateRecPlayBtnUI();
         }
     }
 
@@ -867,22 +901,16 @@
         document.getElementById('mainVolume').oninput = applyVolumes;
         document.getElementById('recVolume').oninput = applyVolumes;
 
-        // 【修正箇所】ファイル選択時の処理フローを改善
         document.getElementById('audioFile').onchange = async e => { 
             const file = e.target.files[0];
             if(file) { 
-                initAudioContext(); // コンテキスト初期化
+                initAudioContext();
                 currentFileName = file.name; 
                 document.getElementById('fileSelectBtn').innerText = currentFileName;
-                
                 const blob = new Blob([file], { type: file.type });
                 if (currentObjectURL) URL.revokeObjectURL(currentObjectURL);
                 currentObjectURL = URL.createObjectURL(blob); 
-                
-                // 読み込み開始
                 wavesurfer.load(currentObjectURL);
-                
-                // 【重要】decode完了イベントで解析を実行
                 wavesurfer.once('decode', () => {
                     analyzeAudio(blob);
                     renderLoopList('file');
@@ -905,6 +933,8 @@
                     } else wavesurfer.setPlaybackRate(s); 
                 }
             }
+            // 録音側の速度もメインに合わせる
+            if (recWavesurfer) recWavesurfer.setPlaybackRate(s);
             updateBpmDisplay(); 
             document.getElementById('pitchTxt').innerText = (p > 0 ? "+" : "") + p; 
             applyVolumes();
@@ -915,7 +945,14 @@
             applySettings(); 
         });
 
-        recWavesurfer.on('finish', () => { wavesurfer.pause(); updateRecPlayBtnUI(); });
+        // 録音再生終了時の処理
+        recWavesurfer.on('finish', () => { 
+            if (isRecSyncPlaying) {
+                isRecSyncPlaying = false;
+                wavesurfer.pause();
+                updateRecPlayBtnUI();
+            }
+        });
         
         document.getElementById('speed').oninput = applySettings;
         document.getElementById('pitch').onmousedown = document.getElementById('pitch').ontouchstart = (e) => {
@@ -933,11 +970,25 @@
             }
         };
 
-        wavesurfer.on('play', () => document.getElementById('playIcon').innerText = 'pause');
-        wavesurfer.on('pause', () => { document.getElementById('playIcon').innerText = 'play_arrow'; });
+        wavesurfer.on('play', () => {
+            document.getElementById('playIcon').innerText = 'pause';
+            updateRecPlayBtnUI();
+        });
+        wavesurfer.on('pause', () => { 
+            document.getElementById('playIcon').innerText = 'play_arrow';
+            if (recWavesurfer.isPlaying()) recWavesurfer.pause();
+            if (isRecSyncPlaying) {
+                isRecSyncPlaying = false;
+                updateRecPlayBtnUI();
+            }
+        });
         
         wavesurfer.on('timeupdate', t => {
             document.getElementById('currentTime').innerText = fmt(t);
+            
+            // 録音同期中なら追従
+            if (isRecSyncPlaying) syncRecTime();
+
             const r = wsRegions.getRegions()[0];
             if(r && t >= r.end) { 
                 if (isRecording) {
