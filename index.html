@@ -847,27 +847,32 @@
         document.getElementById('mainVolume').oninput = applyVolumes;
         document.getElementById('recVolume').oninput = applyVolumes;
 
-        document.getElementById('audioFile').onchange = async e => { 
+        // --- 修正箇所: BPM解析を確実に実行するロジック ---
+        document.getElementById('audioFile').addEventListener('change', async (e) => {
             const file = e.target.files[0];
-            if(file) { 
-                initAudioContext();
-                currentFileName = file.name; document.getElementById('fileSelectBtn').innerText = currentFileName;
-                const reader = new FileReader();
-                reader.onload = async (event) => {
-                    const blob = new Blob([event.target.result], { type: file.type });
-                    currentObjectURL = URL.createObjectURL(blob); 
-                    await wavesurfer.load(currentObjectURL); 
-                    analyzeAudio(blob); 
-                    renderLoopList('file');
-                    // 初回描画バグ対策
-                    setTimeout(() => {
-                        wavesurfer.drawBuffer();
-                        wavesurfer.zoom(Number(document.getElementById('zoomSlider').value));
-                    }, 100);
-                };
-                reader.readAsArrayBuffer(file);
-            } 
-        };
+            if (!file) return;
+
+            initAudioContext();
+            currentFileName = file.name;
+            document.getElementById('fileSelectBtn').innerText = currentFileName;
+
+            if (currentObjectURL) URL.revokeObjectURL(currentObjectURL);
+            currentObjectURL = URL.createObjectURL(file);
+
+            await wavesurfer.load(currentObjectURL);
+
+            // BPM解析を実行
+            analyzeAudio(file);
+            
+            renderLoopList('file');
+            
+            // 描画バグ対策
+            setTimeout(() => {
+                wavesurfer.drawBuffer();
+                wavesurfer.zoom(Number(document.getElementById('zoomSlider').value));
+            }, 100);
+        });
+        // ----------------------------------------------
 
         const applySettings = () => {
             const s = parseFloat(document.getElementById('speed').value), p = parseInt(document.getElementById('pitch').value);
