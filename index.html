@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.4.1 - STABLE SYNC</title>
+    <title>AMS Practice Player v1.4.2 - STABLE SYNC</title>
     
     <meta name="apple-mobile-web-app-title" content="AMS Player">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -559,7 +559,7 @@
         const mVol = parseFloat(document.getElementById('mainVolume').value);
         const rVol = parseFloat(document.getElementById('recVolume').value);
         if (isSolo) wavesurfer.setMuted(true); else { wavesurfer.setMuted(false); wavesurfer.setVolume(mVol); }
-        if (recWavesurfer) recWavesurfer.setVolume(rVol);
+        if (recWavesurfer && recObjectURL) recWavesurfer.setVolume(rVol); // recObjectURLがある場合のみ
         document.getElementById('mainVolTxt').innerText = Math.round(mVol * 100) + "%";
         document.getElementById('recVolTxt').innerText = Math.round(rVol * 100) + "%";
     }
@@ -705,7 +705,7 @@
     }
 
     function playRecording() {
-        if (!recWavesurfer || !recWavesurfer.getDuration()) return;
+        if (!recWavesurfer || !recObjectURL) return;
         initAudioContext();
         if (recWavesurfer.isPlaying()) { 
             recWavesurfer.pause(); 
@@ -730,10 +730,28 @@
 
     function deleteRecording() {
         if (confirm("削除しますか？")) {
+            // UIを隠す
             document.getElementById('rec-waveform-wrapper').style.display = 'none';
             document.getElementById('recControls').style.display = 'none';
-            if (recObjectURL) URL.revokeObjectURL(recObjectURL);
-            recObjectURL = null; recordedAudioBuffer = null; recWavesurfer.empty();
+            document.getElementById('recVolControl').style.display = 'none';
+            
+            // 録音側の再生を完全停止
+            if (recWavesurfer) {
+                recWavesurfer.pause();
+                recWavesurfer.empty();
+            }
+
+            // オブジェクトURLとバッファを破棄
+            if (recObjectURL) {
+                URL.revokeObjectURL(recObjectURL);
+                recObjectURL = null;
+            }
+            recordedAudioBuffer = null;
+            
+            // メイン側のミュート設定（ソロモード）をリセット
+            isSolo = false;
+            document.getElementById('soloBtn').classList.remove('active');
+            applyVolumes();
         }
     }
 
@@ -928,7 +946,7 @@
             }
         };
 
-        // --- 軽量同期ロジック (STABLE SYNC EDITION) ---
+        // --- 同期ロジック (録音データがない場合の安全策を強化) ---
         
         wavesurfer.on('play', () => {
             document.getElementById('playIcon').innerText = 'pause';
@@ -960,6 +978,7 @@
         });
 
         recWavesurfer.on('interaction', () => {
+            if (!recObjectURL) return;
             const recTime = recWavesurfer.getCurrentTime();
             const targetMainTime = lastRecStartPos + recTime;
             if (targetMainTime <= wavesurfer.getDuration()) {
@@ -971,8 +990,8 @@
         wavesurfer.on('timeupdate', t => {
             document.getElementById('currentTime').innerText = fmt(t);
             
-            // 再生中のズレチェック（0.2秒以上のズレがある時だけ補正。頻繁なsetTimeを避ける）
-            if (wavesurfer.isPlaying() && recWavesurfer && recWavesurfer.isPlaying()) {
+            // 再生中のズレチェック（録音データがある時だけ動作）
+            if (wavesurfer.isPlaying() && recObjectURL && recWavesurfer && recWavesurfer.isPlaying()) {
                 const expectedRecTime = t - lastRecStartPos;
                 const actualRecTime = recWavesurfer.getCurrentTime();
                 if (Math.abs(actualRecTime - expectedRecTime) > 0.2) {
@@ -990,8 +1009,8 @@
                     toggleRecording(); 
                 } else {
                     wavesurfer.setTime(r.start); 
-                    // ループ時は録音側も位置を合わせる
-                    if (recWavesurfer) {
+                    // ループ時は録音側も位置を合わせる（データがある時のみ）
+                    if (recObjectURL && recWavesurfer) {
                         const loopOffset = r.start - lastRecStartPos;
                         if (loopOffset >= 0 && loopOffset < recWavesurfer.getDuration()) {
                             recWavesurfer.setTime(loopOffset);
