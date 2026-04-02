@@ -58,11 +58,18 @@
             border: 1px solid var(--primary-color); max-width: 350px; width: 100%;
         }
         
-        .auth-form { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border-color); padding-top: 20px; }
-        .auth-input { background: #000; border: 1px solid var(--border-color); color: #fff; padding: 12px; border-radius: 8px; font-size: 0.9rem; }
-        .email-btn { background: var(--primary-color); color: #121212; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 5px; }
-        .auth-divider { margin: 15px 0; font-size: 0.7rem; color: var(--text-dim); display: flex; align-items: center; gap: 10px; }
-        .auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--border-color); }
+        .auth-form { margin-top: 20px;
+            display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border-color); padding-top: 20px;
+        }
+        .auth-input { background: #000; border: 1px solid var(--border-color); color: #fff; padding: 12px;
+            border-radius: 8px; font-size: 0.9rem; }
+        .email-btn { background: var(--primary-color); color: #121212; border: none;
+            padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 5px;
+        }
+        .auth-divider { margin: 15px 0; font-size: 0.7rem; color: var(--text-dim); display: flex;
+            align-items: center; gap: 10px; }
+        .auth-divider::before, .auth-divider::after { content: ""; flex: 1;
+            height: 1px; background: var(--border-color); }
 
         .google-btn {
             background: white;
@@ -78,8 +85,11 @@
             border-radius: 30px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 1.1rem; width: 100%;
         }
         .user-info { font-size: 0.7rem; color: var(--text-dim); display: flex; align-items: center; gap: 10px; }
-        .logout-btn { background: none; border: 1px solid var(--border-color); color: var(--text-dim); padding: 4px 8px; border-radius: 4px; font-size: 0.65rem; cursor: pointer; }
-        .header-login-btn { background: var(--primary-color); color: #121212; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+        .logout-btn { background: none; border: 1px solid var(--border-color); color: var(--text-dim);
+            padding: 4px 8px; border-radius: 4px; font-size: 0.65rem; cursor: pointer; }
+        .header-login-btn { background: var(--primary-color);
+            color: #121212; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; cursor: pointer;
+        }
 
         header {
             position: fixed;
@@ -90,83 +100,166 @@
             z-index: 2000; backdrop-filter: blur(10px);
         }
         .header-logo { color: var(--primary-color); font-weight: bold; letter-spacing: 1px; font-size: 0.9rem; }
-        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 10px; padding-bottom: 40px; }
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 10px;
+            padding-bottom: 40px; }
         
         .content-section { display: none; }
         .content-section.active { display: block; }
 
-        #waveform-wrapper, #rec-waveform-wrapper { position: relative; background: #000; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 10px; overflow: hidden; min-height: 120px; }
-        #rec-waveform-wrapper { min-height: 80px; margin-top: 8px; display: none; border: 1px solid var(--recording-red); }
-        .waveform-label { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px; }
+        #waveform-wrapper, #rec-waveform-wrapper { position: relative; background: #000; border: 1px solid var(--border-color);
+            border-radius: 8px; margin-bottom: 10px; overflow: hidden; min-height: 120px; }
+        #rec-waveform-wrapper { min-height: 80px;
+            margin-top: 8px; display: none; border: 1px solid var(--recording-red); }
+        .waveform-label { font-size: 0.75rem;
+            color: var(--text-dim); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px;
+        }
         .time-display { color: var(--primary-color); font-weight: bold; font-size: 1rem; }
-        .panel { background: var(--panel-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
-        .panel-rec { padding: 10px 15px; gap: 8px; border-color: rgba(255, 68, 68, 0.4); }
-        .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-        input[type="range"] { flex-grow: 1; accent-color: var(--primary-color); height: 6px; min-width: 50px; -webkit-appearance: none; background: #333; border-radius: 5px; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: var(--primary-color); cursor: pointer; border: none; }
-        .val-display { color: var(--primary-color); font-weight: bold; min-width: 70px; text-align: right; font-size: 0.95rem; }
-        .transport-controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 15px 0; }
-        .btn-ctrl { background: var(--panel-bg); color: var(--text-dim); border: 1px solid var(--border-color); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+        .panel { background: var(--panel-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);
+            display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
+        .panel-rec { padding: 10px 15px;
+            gap: 8px; border-color: rgba(255, 68, 68, 0.4); }
+        .row { display: flex;
+            justify-content: space-between; align-items: center; gap: 10px; }
+        input[type="range"] { flex-grow: 1; accent-color: var(--primary-color);
+            height: 6px; min-width: 50px; -webkit-appearance: none; background: #333; border-radius: 5px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: var(--primary-color);
+            cursor: pointer; border: none; }
+        .val-display { color: var(--primary-color); font-weight: bold; min-width: 70px;
+            text-align: right; font-size: 0.95rem; }
+        .transport-controls { display: flex; justify-content: center; align-items: center;
+            gap: 10px; margin: 15px 0; }
+        .btn-ctrl { background: var(--panel-bg); color: var(--text-dim);
+            border: 1px solid var(--border-color); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+            transition: all 0.2s; }
         .btn-ctrl.active { color: var(--primary-color); border-color: var(--primary-color); }
-        .play-main { background: var(--primary-color); color: #121212 !important; width: 60px; height: 60px; border: none; }
+        .play-main { background: var(--primary-color); color: #121212 !important; width: 60px; height: 60px;
+            border: none; }
         .rec-btn { color: var(--recording-red); border-color: #442222; width: 40px; height: 40px; }
         .rec-btn.recording { background: var(--recording-red); color: white; animation: blink 1s infinite; }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        .solo-btn { width: 32px; height: 32px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; background: #333; color: var(--text-dim); border: 1px solid var(--border-color); }
+        .solo-btn { width: 32px; height: 32px;
+            border-radius: 4px; font-weight: bold; font-size: 0.8rem; background: #333; color: var(--text-dim); border: 1px solid var(--border-color); }
         .solo-btn.active { background: var(--solo-yellow); color: #000; border-color: var(--solo-yellow); }
-        .custom-file-upload { display: block; width: 100%; padding: 12px; border: 2px dashed var(--border-color); border-radius: 10px; margin-bottom: 12px; background: #181818; color: #888; font-size: 0.8rem; text-align: center; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .custom-file-upload { display: block; width: 100%; padding: 12px; border: 2px dashed var(--border-color);
+            border-radius: 10px; margin-bottom: 12px; background: #181818; color: #888; font-size: 0.8rem; text-align: center; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         input[type="file"] { display: none; }
-        #countdown-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 80px; color: var(--primary-color); font-weight: bold; z-index: 1000; display: none; text-shadow: 0 0 20px rgba(0,0,0,0.8); pointer-events: none; }
-        .reset-btn { background: #333; border: none; color: #999; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; cursor: pointer; }
-        .menu-trigger { background: none; border: none; color: var(--text-main); cursor: pointer; padding: 5px; }
-        .side-menu { position: fixed; top: 0; right: -280px; width: 280px; height: 100%; background: var(--panel-bg); z-index: 3000; transition: right 0.3s ease; box-shadow: -5px 0 15px rgba(0,0,0,0.5); padding: 20px; overflow-y: auto; }
+        #countdown-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 80px; color: var(--primary-color); font-weight: bold; z-index: 1000; display: none; text-shadow: 0 0 20px rgba(0,0,0,0.8); pointer-events: none; }
+        .reset-btn { background: #333; border: none; color: #999; padding: 2px 6px;
+            border-radius: 4px; font-size: 0.65rem; cursor: pointer; }
+        .menu-trigger { background: none; border: none;
+            color: var(--text-main); cursor: pointer; padding: 5px; }
+        .side-menu { position: fixed; top: 0;
+            right: -280px; width: 280px; height: 100%; background: var(--panel-bg); z-index: 3000; transition: right 0.3s ease; box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+            padding: 20px; }
         .side-menu.open { right: 0; }
-        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2500; display: none; }
-        .menu-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
-        .menu-section-title { font-size: 0.75rem; color: var(--primary-color); text-transform: uppercase; letter-spacing: 1px; margin: 15px 0 10px; display: block; }
-        .menu-item { display: flex; align-items: center; gap: 12px; color: var(--text-main); padding: 10px; text-decoration: none; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: background 0.2s; font-size: 0.9rem; }
-        .lang-select { width: 100%; background: #000; color: #fff; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; font-size: 0.85rem; outline: none; }
-
-        /* 追加：アカウント情報スタイル（完全維持用） */
-        .account-box { background: #000; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border-color); }
-        .account-info-item { margin-bottom: 10px; font-size: 0.75rem; }
-        .account-label { color: var(--text-dim); display: block; margin-bottom: 2px; }
-        .account-val { color: var(--text-main); word-break: break-all; font-family: monospace; }
-        .del-acc-btn { color: #ff5555; border: 1px solid #442222; background: none; width: 100%; padding: 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; margin-top: 10px; }
-
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 500px; background: var(--panel-bg); border: 1px solid var(--primary-color); border-radius: 16px; z-index: 4000; padding: 20px; box-shadow: 0 0 50px rgba(0,0,0,1); max-height: 85vh; overflow-y: auto; }
+        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 2500; display: none; }
+        .menu-header { display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px;
+        }
+        .menu-section-title { font-size: 0.75rem; color: var(--primary-color); text-transform: uppercase; letter-spacing: 1px;
+            margin: 15px 0 10px; display: block; }
+        .menu-item { display: flex; align-items: center;
+            gap: 12px; color: var(--text-main); padding: 10px; text-decoration: none; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: background 0.2s; font-size: 0.9rem;
+        }
+        
+        .modal { display: none;
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 500px; background: var(--panel-bg); border: 1px solid var(--primary-color);
+            border-radius: 16px; z-index: 4000; padding: 20px; box-shadow: 0 0 50px rgba(0,0,0,1); max-height: 85vh; overflow-y: auto; }
         .guide-box-inner { color: var(--text-main); line-height: 1.6; font-size: 0.85rem; }
-        .guide-box-inner b { color: var(--primary-color); font-size: 1rem; display: block; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
+        .guide-box-inner b { color: var(--primary-color); font-size: 1rem; display: block; margin-bottom: 10px;
+            border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
         .guide-box-inner ul { padding-left: 18px; margin: 10px 0; }
         .guide-box-inner li { margin-bottom: 8px; }
-        .guide-box-inner .guide-sub { color: var(--primary-color); font-weight: bold; margin-top: 15px; display: block; font-size: 0.9rem; }
-        .guide-box-inner .guide-note { color: #ff9999; font-size: 0.75rem; margin-top: 5px; display: block; }
+        .guide-box-inner .guide-sub { color: var(--primary-color); font-weight: bold; margin-top: 15px; display: block;
+            font-size: 0.9rem; }
+        .guide-box-inner .guide-note { color: #ff9999; font-size: 0.75rem; margin-top: 5px;
+            display: block; }
 
         .title-area { text-align: center; margin-bottom: 15px; }
-        .title-area h2 { color: var(--primary-color); font-size: 0.9rem; letter-spacing: 4px; margin: 0; font-weight: bold; text-transform: uppercase; }
-        .mode-tabs { display: flex; justify-content: center; gap: 4px; margin-bottom: 15px; background: var(--panel-bg); padding: 4px; border-radius: 10px; border: 1px solid var(--border-color); }
-        .tab-btn { background: transparent; border: none; color: var(--text-dim); padding: 8px; cursor: pointer; border-radius: 6px; font-size: 0.75rem; flex: 1; transition: all 0.3s ease; position: relative; }
+        .title-area h2 { color: var(--primary-color); font-size: 0.9rem; letter-spacing: 4px; margin: 0;
+            font-weight: bold; text-transform: uppercase; }
+        .mode-tabs { display: flex; justify-content: center; gap: 4px;
+            margin-bottom: 15px; background: var(--panel-bg); padding: 4px; border-radius: 10px; border: 1px solid var(--border-color); }
+        .tab-btn { background: transparent; border: none; color: var(--text-dim); padding: 8px; cursor: pointer;
+            border-radius: 6px; font-size: 0.75rem; flex: 1; transition: all 0.3s ease; position: relative;
+        }
         .tab-btn.active { background: var(--primary-color); color: #121212; font-weight: bold; }
-        .clear-btn-ja { background: #333; border: none; color: var(--text-main); padding: 6px 10px; border-radius: 20px; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; gap: 4px; flex: 1; justify-content: center; white-space: nowrap; }
-        #ytPlayerContainer { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); background: #000; }
-        #ytPlayerContainer iframe { position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; }
-        .loop-badge { background: #252525; padding: 6px 10px; border-radius: 20px; display: flex; align-items: center; gap: 6px; border: 1px solid var(--border-color); cursor: pointer; position: relative; }
-        .loop-list-container { margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 10px; display: flex; flex-wrap: wrap; gap: 10px; }
-        .adj-btn { background: #333; border: none; color: #fff; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
-        .loop-btn-main { background: var(--panel-bg); color: var(--text-main); border: 1px solid var(--primary-color); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
+        .clear-btn-ja { background: #333; border: none; color: var(--text-main); padding: 6px 10px;
+            border-radius: 20px; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; gap: 4px; flex: 1; justify-content: center; white-space: nowrap; }
+        #ytPlayerContainer { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 8px;
+            overflow: hidden; border: 1px solid var(--border-color); background: #000; }
+        #ytPlayerContainer iframe { position: absolute;
+            top: 0; left: 0; width: 100% !important; height: 100% !important; }
+        .loop-badge { background: #252525; padding: 6px 10px; border-radius: 20px; display: flex;
+            align-items: center; gap: 6px; border: 1px solid var(--border-color); cursor: pointer; position: relative; }
+        .loop-list-container { margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 10px; display: flex;
+            flex-wrap: wrap; gap: 10px; }
+        .adj-btn { background: #333; border: none; color: #fff;
+            padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+        .loop-btn-main { background: var(--panel-bg);
+            color: var(--text-main); border: 1px solid var(--primary-color); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
         
-        .yt-loop-btn-ui { width: 140px; padding: 8px; border-radius: 6px; border: 1px solid var(--primary-color); cursor: pointer; font-size: 0.75rem; font-weight: bold; background: #000; color: var(--primary-color); transition: all 0.3s; display: flex; align-items: center; justify-content: center; }
-        .yt-loop-btn-ui.active { background: var(--primary-color); color: #000; }
+        .yt-loop-btn-ui {
+            width: 140px;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--primary-color);
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: bold;
+            background: #000;
+            color: var(--primary-color);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .yt-loop-btn-ui.active {
+            background: var(--primary-color);
+            color: #000;
+        }
 
-        .action-row-container { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 15px; width: 100%; }
-        .speedup-group { display: flex; align-items: center; gap: 5px; background: #252525; padding: 4px 8px; border-radius: 20px; border: 1px solid var(--border-color); flex: 1; justify-content: center; }
+        .action-row-container { 
+            display: flex;
+            justify-content: space-between; 
+            align-items: center; 
+            gap: 8px; 
+            margin-bottom: 15px; 
+            width: 100%;
+        }
+        .speedup-group { 
+            display: flex;
+            align-items: center; 
+            gap: 5px; 
+            background: #252525; 
+            padding: 4px 8px; 
+            border-radius: 20px; 
+            border: 1px solid var(--border-color);
+            flex: 1;
+            justify-content: center;
+        }
         .speedup-label { font-size: 0.65rem; color: var(--text-dim); white-space: nowrap; }
-        .speedup-select { background: transparent; color: var(--primary-color); border: none; font-size: 0.75rem; font-weight: bold; outline: none; cursor: pointer; transition: opacity 0.3s; }
+        .speedup-select { 
+            background: transparent;
+            color: var(--primary-color); 
+            border: none; 
+            font-size: 0.75rem; 
+            font-weight: bold;
+            outline: none; 
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
         .speedup-select:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        .policy-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 5000; overflow-y: auto; padding: 20px; }
-        .policy-content { background: var(--panel-bg); color: var(--text-main); padding: 25px; border-radius: 15px; max-width: 600px; margin: 30px auto; font-size: 0.85rem; line-height: 1.7; border: 1px solid var(--border-color); }
-        .policy-content h3 { color: var(--primary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-top: 20px; font-size: 1rem; }
+        /* ポリシー用スタイル */
+        .policy-modal { display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 5000; overflow-y: auto; padding: 20px; }
+        .policy-content { background: var(--panel-bg); color: var(--text-main); padding: 25px; border-radius: 15px; max-width: 600px;
+            margin: 30px auto; font-size: 0.85rem; line-height: 1.7; border: 1px solid var(--border-color); }
+        .policy-content h3 { color: var(--primary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;
+            margin-top: 20px; font-size: 1rem; }
     </style>
 </head>
 <body>
@@ -225,28 +318,6 @@
             <span class="material-icons">close</span>
         </button>
     </div>
-
-    <span class="menu-section-title" id="accountTitle">Account Information</span>
-    <div class="account-box" id="accountInfoBox" style="display:none;">
-        <div class="account-info-item">
-            <span class="account-label">Name</span>
-            <span class="account-val" id="accName">---</span>
-        </div>
-        <div class="account-info-item">
-            <span class="account-label">Email</span>
-            <span class="account-val" id="accEmail">---</span>
-        </div>
-        <div class="account-info-item">
-            <span class="account-label">UID</span>
-            <span class="account-val" id="accUid">---</span>
-        </div>
-        <div class="account-info-item">
-            <span class="account-label">Plan</span>
-            <span class="account-val" id="accPlan" style="font-weight:bold; color:var(--primary-color);">FREE</span>
-        </div>
-        <button class="del-acc-btn" onclick="deleteAccount()" id="delAccBtnTxt">Delete Account</button>
-    </div>
-
     <span class="menu-section-title" id="langTitle">Language Settings</span>
     <select id="langSelect" class="lang-select" onchange="changeLanguage()">
         <option value="ja">日本語</option>
@@ -293,7 +364,7 @@
             </div>
             <span class="time-display"><span id="currentTime">00:00</span> / <span id="totalTime">00:00</span></span>
         </div>
-
+        
         <div id="waveform-wrapper">
             <div id="countdown-overlay"></div>
             <div id="waveform"></div>
@@ -424,65 +495,48 @@
 
     let isSubscribed = false;
 
-    // モーダル・オーバーレイ操作
     function openAuthOverlay() { document.getElementById('auth-overlay').style.display = 'flex'; }
     function closeAuthOverlay() { document.getElementById('auth-overlay').style.display = 'none'; }
     function closeSubOverlay() { document.getElementById('subscription-overlay').style.display = 'none'; }
-    
+
     function togglePolicy(type, show) {
         const id = type === 'privacy' ? 'privacyPolicyModal' : 'legalNoticeModal';
         document.getElementById(id).style.display = show ? 'block' : 'none';
         if (show) toggleMenu(false);
     }
 
-    // Auth 関連
     function loginWithGoogle() {
         initAudioContext();
         const provider = new firebase.auth.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
-        auth.signInWithPopup(provider).then(() => { closeAuthOverlay(); }).catch(e => alert("ログインエラー: " + e.message));
+        auth.signInWithPopup(provider).then(() => {
+            closeAuthOverlay();
+        }).catch(e => alert("ログインエラー: " + e.message));
     }
 
     function loginWithEmail() {
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
         if(!email || !password) return alert("メールアドレスとパスワードを入力してください");
+        
         initAudioContext();
         auth.signInWithEmailAndPassword(email, password)
-            .then(() => { closeAuthOverlay(); })
-            .catch((error) => {
-                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-                    if(confirm("アカウントが見つかりません。この内容で新しく登録しますか？")) {
-                        auth.createUserWithEmailAndPassword(email, password)
-                            .then(() => closeAuthOverlay())
-                            .catch(e => alert("登録エラー: " + e.message));
-                    }
-                } else {
-                    alert("ログインエラー: " + error.message);
+        .then(() => { closeAuthOverlay(); })
+        .catch((error) => {
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                if(confirm("アカウントが見つかりません。この内容で新しく登録しますか？")) {
+                    auth.createUserWithEmailAndPassword(email, password)
+                    .then(() => closeAuthOverlay())
+                    .catch(e => alert("登録エラー: " + e.message));
                 }
-            });
+            } else {
+                alert("ログインエラー: " + error.message);
+            }
+        });
     }
 
-    function logout() { auth.signOut().then(() => { location.reload(); }); }
-
-    // アカウント削除（追加分）
-    async function deleteAccount() {
-        const user = auth.currentUser;
-        if (!user) return;
-        const lang = document.getElementById('langSelect').value;
-        const msg = lang === 'ja' ? "本当にアカウントを削除しますか？\n全てのデータが消去されます。" : "Are you sure you want to delete your account?\nAll data will be permanently removed.";
-        if (confirm(msg)) {
-            try {
-                await user.delete();
-                alert(lang === 'ja' ? "削除されました。" : "Account deleted.");
-                location.reload();
-            } catch (e) {
-                if (e.code === 'auth/requires-recent-login') {
-                    alert(lang === 'ja' ? "再ログインが必要です。" : "Please re-login to perform this action.");
-                    logout();
-                } else { alert("Error: " + e.message); }
-            }
-        }
+    function logout() {
+        auth.signOut().then(() => { location.reload(); });
     }
 
     function redirectToCheckout() {
@@ -495,7 +549,9 @@
                 window.location.href = checkoutUrl;
             }
         } else {
-            alert("先にログインしてください。"); closeSubOverlay(); openAuthOverlay();
+            alert("先にログインしてください。");
+            closeSubOverlay();
+            openAuthOverlay();
         }
     }
 
@@ -521,7 +577,10 @@
                 }
             }
             return false;
-        } catch (e) { console.error("Check error:", e); return false; }
+        } catch (e) {
+            console.error("Check error:", e);
+            return false;
+        }
     }
 
     auth.onAuthStateChanged(async user => {
@@ -530,74 +589,197 @@
         const authSection = document.getElementById('auth-section');
         const authOverlay = document.getElementById('auth-overlay');
         const subOverlay = document.getElementById('subscription-overlay');
-        
-        const accBox = document.getElementById('accountInfoBox');
-        const accName = document.getElementById('accName');
-        const accEmail = document.getElementById('accEmail');
-        const accUid = document.getElementById('accUid');
-        const accPlan = document.getElementById('accPlan');
 
         if (user) {
             authOverlay.style.display = 'none';
             authSection.style.display = 'none';
             userInfo.style.display = 'flex';
-            userNameSpan.textContent = user.displayName || user.email.split('@')[0];
+            userNameSpan.innerText = user.displayName || user.email.split('@')[0];
             
-            accBox.style.display = 'block';
-            accName.textContent = user.displayName || "Not Set";
-            accEmail.textContent = user.email;
-            accUid.textContent = user.uid;
-
             isSubscribed = await checkSubscriptionStatus(user);
-            accPlan.textContent = isSubscribed ? "PREMIUM (Active)" : "FREE";
-            accPlan.style.color = isSubscribed ? "var(--primary-color)" : "var(--text-dim)";
-
-            if (isSubscribed) subOverlay.style.display = 'none';
-            updateLoopList();
+            if (isSubscribed) {
+                subOverlay.style.display = 'none';
+            }
+            if (currentMode === 'file') renderLoopList('file');
+            else renderLoopList('yt');
         } else {
-            authSection.style.display = 'block';
             userInfo.style.display = 'none';
-            accBox.style.display = 'none';
+            authSection.style.display = 'block';
+            subOverlay.style.display = 'none';
             isSubscribed = false;
         }
     });
 
-    let wavesurfer, wsRegions, recWavesurfer;
-    let audioContext, audioTag, mediaNode;
-    let isCountEnabled = true;
-    let isSpeedUpEnabled = false;
-    let currentLoopCount = 0;
-    let isRecording = false;
-    let mediaRecorder;
-    let audioChunks = [];
-    let recObjectURL = null;
-    let lastRecStartPos = 0;
-    let activeMode = 'file';
-
     const translations = {
         ja: {
-            authDesc: "テスト用アカウントでログイン", googleLoginBtnTxt: "Googleでログイン", authDivider: "または", emailLoginBtnTxt: "ログイン / 新規登録", authCloseBtn: "閉じる",
-            subDesc: "この機能を利用するには<br>サブスクリプションへの登録が必要です。", subStartBtn: "サブスクリプションを開始する", subCloseBtn: "閉じる", subLogoutBtn: "別のカウントでログイン",
-            langTitle: "言語設定", helpTitle: "ヘルプ & ガイド", guideFileTitle: "Audio Fileモード ガイド", guideYTTitle: "YouTubeモード ガイド", privacyMenu: "プライバシーポリシー", legalMenu: "特定商取引法に基づく表記",
-            tabFile: "Audio File Mode", tabYT: "YouTube Mode", fileSelectBtn: "ファイルを選択", clearRangeBtn: "選択解除", saveLoopBtn: "ループ保存", speedUpLabel: "速度回数", bpmReset: "Reset", pitchReset: "Reset",
-            historyTitle: "再生履歴", historyClearBtn: "全て削除", ytLoadBtnTxt: "読込", recDelBtnTxt: "削除", accountTitle: "アカウント情報", delAccBtnTxt: "アカウント削除"
+            langTitle: "言語設定",
+            helpTitle: "ヘルプ & ガイド",
+            guideFileTitle: "Audio Fileモード ガイド",
+            guideYTTitle: "YouTubeモード ガイド",
+            privacyMenu: "プライバシーポリシー",
+            legalMenu: "特定商取引法に基づく表記",
+            fileSelectBtn: "ファイルを選択",
+            loadStatus: "READY",
+            mainVolTxt: "音量",
+            clearRangeBtn: "選択解除",
+            saveLoopBtn: "ループ保存",
+            saveLoopBtnYT: "SAVE",
+            speedUpLabel: "速度回数",
+            playRecBtn: "録音再生",
+            recDelBtnTxt: "削除",
+            ytLoadBtnTxt: "読込",
+            historyTitle: "履歴",
+            historyClearBtn: "全て削除",
+            setStartBtn: "開始点",
+            setEndBtn: "終了点",
+            toggleLoopBtn: "LOOP OFF",
+            authDesc: "ログインして全ての機能を利用",
+            googleLoginBtnTxt: "Googleでログイン",
+            emailLoginBtnTxt: "ログイン / 新規登録",
+            authCloseBtn: "閉じる",
+            subDesc: "この機能を利用するには<br>サブスクリプションへの登録が必要です。",
+            subStartBtn: "サブスクリプションを開始する",
+            subCloseBtn: "閉じる",
+            subLogoutBtn: "別のカウントでログイン"
         },
         en: {
-            authDesc: "Sign in with test account", googleLoginBtnTxt: "Login with Google", authDivider: "OR", emailLoginBtnTxt: "Login / Register", authCloseBtn: "Close",
-            subDesc: "A subscription is required<br>to use this feature.", subStartBtn: "Start Subscription", subCloseBtn: "Close", subLogoutBtn: "Login with another account",
-            langTitle: "Language Settings", helpTitle: "Help & Guide", guideFileTitle: "Audio File Guide", guideYTTitle: "YouTube Guide", privacyMenu: "Privacy Policy", legalMenu: "Legal Notice",
-            tabFile: "Audio File Mode", tabYT: "YouTube Mode", fileSelectBtn: "Select File", clearRangeBtn: "Clear Range", saveLoopBtn: "Save Loop", speedUpLabel: "Auto Up", bpmReset: "Reset", pitchReset: "Reset",
-            historyTitle: "RECENT HISTORY", historyClearBtn: "Clear All", ytLoadBtnTxt: "LOAD", recDelBtnTxt: "Delete", accountTitle: "Account Info", delAccBtnTxt: "Delete Account"
+            langTitle: "Language Settings",
+            helpTitle: "Help & Guide",
+            guideFileTitle: "Audio File Mode Guide",
+            guideYTTitle: "YouTube Mode Guide",
+            privacyMenu: "Privacy Policy",
+            legalMenu: "Legal Notice",
+            fileSelectBtn: "SELECT FILE",
+            loadStatus: "READY",
+            mainVolTxt: "Vol",
+            clearRangeBtn: "CLEAR",
+            saveLoopBtn: "SAVE LOOP",
+            saveLoopBtnYT: "SAVE",
+            speedUpLabel: "Auto-Speed",
+            playRecBtn: "PLAY REC",
+            recDelBtnTxt: "DEL",
+            ytLoadBtnTxt: "LOAD",
+            historyTitle: "HISTORY",
+            historyClearBtn: "Clear All",
+            setStartBtn: "SET START",
+            setEndBtn: "SET END",
+            toggleLoopBtn: "LOOP OFF",
+            authDesc: "Login to unlock all features",
+            googleLoginBtnTxt: "Sign in with Google",
+            emailLoginBtnTxt: "Login / Register",
+            authCloseBtn: "Close",
+            subDesc: "Subscription is required to use this feature.",
+            subStartBtn: "Start Subscription",
+            subCloseBtn: "Close",
+            subLogoutBtn: "Login with another account"
         }
     };
 
+    let currentLang = 'ja';
     function changeLanguage() {
-        const lang = document.getElementById('langSelect').value;
-        const t = translations[lang];
-        for(let id in t) { const el = document.getElementById(id); if(el) { if(el.tagName === 'INPUT') el.placeholder = t[id]; else el.innerHTML = t[id]; } }
-        const spTxt = document.getElementById('spTxt');
-        if (spTxt && spTxt.textContent.includes('BPM ---')) spTxt.textContent = "BPM ---"; else if(spTxt) updateBpmDisplay(document.getElementById('speed').value);
-        updateLoopList();
+        currentLang = document.getElementById('langSelect').value;
+        const t = translations[currentLang];
+        Object.keys(t).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (el.tagName === 'SPAN' || el.tagName === 'BUTTON' || el.tagName === 'P' || el.tagName === 'LABEL') {
+                    if (id === 'subDesc') el.innerHTML = t[id];
+                    else el.innerText = t[id];
+                }
+            }
+        });
+        updateGuideContent();
+        updatePolicyContent();
+    }
+
+    function updateGuideContent() {
+        const fileGuide = currentLang === 'ja' ? `
+            <b>AUDIO FILE MODE GUIDE</b>
+            <ul>
+                <li><b>ファイル選択:</b> デバイス内の音源を読み込みます。</li>
+                <li><b>ループ作成:</b> 波形をドラッグして範囲を選択します。</li>
+                <li><b>カウント機能:</b> 再生開始前にカウントを入れます。</li>
+                <li><b>Auto Speed Up:</b> 指定回数ループするごとに速度を+5%自動上昇させます。</li>
+                <li><b>録音機能:</b> 自分の音を録音して客観的に確認できます。</li>
+            </ul>
+        ` : `
+            <b>AUDIO FILE MODE GUIDE</b>
+            <ul>
+                <li><b>File Select:</b> Load audio from your device.</li>
+                <li><b>Create Loop:</b> Drag on the waveform to select range.</li>
+                <li><b>Countdown:</b> Adds a click before playback starts.</li>
+                <li><b>Auto Speed Up:</b> Speed increases by 5% every X loops.</li>
+                <li><b>Recording:</b> Record and check your performance.</li>
+            </ul>
+        `;
+        const ytGuide = currentLang === 'ja' ? `
+            <b>YOUTUBE MODE GUIDE</b>
+            <ul>
+                <li><b>読込:</b> YouTubeのURLを入力して動画を読み込みます。</li>
+                <li><b>ループ設定:</b> 「SET START」「SET END」で範囲を指定します。</li>
+                <li><b>履歴:</b> 最近練習した曲に素早くアクセスできます。</li>
+                <li><b>制限事項:</b> YouTube側の制限により、ピッチ変更や一部の自動速度変更は利用できません。</li>
+            </ul>
+        ` : `
+            <b>YOUTUBE MODE GUIDE</b>
+            <ul>
+                <li><b>Load:</b> Paste YouTube URL to load video.</li>
+                <li><b>Loop:</b> Use "SET START" and "SET END" buttons.</li>
+                <li><b>History:</b> Quick access to recent practice tracks.</li>
+                <li><b>Note:</b> Pitch shift and some auto-features are limited by YouTube's API.</li>
+            </ul>
+        `;
+        document.getElementById('guideFileContent').innerHTML = fileGuide;
+        document.getElementById('guideYTContent').innerHTML = ytGuide;
+    }
+
+    function updatePolicyContent() {
+        const privacyText = currentLang === 'ja' ? `
+            <h3>プライバシーポリシー</h3>
+            <p>Anderson Studios（以下「当スタジオ」）は、本アプリにおけるユーザーの個人情報の取扱いについて以下の通り定めます。</p>
+            <b>1. 収集する情報</b>
+            <p>ログイン時にGoogleアカウントのメールアドレスおよび表示名を取得します。これらはユーザー識別とサブスクリプション管理のために使用されます。</p>
+            <b>2. データの利用目的</b>
+            <p>・サービスの提供および管理<br>・有料プランの認証<br>・ユーザーサポート</p>
+        ` : `
+            <h3>Privacy Policy</h3>
+            <p>Anderson Studios ("we," "our," or "us") provides this Privacy Policy to explain how we collect and use your information.</p>
+            <b>1. Information We Collect</b>
+            <p>We collect your email address and display name via Google/Email authentication for user identification and subscription management.</p>
+            <b>2. Use of Data</b>
+            <p>- To provide and maintain our service<br>- To verify premium subscriptions<br>- To provide customer support</p>
+        `;
+        const legalText = currentLang === 'ja' ? `
+            <h3>特定商取引法に基づく表記</h3>
+            <b>販売業者</b><p>Anderson Studios</p>
+            <b>お問い合わせ</b><p>アプリ内メニューまたは公式サイトよりご連絡ください。</p>
+            <b>販売価格</b><p>購入ページに表示される金額（税込）</p>
+            <b>代金支払い方法</b><p>クレジットカード（Square決済システム経由）</p>
+            <b>引渡し時期</b><p>決済完了後、即時提供</p>
+            <b>返品・キャンセル</b><p>デジタルコンテンツの性質上、決済完了後のキャンセルはできません。</p>
+        ` : `
+            <h3>Legal Notice</h3>
+            <b>Provider</b><p>Anderson Studios</p>
+            <b>Contact</b><p>Please contact via the app menu or official website.</p>
+            <b>Price</b><p>As displayed on the subscription page.</p>
+            <b>Payment</b><p>Credit Card (via Square Payment System)</p>
+            <b>Delivery</b><p>Immediate after payment completion.</p>
+            <b>Refunds</b><p>Due to the nature of digital services, no refunds are provided after payment.</p>
+        `;
+        document.getElementById('privacyPolicyInner').innerHTML = privacyText + `<button class="clear-btn-ja" style="width:100%; margin-top:20px;" onclick="togglePolicy('privacy', false)">Close</button>`;
+        document.getElementById('legalNoticeInner').innerHTML = legalText + `<button class="clear-btn-ja" style="width:100%; margin-top:20px;" onclick="togglePolicy('legal', false)">Close</button>`;
+    }
+
+    let wavesurfer, wsRegions, recWavesurfer;
+    let audioContext, mediaRecorder, audioChunks = [];
+    let isRecording = false, recObjectURL = null, lastRecStartPos = 0;
+    let currentMode = 'file';
+    let isCountEnabled = true, isSpeedUpEnabled = false, currentLoopCount = 0;
+    let ytPlayer, ytLoopStart = 0, ytLoopEnd = 0, isYTLooping = false, ytLoopTimer = null;
+
+    function initAudioContext() {
+        if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') audioContext.resume();
     }
 
     function toggleMenu(show) {
@@ -605,52 +787,83 @@
         document.getElementById('menuOverlay').style.display = show ? 'block' : 'none';
     }
 
+    function showGuide(mode) {
+        closeModals();
+        document.getElementById(mode === 'file' ? 'guideModalFile' : 'guideModalYT').style.display = 'block';
+        toggleMenu(false);
+    }
+
+    function closeModals() {
+        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+    }
+
     function switchMode(mode) {
-        if (mode === 'yt' && !isSubscribed) { openAuthOverlay(); return; }
-        activeMode = mode;
-        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-        document.getElementById(mode + '-section').classList.add('active');
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('tab-' + mode).classList.add('active');
-        if (mode === 'file' && wavesurfer) wavesurfer.pause();
-        if (mode === 'yt' && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+        currentMode = mode;
+        document.getElementById('tab-file').classList.toggle('active', mode === 'file');
+        document.getElementById('tab-yt').classList.toggle('active', mode === 'yt');
+        document.getElementById('file-section').classList.toggle('active', mode === 'file');
+        document.getElementById('yt-section').classList.toggle('active', mode === 'yt');
+        if(mode === 'file') { if(wavesurfer) wavesurfer.play(); if(ytPlayer) ytPlayer.pauseVideo(); renderLoopList('file'); }
+        else { if(wavesurfer) wavesurfer.pause(); renderLoopList('yt'); renderYTHistory(); }
     }
 
-    function initAudioContext() {
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            audioTag = document.createElement('audio');
-            audioTag.crossOrigin = "anonymous";
-            mediaNode = audioContext.createMediaElementSource(audioTag);
-            mediaNode.connect(audioContext.destination);
-        }
-    }
-
-    function startApp() {
+    async function startApp() {
         wavesurfer = WaveSurfer.create({
-            container: '#waveform', waveformColor: '#444', progressColor: varProp('--primary-color'),
-            cursorColor: '#fff', barWidth: 2, barRadius: 3, responsive: true, height: 120, normalize: true,
-            minPxPerSec: 100
+            container: '#waveform',
+            waveColor: '#444',
+            progressColor: '#d4a373',
+            cursorColor: '#fff',
+            cursorWidth: 2,
+            height: 120,
+            normalize: true,
+            backend: 'WebAudio'
         });
         wsRegions = wavesurfer.registerPlugin(WaveSurfer.Regions.create());
-        
-        wavesurfer.on('ready', () => {
-            document.getElementById('loadStatus').textContent = "LOADED";
-            document.getElementById('totalTime').textContent = formatTime(wavesurfer.getDuration());
+
+        wavesurfer.on('interaction', () => { if (!isSubscribed) { wavesurfer.pause(); document.getElementById('subscription-overlay').style.display = 'flex'; } });
+        wsRegions.on('region-created', (region) => {
+            if (!isSubscribed) { region.remove(); return; }
             wsRegions.clearRegions();
-            updateBpmDisplay(1.0);
-            updateLoopList();
+        });
+        wsRegions.on('region-clicked', (region, e) => { e.stopPropagation(); region.play(); });
+
+        document.getElementById('audioFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                wavesurfer.load(url);
+                document.getElementById('fileSelectBtn').innerText = file.name;
+                document.getElementById('loadStatus').innerText = "LOADING...";
+            }
         });
 
-        wavesurfer.on('interaction', () => { if (isRecording) toggleRecording(); });
+        wavesurfer.on('ready', () => {
+            document.getElementById('loadStatus').innerText = "READY";
+            document.getElementById('totalTime').innerText = formatTime(wavesurfer.getDuration());
+            applySettings();
+        });
+
+        document.getElementById('playBtn').addEventListener('click', () => {
+            if (wavesurfer.isPlaying()) { wavesurfer.pause(); } 
+            else {
+                if (isCountEnabled) { runCountdown(() => wavesurfer.play()); } 
+                else { wavesurfer.play(); }
+            }
+        });
+
+        wavesurfer.on('play', () => document.getElementById('playIcon').innerText = 'pause');
+        wavesurfer.on('pause', () => document.getElementById('playIcon').innerText = 'play_arrow');
+
+        const sliders = ['speed', 'pitch', 'mainVolume', 'zoomSlider'];
+        sliders.forEach(id => document.getElementById(id).addEventListener('input', applySettings));
 
         wavesurfer.on('timeupdate', (t) => {
-            document.getElementById('currentTime').textContent = formatTime(t);
-            if (recWavesurfer && !isRecording && recObjectURL) {
-                const r = wsRegions.getRegions()[0];
-                if (r) {
-                    const expectedRecTime = t - lastRecStartPos;
-                    if (expectedRecTime >= 0 && expectedRecTime < recWavesurfer.getDuration()) recWavesurfer.setTime(expectedRecTime);
+            document.getElementById('currentTime').innerText = formatTime(t);
+            if (isRecording && recWavesurfer) {
+                const elapsed = t - lastRecStartPos;
+                if (elapsed >= 0) {
+                    const expectedRecTime = elapsed / parseFloat(document.getElementById('speed').value);
+                    if (expectedRecTime <= recWavesurfer.getDuration()) recWavesurfer.setTime(expectedRecTime);
                     else recWavesurfer.pause();
                 }
             }
@@ -676,321 +889,9 @@
             }
         });
 
-        wsRegions.on('region-created', (r) => { if(wsRegions.getRegions().length > 1) wsRegions.getRegions()[0].remove(); });
-
-        document.getElementById('speed').addEventListener('input', applySettings);
-        document.getElementById('pitch').addEventListener('input', applySettings);
-        document.getElementById('mainVolume').addEventListener('input', (e) => {
-            const v = parseFloat(e.target.value);
-            wavesurfer.setVolume(v);
-            document.getElementById('mainVolTxt').textContent = Math.round(v * 100) + '%';
-        });
-
-        document.getElementById('zoomSlider').addEventListener('input', (e) => wavesurfer.zoom(parseFloat(e.target.value)));
-        document.getElementById('resetZoomBtn').addEventListener('click', () => { document.getElementById('zoomSlider').value = 100; wavesurfer.zoom(100); });
-        
-        document.getElementById('playBtn').addEventListener('click', () => {
-            wavesurfer.playPause();
-            document.getElementById('playIcon').textContent = wavesurfer.isPlaying() ? 'pause' : 'play_arrow';
-        });
-
-        document.getElementById('audioFile').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const url = URL.createObjectURL(file);
-                wavesurfer.load(url);
-                document.getElementById('fileSelectBtn').textContent = file.name;
-                document.getElementById('loadStatus').textContent = "LOADING...";
-            }
-        });
-
         window.resetSetting = (id, val) => { document.getElementById(id).value = val; applySettings(); };
         changeLanguage(); renderYTHistory();
     }
-
-    function applySettings() {
-        const s = parseFloat(document.getElementById('speed').value);
-        wavesurfer.setPlaybackRate(s);
-        updateBpmDisplay(s);
-        document.getElementById('pitchTxt').textContent = (document.getElementById('pitch').value > 0 ? '+' : '') + document.getElementById('pitch').value;
-    }
-
-    function updateBpmDisplay(s) { 
-        const el = document.getElementById('spTxt');
-        if(el) el.textContent = "BPM " + Math.round(s * 100) + "%"; 
-    }
-    
-    function formatTime(s) { const m = Math.floor(s / 60); const ss = Math.floor(s % 60); return `${m.toString().padStart(2,'0')}:${ss.toString().padStart(2,'0')}`; }
-    function varProp(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-
-    function toggleFeature(type) {
-        if (type === 'count') {
-            isCountEnabled = !isCountEnabled;
-            document.getElementById('countToggleBtn').classList.toggle('active', isCountEnabled);
-        } else if (type === 'speedup') {
-            isSpeedUpEnabled = !isSpeedUpEnabled;
-            document.getElementById('speedUpToggleBtn').classList.toggle('active', isSpeedUpEnabled);
-            document.getElementById('speedUpCount').disabled = !isSpeedUpEnabled;
-            currentLoopCount = 0;
-        }
-    }
-
-    async function toggleRecording() {
-        if (isRecording) {
-            mediaRecorder.stop();
-            isRecording = false;
-            document.getElementById('recBtn').classList.remove('recording');
-            document.getElementById('recIcon').textContent = 'mic';
-            wavesurfer.pause();
-        } else {
-            const regions = wsRegions.getRegions();
-            if (regions.length === 0) return alert("録音範囲（ループ範囲）を指定してください。");
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(audioChunks, { type: 'audio/ogg; codecs=opus' });
-                recObjectURL = URL.createObjectURL(blob);
-                showRecWaveform(recObjectURL);
-                document.getElementById('recControls').style.display = 'flex';
-                document.getElementById('recVolControl').style.display = 'flex';
-            };
-            const startPos = regions[0].start;
-            lastRecStartPos = startPos;
-            if (isCountEnabled) {
-                let count = 3;
-                const overlay = document.getElementById('countdown-overlay');
-                overlay.style.display = 'block';
-                const timer = setInterval(() => {
-                    overlay.textContent = count;
-                    if (count <= 0) { clearInterval(timer); overlay.style.display = 'none'; startRecordingProcess(startPos); }
-                    count--;
-                }, 800);
-            } else { startRecordingProcess(startPos); }
-        }
-    }
-
-    function startRecordingProcess(pos) {
-        wavesurfer.setTime(pos); wavesurfer.play(); mediaRecorder.start();
-        isRecording = true; document.getElementById('recBtn').classList.add('recording');
-        document.getElementById('recIcon').textContent = 'stop';
-        document.getElementById('rec-waveform-wrapper').style.display = 'block';
-    }
-
-    function showRecWaveform(url) {
-        if (recWavesurfer) recWavesurfer.destroy();
-        recWavesurfer = WaveSurfer.create({
-            container: '#rec-waveform', waveformColor: '#ff444466', progressColor: '#ff4444',
-            cursorColor: '#fff', height: 60, responsive: true, interact: false
-        });
-        recWavesurfer.load(url);
-        recWavesurfer.on('ready', () => {
-            const v = parseFloat(document.getElementById('recVolume').value);
-            recWavesurfer.setVolume(v);
-        });
-    }
-
-    document.getElementById('recVolume').addEventListener('input', (e) => {
-        const v = parseFloat(e.target.value);
-        if (recWavesurfer) recWavesurfer.setVolume(v);
-        document.getElementById('recVolTxt').textContent = Math.round(v * 100) + '%';
-    });
-
-    function playRecording() { if (recWavesurfer) recWavesurfer.playPause(); }
-    function deleteRecording() {
-        if (recObjectURL) URL.revokeObjectURL(recObjectURL);
-        recObjectURL = null;
-        if (recWavesurfer) { recWavesurfer.destroy(); recWavesurfer = null; }
-        document.getElementById('rec-waveform-wrapper').style.display = 'none';
-        document.getElementById('recControls').style.display = 'none';
-        document.getElementById('recVolControl').style.display = 'none';
-    }
-
-    function toggleSolo() {
-        const btn = document.getElementById('soloBtn');
-        btn.classList.toggle('active');
-        const isSolo = btn.classList.contains('active');
-        wavesurfer.setVolume(isSolo ? 0 : document.getElementById('mainVolume').value);
-    }
-
-    // YouTube Logic
-    let ytPlayer, ytLoopInterval;
-    let ytLoop = { active: false, start: 0, end: 0 };
-    const tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    const firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-    window.onYouTubeIframeAPIReady = () => {
-        ytPlayer = new YT.Player('player', {
-            height: '100%', width: '100%', videoId: '',
-            playerVars: { 'playsinline': 1, 'controls': 1, 'rel': 0 },
-            events: { 'onStateChange': onPlayerStateChange }
-        });
-    };
-
-    function onPlayerStateChange(event) {
-        if (event.data == YT.PlayerState.PLAYING) {
-            ytLoopInterval = setInterval(() => {
-                const now = ytPlayer.getCurrentTime();
-                if (ytLoop.active && now >= ytLoop.end) ytPlayer.seekTo(ytLoop.start);
-            }, 100);
-        } else { clearInterval(ytLoopInterval); }
-    }
-
-    function loadYouTube() {
-        const url = document.getElementById('ytUrl').value;
-        const vid = extractVideoId(url);
-        if (vid) {
-            ytPlayer.loadVideoById(vid);
-            saveToHistory(vid);
-            ytLoop = { active: false, start: 0, end: 0 };
-            updateYTLoopUI();
-            updateLoopList();
-        } else alert("Invalid YouTube URL");
-    }
-
-    function extractVideoId(url) {
-        const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-        const match = url.match(regExp);
-        return (match && match[2].length == 11) ? match[2] : null;
-    }
-
-    function setLoopPoint(type) {
-        const now = ytPlayer.getCurrentTime();
-        if (type === 'start') { ytLoop.start = now; if (ytLoop.end <= now) ytLoop.end = now + 5; }
-        else { ytLoop.end = now; if (ytLoop.start >= now) ytLoop.start = Math.max(0, now - 5); }
-        updateYTLoopUI();
-    }
-
-    function adjustTime(type, amt) {
-        if (type === 'start') ytLoop.start = Math.max(0, ytLoop.start + amt);
-        else ytLoop.end = Math.max(ytLoop.start + 1, ytLoop.end + amt);
-        updateYTLoopUI();
-    }
-
-    function updateYTLoopUI() {
-        document.getElementById('loopStartTxt').textContent = formatTime(ytLoop.start);
-        document.getElementById('loopEndTxt').textContent = formatTime(ytLoop.end);
-        const btn = document.getElementById('toggleLoopBtn');
-        btn.textContent = ytLoop.active ? "LOOP ON" : "LOOP OFF";
-        btn.classList.toggle('active', ytLoop.active);
-    }
-
-    function toggleLoop() {
-        ytLoop.active = !ytLoop.active;
-        if (ytLoop.active) ytPlayer.seekTo(ytLoop.start);
-        updateYTLoopUI();
-    }
-
-    // Firestore Loop 保存・表示
-    function saveLoop(mode) {
-        const user = auth.currentUser;
-        if (!user) { alert("Please login to save loops."); openAuthOverlay(); return; }
-        
-        let loopData = { userId: user.uid, mode: mode, createdAt: new Date() };
-        if (mode === 'file') {
-            const regions = wsRegions.getRegions();
-            if (regions.length === 0) return alert("Select a range first.");
-            const r = regions[0];
-            loopData.fileName = document.getElementById('fileSelectBtn').textContent;
-            loopData.start = r.start; loopData.end = r.end;
-        } else {
-            const vid = ytPlayer.getVideoData().video_id;
-            if (!vid) return alert("Load a video first.");
-            loopData.videoId = vid;
-            loopData.videoTitle = ytPlayer.getVideoData().title;
-            loopData.start = ytLoop.start; loopData.end = ytLoop.end;
-        }
-
-        db.collection('Loops').add(loopData).then(() => { updateLoopList(); }).catch(e => alert("Error: " + e.message));
-    }
-
-    function updateLoopList() {
-        const user = auth.currentUser;
-        if (!user) { 
-            const fList = document.getElementById('loopListFile');
-            const yList = document.getElementById('loopListYT');
-            if(fList) fList.innerHTML = ''; 
-            if(yList) yList.innerHTML = ''; 
-            return; 
-        }
-        db.collection('Loops').where('userId', '==', user.uid).orderBy('createdAt', 'desc').get().then(snap => {
-            const fileList = document.getElementById('loopListFile');
-            const ytList = document.getElementById('loopListYT');
-            if(fileList) fileList.innerHTML = ''; 
-            if(ytList) ytList.innerHTML = '';
-            snap.forEach(doc => {
-                const data = doc.data();
-                const badge = document.createElement('div');
-                badge.className = 'loop-badge';
-                badge.innerHTML = `<span class="material-icons" style="font-size:14px;">play_circle</span> ${formatTime(data.start)} - ${formatTime(data.end)}`;
-                
-                const delBtn = document.createElement('span');
-                delBtn.className = 'material-icons';
-                delBtn.style = "font-size:14px; color:#666;";
-                delBtn.textContent = 'cancel';
-                delBtn.onclick = (e) => { e.stopPropagation(); deleteLoop(doc.id); };
-                badge.appendChild(delBtn);
-
-                badge.onclick = () => {
-                    if (data.mode === 'file') {
-                        if (document.getElementById('fileSelectBtn').textContent === data.fileName) {
-                            wsRegions.clearRegions();
-                            wsRegions.addRegion({ start: data.start, end: data.end, color: 'rgba(212, 163, 115, 0.3)' });
-                            wavesurfer.setTime(data.start);
-                        } else alert("Please load the original file: " + data.fileName);
-                    } else {
-                        switchMode('yt');
-                        ytPlayer.loadVideoById(data.videoId, data.start);
-                        ytLoop = { active: true, start: data.start, end: data.end };
-                        updateYTLoopUI();
-                    }
-                };
-                if (data.mode === 'file' && fileList) fileList.appendChild(badge); 
-                else if (data.mode === 'yt' && ytList) ytList.appendChild(badge);
-            });
-        });
-    }
-
-    function deleteLoop(id) { if (confirm("Delete this loop?")) db.collection('Loops').doc(id).delete().then(() => updateLoopList()); }
-
-    // History
-    function saveToHistory(vid) {
-        let history = JSON.parse(localStorage.getItem('yt_history') || '[]');
-        history = [vid, ...history.filter(id => id !== vid)].slice(0, 10);
-        localStorage.setItem('yt_history', JSON.stringify(history));
-        renderYTHistory();
-    }
-    function renderYTHistory() {
-        const history = JSON.parse(localStorage.getItem('yt_history') || '[]');
-        const container = document.getElementById('ytHistoryContainer');
-        const list = document.getElementById('ytHistoryList');
-        if (history.length === 0) { if(container) container.style.display = 'none'; return; }
-        if(container) container.style.display = 'block';
-        if(list) list.innerHTML = history.map(vid => `<img src="https://img.youtube.com/vi/${vid}/default.jpg" data-vid="${vid}" style="height:50px; border-radius:4px; cursor:pointer; border:1px solid var(--border-color);">`).join('');
-    }
-    function handleHistoryClick(e) { if (e.target.dataset.vid) { ytPlayer.loadVideoById(e.target.dataset.vid); ytLoop.active = false; updateYTLoopUI(); } }
-    function clearYTHistory() { localStorage.removeItem('yt_history'); renderYTHistory(); }
-
-    function showGuide(type) {
-        closeModals();
-        if (type === 'file') {
-            document.getElementById('guideFileContent').innerHTML = `<b>Audio File MODE GUIDE</b><ul><li><b>ABループ:</b> 波形をドラッグして範囲を選択。末尾に達すると自動で先頭に戻ります。</li><li><b>カウントイン:</b> <span class="material-icons" style="font-size:16px;">timer</span>有効時、録音開始前に3秒のカウントが入ります。</li><li><b>録音機能:</b> 選択範囲を再生しながら自分の音を録音。Sボタン（ソロ）で原曲をミュートして確認できます。</li><li><b>速度/ピッチ:</b> BPM（速度）やピッチをリアルタイムに変更可能。</li></ul>`;
-            document.getElementById('guideModalFile').style.display = 'block';
-        } else {
-            document.getElementById('guideYTContent').innerHTML = `<b>YouTube MODE GUIDE</b><ul><li><b>読込:</b> YouTubeのURLを入力してLOAD。履歴からも選べます。</li><li><b>ABループ:</b> 再生中にSET START/ENDで範囲を指定。微調整ボタンで1秒刻みの調整が可能。</li><li><b>ループ保存:</b> 気に入った範囲を保存。ログインすれば後で呼び出せます。</li></ul><span class="guide-note">※YouTubeモードはプレミアム機能です。</span>`;
-            document.getElementById('guideModalYT').style.display = 'block';
-        }
-    }
-    function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
-
-    const privacyText = `<h3>プライバシーポリシー</h3><p>AMS Player（以下「当アプリ」）は、Google Firebaseを使用してユーザー認証およびデータの保存を行っています。</p><h3>収集する情報</h3><ul><li>メールアドレス（ログイン時）</li><li>ユーザーが保存したループ設定</li></ul><h3>利用目的</h3><p>保存されたループ設定の同期およびサブスクリプション状態の確認にのみ利用します。収集した情報を第三者に提供することはありません。</p>`;
-    const legalText = `<h3>特定商取引法に基づく表記</h3><p><b>運営者:</b> 佐藤 浩</p><p><b>所在地:</b> 東京都町田市（詳細は請求により遅滞なく提供します）</p><p><b>提供時期:</b> 決済完了後、即時利用可能</p><p><b>返品・返金:</b> デジタルコンテンツの性質上、購入後の返金はできません。</p><p><b>解約:</b> 次回更新日までに手続きを完了してください。</p>`;
-    document.getElementById('privacyPolicyInner').innerHTML = privacyText + `<button class="clear-btn-ja" onclick="togglePolicy('privacy', false)" style="width:100%; margin-top:20px;">閉じる</button>`;
-    document.getElementById('legalNoticeInner').innerHTML = legalText + `<button class="clear-btn-ja" onclick="togglePolicy('legal', false)" style="width:100%; margin-top:20px;">閉じる</button>`;
-
     window.addEventListener('DOMContentLoaded', startApp);
 </script>
 </body>
