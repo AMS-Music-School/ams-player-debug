@@ -329,7 +329,7 @@
 </div>
 
 <script>
-    // --- 【重要】ここにテスト用プロジェクトのConfigを貼り付けてください ---
+    // Firebase Configuration
     const firebaseConfig = {
         apiKey: "AIzaSyAHaRRponFdRJZMxWwV5kEiBMBrmKswtW0",
         authDomain: "ams-player-test.firebaseapp.com",
@@ -339,7 +339,6 @@
         appId: "1:371056740344:web:f440083382c8d97900780d",
         measurementId: "G-V3VWGESN1Y"
     };
-    // ------------------------------------------------------------------
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -347,60 +346,39 @@
 
     let isSubscribed = false;
 
-    function openAuthOverlay() {
-        document.getElementById('auth-overlay').style.display = 'flex';
-    }
-
-    function closeAuthOverlay() {
-        document.getElementById('auth-overlay').style.display = 'none';
-    }
-    
-    function closeSubOverlay() {
-        document.getElementById('subscription-overlay').style.display = 'none';
-    }
+    function openAuthOverlay() { document.getElementById('auth-overlay').style.display = 'flex'; }
+    function closeAuthOverlay() { document.getElementById('auth-overlay').style.display = 'none'; }
+    function closeSubOverlay() { document.getElementById('subscription-overlay').style.display = 'none'; }
 
     function loginWithGoogle() {
         initAudioContext(); 
         const provider = new firebase.auth.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
-        auth.signInWithPopup(provider).then(() => {
-            closeAuthOverlay();
-        }).catch(e => alert("ログインエラー: " + e.message));
+        auth.signInWithPopup(provider).then(() => closeAuthOverlay()).catch(e => alert("ログインエラー: " + e.message));
     }
 
     function loginWithEmail() {
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
         if(!email || !password) return alert("メールアドレスとパスワードを入力してください");
-        
         initAudioContext();
         auth.signInWithEmailAndPassword(email, password)
-            .then(() => {
-                closeAuthOverlay();
-            })
+            .then(() => closeAuthOverlay())
             .catch((error) => {
                 if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
                     if(confirm("アカウントが見つかりません。この内容で新しく登録しますか？")) {
-                        auth.createUserWithEmailAndPassword(email, password)
-                            .then(() => closeAuthOverlay())
-                            .catch(e => alert("登録エラー: " + e.message));
+                        auth.createUserWithEmailAndPassword(email, password).then(() => closeAuthOverlay()).catch(e => alert("登録エラー: " + e.message));
                     }
-                } else {
-                    alert("ログインエラー: " + error.message);
-                }
+                } else { alert("ログインエラー: " + error.message); }
             });
     }
 
-    function logout() {
-        auth.signOut().then(() => {
-            location.reload();
-        });
-    }
+    function logout() { auth.signOut().then(() => location.reload()); }
 
     function redirectToCheckout() {
         const user = auth.currentUser;
         if (user) {
-            const confirmed = confirm(`現在「${user.email}」でログインしています。\nこのメールアドレスで支払手続きを進めますか？\n（決済完了後、自動的にプレミアム機能が有効になります）`);
+            const confirmed = confirm(`現在「${user.email}」でログインしています。\nこのメールアドレスで支払手続きを進めますか？`);
             if (confirmed) {
                 const baseUrl = "https://square.link/u/B13lqKnj";
                 const checkoutUrl = `${baseUrl}?checkout_user_email=${encodeURIComponent(user.email)}`;
@@ -408,8 +386,7 @@
             }
         } else {
             alert("先にログインしてください。");
-            closeSubOverlay();
-            openAuthOverlay();
+            closeSubOverlay(); openAuthOverlay();
         }
     }
 
@@ -424,46 +401,26 @@
             const userDoc = await db.collection('Users').doc(user.email).get();
             if (userDoc.exists) {
                 const userData = userDoc.data();
-                if (userData.isSubscribed === true) {
-                    if (userData.expirationDate) {
-                        const now = new Date();
-                        const expiration = userData.expirationDate.toDate();
-                        if (now < expiration) return true;
-                        return false;
-                    }
-                    return true; 
-                }
+                if (userData.isSubscribed === true) return true;
             }
             return false;
-        } catch (e) {
-            console.error("Check error:", e);
-            return false;
-        }
+        } catch (e) { return false; }
     }
 
     auth.onAuthStateChanged(async user => {
         const userInfo = document.getElementById('userInfoDisplay');
         const userNameSpan = document.getElementById('userName');
         const authSection = document.getElementById('auth-section');
-        const authOverlay = document.getElementById('auth-overlay');
-        const subOverlay = document.getElementById('subscription-overlay');
-
         if (user) {
-            authOverlay.style.display = 'none';
+            document.getElementById('auth-overlay').style.display = 'none';
             authSection.style.display = 'none';
             userInfo.style.display = 'flex';
             userNameSpan.innerText = user.displayName || user.email.split('@')[0];
             isSubscribed = await checkSubscriptionStatus(user);
-            if (isSubscribed) {
-                subOverlay.style.display = 'none';
-            }
-            if (currentMode === 'file') renderLoopList('file');
-            else renderLoopList('yt');
+            if (isSubscribed) document.getElementById('subscription-overlay').style.display = 'none';
+            renderLoopList(currentMode);
         } else {
-            userInfo.style.display = 'none';
-            authSection.style.display = 'block';
-            subOverlay.style.display = 'none';
-            isSubscribed = false;
+            userInfo.style.display = 'none'; authSection.style.display = 'block'; isSubscribed = false;
         }
     });
 
@@ -474,8 +431,8 @@
             setStart: "開始位置", setEnd: "終了位置", loopOff: "ループ OFF", loopOn: "ループ ON",
             fileSelect: "ファイルを選択", saveLoop: "ループ保存",
             recPlay: "録音再生", recStop: "再生停止",
-            guideFileContent: "<b>【Audio File Mode】ガイド</b><ul><li>録音機能: 再生しながら録音できます。範囲指定時は終わりで自動停止します。</li><li>音量調整: メイン音源と録音音声を個別に調整可能。</li><li>ソロ(S): 録音音響のみを再生。</li></ul>",
-            guideYTContent: "<b>【YouTube Mode】ガイド</b><ul><li>読み込み: URLを貼り付けてLOAD。</li><li>ループ: SET START/ENDで区間指定。</li><li>SAVE: ループを複数保存。</li></ul>"
+            guideFileContent: "<b>【Audio File Mode】ガイド</b><ul><li>録音機能: 再生しながら録音できます。</li><li>音量調整: メイン音源と録音音声を個別に調整可能。</li></ul>",
+            guideYTContent: "<b>【YouTube Mode】ガイド</b><ul><li>URLを貼り付けてLOAD。</li><li>SAVE: ループを複数保存。</li></ul>"
         },
         en: {
             langTitle: "Language Settings", helpTitle: "Help & Guide", guideFile: "Audio File Mode Guide", guideYT: "YouTube Mode Guide",
@@ -483,19 +440,18 @@
             setStart: "SET START", setEnd: "SET END", loopOff: "LOOP OFF", loopOn: "LOOP ON",
             fileSelect: "Select Audio File", saveLoop: "Save Loop",
             recPlay: "Play Rec", recStop: "Stop Rec",
-            guideFileContent: "<b>【Audio File Mode】Guide</b><ul><li>Recording: Record while playing. Stops automatically at end of range.</li><li>Volume: Adjust Main/Rec levels.</li><li>Solo(S): Listen only to recording.</li></ul>",
-            guideYTContent: "<b>【YouTube Mode】Guide</b><ul><li>Load: Paste URL and LOAD.</li><li>Loop: Press START/END.</li><li>SAVE: Store multiple loops.</li></ul>"
+            guideFileContent: "<b>【Audio File Mode】Guide</b><ul><li>Recording: Record while playing.</li></ul>",
+            guideYTContent: "<b>【YouTube Mode】Guide</b><ul><li>Load: Paste URL and LOAD.</li></ul>"
         }
     };
 
     let wavesurfer, wsRegions, recWavesurfer, ytPlayer, loopInterval;
     let loopStart = 0, loopEnd = 0, isLooping = false, currentMode = 'file';
-    let audioCtx, firstSoundTime = 0, originalBpm = 120;
-    let currentObjectURL = null, currentFileName = "", currentYTId = "";
+    let audioCtx, originalBpm = 120;
+    let currentFileName = "", currentYTId = "";
     let isCountEnabled = true, isSpeedUpEnabled = false;
-    let mediaRecorder, recordedChunks = [];
-    let isRecording = false, isSolo = false;
-    let recObjectURL = null, recordedAudioBuffer = null, lastRecStartPos = 0;
+    let mediaRecorder, recordedChunks = [], isRecording = false, isSolo = false;
+    let recObjectURL = null, lastRecStartPos = 0;
 
     function changeLanguage() {
         const lang = document.getElementById('langSelect').value || 'ja';
@@ -504,8 +460,6 @@
         document.getElementById('helpTitle').innerText = t.helpTitle;
         document.getElementById('guideFileTitle').innerText = t.guideFile;
         document.getElementById('guideYTTitle').innerText = t.guideYT;
-        document.getElementById('closeBtn1').innerText = t.close;
-        document.getElementById('closeBtn2').innerText = t.close;
         document.getElementById('resetZoomBtn').innerText = t.fit;
         document.getElementById('clearRangeBtn').innerHTML = `<span class="material-icons" style="font-size:16px;">layers_clear</span> ${t.clear}`;
         document.getElementById('saveLoopBtn').innerHTML = `<span class="material-icons" style="font-size:16px;">bookmark_add</span> ${t.saveLoop}`;
@@ -519,15 +473,6 @@
         if (loadS.innerText.includes("READY") || loadS.innerText.includes("準備")) loadS.innerText = t.ready;
         const loopB = document.getElementById('toggleLoopBtn');
         if(loopB) loopB.innerText = isLooping ? t.loopOn : t.loopOff;
-        updateRecPlayBtnUI();
-    }
-
-    function updateRecPlayBtnUI() {
-        const lang = document.getElementById('langSelect').value;
-        const t = translations[lang] || translations['ja'];
-        const btn = document.getElementById('playRecBtn');
-        if (recWavesurfer && recWavesurfer.isPlaying()) btn.innerHTML = `<span class="material-icons" style="font-size:14px;">stop_circle</span> ${t.recStop}`;
-        else if(btn) btn.innerHTML = `<span class="material-icons" style="font-size:14px;">play_circle</span> ${t.recPlay}`;
     }
 
     function toggleMenu(isOpen) {
@@ -567,14 +512,10 @@
     }
 
     function toggleFeature(type) {
-        if (type === 'count') { 
-            isCountEnabled = !isCountEnabled; 
-            document.getElementById('countToggleBtn').classList.toggle('active', isCountEnabled); 
-        }
+        if (type === 'count') { isCountEnabled = !isCountEnabled; document.getElementById('countToggleBtn').classList.toggle('active', isCountEnabled); }
         else if (type === 'speedup') { 
             if (!isSubscribed) { document.getElementById('subscription-overlay').style.display = 'flex'; return; }
-            isSpeedUpEnabled = !isSpeedUpEnabled; 
-            document.getElementById('speedUpToggleBtn').classList.toggle('active', isSpeedUpEnabled); 
+            isSpeedUpEnabled = !isSpeedUpEnabled; document.getElementById('speedUpToggleBtn').classList.toggle('active', isSpeedUpEnabled); 
         }
     }
 
@@ -584,48 +525,76 @@
         document.getElementById('yt-section').classList.toggle('active', mode === 'yt');
         document.getElementById('tab-file').classList.toggle('active', mode === 'file');
         document.getElementById('tab-yt').classList.toggle('active', mode === 'yt');
-        if(mode === 'yt') { if(wavesurfer) wavesurfer.pause(); renderYTHistory(); }
+        if(mode === 'yt' && wavesurfer) wavesurfer.pause();
         if(mode === 'file' && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
     }
 
+    // --- BPM解析 & 修正ロジック ---
     async function analyzeAudio(blob) {
-        const lang = document.getElementById('langSelect').value;
+        const lang = document.getElementById('langSelect').value || 'ja';
         const statusEl = document.getElementById('loadStatus');
         statusEl.innerText = translations[lang].analyzing;
+        
         const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
         try {
             const arrayBuffer = await blob.arrayBuffer();
             const audioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
-            const data = audioBuffer.getChannelData(0);
-            let skip = 0; const threshold = 0.015;
-            for (let i = 0; i < data.length; i += 100) { if (Math.abs(data[i]) > threshold) { skip = i / audioBuffer.sampleRate; break; } }
-            firstSoundTime = skip;
             const bpm = detectBPM(audioBuffer);
-            if (bpm > 0) { originalBpm = Math.round(bpm); updateBpmDisplay(); }
+            if (bpm > 0) {
+                originalBpm = Math.round(bpm);
+                updateBpmDisplay();
+            } else {
+                originalBpm = 120;
+                document.getElementById('spTxt').innerText = "BPM (Default) 120";
+            }
             statusEl.innerText = translations[lang].ready;
-            if(wavesurfer) wavesurfer.setTime(firstSoundTime);
-        } catch (e) { statusEl.innerText = translations[lang].ready; } finally { tempCtx.close(); }
+        } catch (e) {
+            console.error("BPM Analysis Error:", e);
+            statusEl.innerText = translations[lang].ready;
+        } finally { tempCtx.close(); }
+    }
+
+    function detectBPM(buffer) {
+        const data = buffer.getChannelData(0);
+        const sampleRate = buffer.sampleRate;
+        const step = 250; // 解析ステップ
+        const energy = [];
+        
+        // データの中心付近（リズムが安定している場所）から最大30秒分を抽出
+        const startSample = Math.floor(Math.max(0, data.length / 2 - 15 * sampleRate));
+        const endSample = Math.floor(Math.min(data.length, data.length / 2 + 15 * sampleRate));
+
+        for (let i = startSample; i < endSample; i += step) {
+            let sum = 0;
+            for(let j=0; j<step && (i+j)<data.length; j++) sum += data[i+j] * data[i+j];
+            energy.push(Math.sqrt(sum/step));
+        }
+
+        let bestBpm = 0, maxCorrelation = 0;
+        // 60BPMから200BPMの間で探す
+        const minInterval = Math.floor((60 / 200) * (sampleRate / step));
+        const maxInterval = Math.floor((60 / 60) * (sampleRate / step));
+
+        for (let interval = minInterval; interval <= maxInterval; interval++) {
+            let correlation = 0;
+            for (let i = 0; i < Math.min(energy.length - interval, 5000); i++) {
+                correlation += energy[i] * energy[i + interval];
+            }
+            if (correlation > maxCorrelation) {
+                maxCorrelation = correlation;
+                bestBpm = 60 / (interval * step / sampleRate);
+            }
+        }
+        
+        if (bestBpm > 200) bestBpm /= 2;
+        if (bestBpm < 60) bestBpm *= 2;
+        return (bestBpm < 50 || bestBpm > 250) ? 0 : bestBpm;
     }
 
     function updateBpmDisplay() {
         const currentSpeed = parseFloat(document.getElementById('speed').value);
-        const currentBpm = originalBpm ? Math.round(originalBpm * currentSpeed) : '---';
+        const currentBpm = Math.round(originalBpm * currentSpeed);
         document.getElementById('spTxt').innerText = "BPM " + currentBpm;
-    }
-
-    function detectBPM(buffer) {
-        const data = buffer.getChannelData(0), sampleRate = buffer.sampleRate, step = 200, energy = [];
-        for (let i = 0; i < data.length; i += step) {
-            let sum = 0; for(let j=0; j<step && (i+j)<data.length; j++) sum += data[i+j] * data[i+j];
-            energy.push(Math.sqrt(sum/step));
-        }
-        let bestBpm = 0, maxCorrelation = 0;
-        const minInterval = Math.floor((60 / 200) * (sampleRate / step)), maxInterval = Math.floor((60 / 60) * (sampleRate / step));
-        for (let interval = minInterval; interval <= maxInterval; interval++) {
-            let correlation = 0; for (let i = 0; i < Math.min(energy.length - interval, 10000); i++) correlation += energy[i] * energy[i + interval];
-            if (correlation > maxCorrelation) { maxCorrelation = correlation; bestBpm = 60 / (interval * step / sampleRate); }
-        }
-        return (bestBpm < 50 || bestBpm > 250) ? 0 : bestBpm;
     }
 
     function playBeep(isLast) {
@@ -644,7 +613,10 @@
         const interval = 60000 / (originalBpm * currentSpeed);
         const overlay = document.getElementById('countdown-overlay');
         overlay.style.display = 'block';
-        for (let i = 1; i <= 4; i++) { overlay.innerText = i; playBeep(i === 4); await new Promise(r => setTimeout(r, interval)); }
+        for (let i = 1; i <= 4; i++) {
+            overlay.innerText = i; playBeep(i === 4);
+            await new Promise(r => setTimeout(r, interval));
+        }
         overlay.style.display = 'none'; return true;
     }
 
@@ -659,22 +631,18 @@
             document.getElementById('recIcon').innerText = 'mic';
         } else {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
-                const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
-                mediaRecorder = new MediaRecorder(stream, { mimeType });
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
                 recordedChunks = [];
                 mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
                 mediaRecorder.onstop = async () => {
-                    const blob = new Blob(recordedChunks, { type: mimeType });
+                    const blob = new Blob(recordedChunks, { type: 'audio/webm' });
                     if (recObjectURL) URL.revokeObjectURL(recObjectURL);
                     recObjectURL = URL.createObjectURL(blob);
-                    const arrayBuffer = await blob.arrayBuffer();
-                    const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    recordedAudioBuffer = await tempCtx.decodeAudioData(arrayBuffer); tempCtx.close();
                     document.getElementById('rec-waveform-wrapper').style.display = 'block';
                     document.getElementById('recVolControl').style.display = 'flex';
                     document.getElementById('recControls').style.display = 'flex';
-                    await recWavesurfer.load(recObjectURL); applyVolumes(); updateRecPlayBtnUI();
+                    await recWavesurfer.load(recObjectURL); applyVolumes();
                     stream.getTracks().forEach(track => track.stop());
                 };
                 const region = wsRegions.getRegions()[0];
@@ -687,57 +655,67 @@
     }
 
     function playRecording() {
-        if (!recWavesurfer || !recWavesurfer.getDuration()) return;
-        initAudioContext();
+        if (!recWavesurfer) return;
         if (recWavesurfer.isPlaying()) { recWavesurfer.pause(); wavesurfer.pause(); } 
         else { wavesurfer.setTime(lastRecStartPos); recWavesurfer.setTime(0); wavesurfer.play(); recWavesurfer.play(); }
-        updateRecPlayBtnUI();
     }
 
     function deleteRecording() {
-        if (confirm("削除しますか？")) {
+        if (confirm("録音を削除しますか？")) {
             document.getElementById('rec-waveform-wrapper').style.display = 'none';
             document.getElementById('recControls').style.display = 'none';
-            if (recObjectURL) URL.revokeObjectURL(recObjectURL);
-            recObjectURL = null; recordedAudioBuffer = null; recWavesurfer.empty();
+            recObjectURL = null; recWavesurfer.empty();
         }
     }
 
+    // YouTube API
     const tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
 
     function loadYouTube(manualUrl = null) {
         initAudioContext();
-        const urlInput = document.getElementById('ytUrl'); const url = manualUrl || urlInput.value;
+        const urlInput = document.getElementById('ytUrl');
+        const url = manualUrl || urlInput.value;
         if (!url) return;
         const videoId = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.includes('be/') ? url.split('be/')[1].split('?')[0] : null;
         if (videoId) {
-            currentYTId = videoId; document.getElementById('loopListYT').innerHTML = ""; 
+            currentYTId = videoId;
             if (ytPlayer && ytPlayer.loadVideoById) ytPlayer.loadVideoById(videoId);
-            else ytPlayer = new YT.Player('player', { videoId: videoId, events: { 'onReady': () => { updateYTInfo(); }, 'onStateChange': onPlayerStateChange } });
+            else ytPlayer = new YT.Player('player', { videoId: videoId, events: { 'onReady': onPlayerReady, 'onStateChange': onPlayerStateChange } });
             urlInput.value = "";
         }
+    }
+
+    function onPlayerReady(e) { updateYTInfo(); }
+    function onPlayerStateChange(e) {
+        if (e.data === YT.PlayerState.PLAYING) {
+            updateYTInfo();
+            loopInterval = setInterval(() => { if (isLooping && ytPlayer.getCurrentTime() >= loopEnd) ytPlayer.seekTo(loopStart); }, 200);
+        } else clearInterval(loopInterval);
+    }
+
+    function updateYTInfo() {
+        const data = ytPlayer.getVideoData();
+        if (data && data.video_id) { saveToHistory(data.video_id, data.title); renderLoopList('yt'); }
     }
 
     function saveToHistory(id, title) {
         let history = JSON.parse(localStorage.getItem('ams_yt_history') || "[]");
         history = history.filter(item => item.id !== id);
-        history.unshift({ id: id, title: title || id, url: `https://www.youtube.com/watch?v=${id}`, time: Date.now() });
+        history.unshift({ id, title, url: `https://www.youtube.com/watch?v=${id}` });
         if (history.length > 20) history.pop();
-        localStorage.setItem('ams_yt_history', JSON.stringify(history)); 
-        renderYTHistory();
+        localStorage.setItem('ams_yt_history', JSON.stringify(history)); renderYTHistory();
     }
 
     function renderYTHistory() {
         const historyList = document.getElementById('ytHistoryList');
         const container = document.getElementById('ytHistoryContainer');
-        if(!historyList || !container) return;
         const history = JSON.parse(localStorage.getItem('ams_yt_history') || "[]");
         if (history.length === 0) { container.style.display = 'none'; return; }
         container.style.display = 'block'; historyList.innerHTML = "";
         history.forEach(item => {
             const card = document.createElement('div');
-            card.style = "background: #252525; border: 1px solid #333; border-radius: 6px; padding: 8px 12px; min-width: 180px; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer;";
+            card.style = "background:#252525; border:1px solid #333; border-radius:6px; padding:8px 12px; min-width:180px; flex-shrink:0; display:flex; justify-content:space-between; align-items:center; cursor:pointer;";
             card.setAttribute('data-url', item.url);
             card.innerHTML = `<span style="font-size:0.7rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#e0e0e0;">${item.title}</span><span class="material-icons" style="color:#ff5555; font-size:16px;" onclick="event.stopPropagation(); deleteHistoryItem('${item.id}')">cancel</span>`;
             historyList.appendChild(card);
@@ -746,10 +724,7 @@
 
     function handleHistoryClick(event) {
         const card = event.target.closest('div[data-url]');
-        if (card) {
-            if (!isSubscribed) { document.getElementById('subscription-overlay').style.display = 'flex'; return; }
-            loadYouTube(card.getAttribute('data-url'));
-        }
+        if (card) loadYouTube(card.getAttribute('data-url'));
     }
 
     window.deleteHistoryItem = (id) => {
@@ -759,18 +734,6 @@
     };
 
     window.clearYTHistory = () => { if (confirm("履歴を削除しますか？")) { localStorage.removeItem('ams_yt_history'); renderYTHistory(); } };
-
-    function updateYTInfo() {
-        const data = ytPlayer.getVideoData();
-        if (data && data.video_id) { saveToHistory(data.video_id, data.title); renderLoopList('yt'); }
-    }
-
-    function onPlayerStateChange(e) {
-        if (e.data === YT.PlayerState.PLAYING) {
-            updateYTInfo();
-            loopInterval = setInterval(() => { if (isLooping && ytPlayer.getCurrentTime() >= loopEnd) ytPlayer.seekTo(loopStart); }, 200);
-        } else clearInterval(loopInterval);
-    }
 
     const fmt = (s) => `${Math.floor(s/60).toString().padStart(2,'0')}:${Math.floor(s%60).toString().padStart(2,'0')}`;
     window.setLoopPoint = (t) => {
@@ -787,7 +750,8 @@
     window.toggleLoop = () => { 
         isLooping = !isLooping; const lang = document.getElementById('langSelect').value;
         const b = document.getElementById('toggleLoopBtn'); 
-        if(b) { b.innerText = isLooping ? translations[lang].loopOn : translations[lang].loopOff; b.classList.toggle('active', isLooping); }
+        b.innerText = isLooping ? translations[lang].loopOn : translations[lang].loopOff;
+        b.classList.toggle('active', isLooping);
     };
 
     function saveLoop(mode) {
@@ -805,8 +769,6 @@
         localStorage.setItem(storageKey, JSON.stringify(allLoops)); renderLoopList(mode);
     }
 
-    function getCircleNum(n) { const circles = ["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩"]; return circles[n-1] || `(${n})`; }
-
     function renderLoopList(mode) {
         const container = mode === 'file' ? document.getElementById('loopListFile') : document.getElementById('loopListYT');
         const key = mode === 'file' ? currentFileName : currentYTId;
@@ -816,13 +778,12 @@
         (allLoops[key] || []).forEach((loop, index) => {
             const badge = document.createElement('div'); badge.className = 'loop-badge';
             badge.onclick = () => applyStoredLoop(mode, loop.start, loop.end);
-            badge.innerHTML = `<span class="badge-num">${getCircleNum(index + 1)}</span><span class="material-icons badge-del" onclick="event.stopPropagation(); deleteLoop('${mode}', ${index})">cancel</span>`;
+            badge.innerHTML = `<span>${index + 1}</span><span class="material-icons" style="font-size:14px;" onclick="event.stopPropagation(); deleteLoop('${mode}', ${index})">cancel</span>`;
             container.appendChild(badge);
         });
     }
 
     window.applyStoredLoop = (mode, start, end) => {
-        if (!isSubscribed) { document.getElementById('subscription-overlay').style.display = 'flex'; return; }
         initAudioContext();
         if (mode === 'file') { wsRegions.clearRegions(); wsRegions.addRegion({ start, end, color: 'rgba(212, 163, 115, 0.2)' }); wavesurfer.setTime(start); } 
         else { loopStart = start; loopEnd = end; document.getElementById('loopStartTxt').innerText = fmt(start); document.getElementById('loopEndTxt').innerText = fmt(end); ytPlayer.seekTo(start); if (!isLooping) toggleLoop(); }
@@ -852,25 +813,16 @@
             if(file) { 
                 initAudioContext();
                 currentFileName = file.name; document.getElementById('fileSelectBtn').innerText = currentFileName;
-                const reader = new FileReader();
-                reader.onload = async (event) => {
-                    const blob = new Blob([event.target.result], { type: file.type });
-                    currentObjectURL = URL.createObjectURL(blob); 
-                    await wavesurfer.load(currentObjectURL); 
-                    analyzeAudio(file); 
-                    renderLoopList('file');
-                    // 初回描画バグ対策
-                    setTimeout(() => {
-                        wavesurfer.drawBuffer();
-                        wavesurfer.zoom(Number(document.getElementById('zoomSlider').value));
-                    }, 100);
-                };
-                reader.readAsArrayBuffer(file);
+                const blob = new Blob([await file.arrayBuffer()], { type: file.type });
+                await wavesurfer.load(URL.createObjectURL(blob));
+                analyzeAudio(blob);
+                renderLoopList('file');
             } 
         };
 
         const applySettings = () => {
-            const s = parseFloat(document.getElementById('speed').value), p = parseInt(document.getElementById('pitch').value);
+            const s = parseFloat(document.getElementById('speed').value);
+            const p = parseInt(document.getElementById('pitch').value);
             const media = wavesurfer.getMediaElement();
             if (media) {
                 media.preservesPitch = true;
@@ -879,23 +831,13 @@
             }
             updateBpmDisplay(); 
             document.getElementById('pitchTxt').innerText = (p > 0 ? "+" : "") + p; 
-            applyVolumes();
         };
 
         wavesurfer.on('ready', () => { 
             document.getElementById('totalTime').innerText = fmt(wavesurfer.getDuration()); 
             applySettings(); 
-            wavesurfer.drawBuffer();
         });
 
-        recWavesurfer.on('interaction', (newTime) => {
-            if (lastRecStartPos !== undefined) {
-                wavesurfer.setTime(lastRecStartPos + newTime);
-            }
-        });
-
-        recWavesurfer.on('finish', () => { wavesurfer.pause(); updateRecPlayBtnUI(); });
-        
         document.getElementById('speed').oninput = applySettings;
         document.getElementById('pitch').onmousedown = document.getElementById('pitch').ontouchstart = (e) => {
             if (!isSubscribed) { e.preventDefault(); document.getElementById('subscription-overlay').style.display = 'flex'; }
@@ -904,24 +846,23 @@
 
         document.getElementById('playBtn').onclick = async () => {
             initAudioContext(); 
-            if (wavesurfer.isPlaying()) { wavesurfer.pause(); } 
+            if (wavesurfer.isPlaying()) wavesurfer.pause();
             else {
-                const current = wavesurfer.getCurrentTime(), region = wsRegions.getRegions()[0];
-                if (isCountEnabled && region && (current < region.start || current >= region.end)) wavesurfer.setTime(region.start);
-                await runCountdown(); applySettings(); wavesurfer.play();
+                const region = wsRegions.getRegions()[0];
+                if (isCountEnabled && region) wavesurfer.setTime(region.start);
+                await runCountdown(); wavesurfer.play();
             }
         };
 
         wavesurfer.on('play', () => document.getElementById('playIcon').innerText = 'pause');
-        wavesurfer.on('pause', () => { document.getElementById('playIcon').innerText = 'play_arrow'; });
+        wavesurfer.on('pause', () => document.getElementById('playIcon').innerText = 'play_arrow');
         
         wavesurfer.on('timeupdate', t => {
             document.getElementById('currentTime').innerText = fmt(t);
             const r = wsRegions.getRegions()[0];
             if(r && t >= r.end) { 
-                if (isRecording) {
-                    toggleRecording(); 
-                } else {
+                if (isRecording) toggleRecording(); 
+                else {
                     wavesurfer.setTime(r.start); 
                     if (isSpeedUpEnabled) { 
                         const s = document.getElementById('speed'); 
@@ -933,8 +874,7 @@
         });
 
         window.resetSetting = (id, val) => { document.getElementById(id).value = val; applySettings(); };
-        changeLanguage(); 
-        renderYTHistory();
+        changeLanguage(); renderYTHistory();
     }
     window.addEventListener('DOMContentLoaded', startApp);
 </script>
