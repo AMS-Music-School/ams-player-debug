@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.3.5 - Subscription Edition</title>
+    <title>AMS Practice Player v1.3.6 - Subscription Edition</title>
     
     <meta name="apple-mobile-web-app-title" content="AMS Player">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -411,51 +411,27 @@
         }
     }
 
-    // --- サブスク状態確認の修正版（32日間の期限チェック付き） ---
     async function checkSubscriptionStatus(user) {
         if (!user || !user.email) return false;
-        
         try {
-            // 1. まず SchoolMember (教室生徒用) を確認（手動設定のため期限なし）
             const schoolRef = db.collection('SchoolMember').doc(user.email);
             const schoolDoc = await schoolRef.get();
-            
             if (schoolDoc.exists) {
                 const data = schoolDoc.data();
-                if (data.isSubscribed === true || data.isStudent === true) {
-                    console.log("Access granted via SchoolMember");
-                    return true;
-                }
+                if (data.isSubscribed === true || data.isStudent === true) return true;
             }
-
-            // 2. 次に Users (一般決済用) を確認
             const userRef = db.collection('Users').doc(user.email);
             const userDoc = await userRef.get();
-            
             if (userDoc.exists) {
                 const userData = userDoc.data();
-                
-                // 有効期限のチェック
                 if (userData.isSubscribed === true && userData.expirationDate) {
                     const now = new Date();
-                    const expiration = userData.expirationDate.toDate(); // TimestampをDateに変換
-
-                    if (now < expiration) {
-                        console.log("Subscription active until:", expiration);
-                        return true;
-                    } else {
-                        console.log("Subscription expired on:", expiration);
-                        return false;
-                    }
+                    const expiration = userData.expirationDate.toDate();
+                    if (now < expiration) return true;
                 }
             }
-
-            console.log("No active subscription found for:", user.email);
             return false;
-        } catch (e) {
-            console.error("Subscription check error:", e);
-            return false;
-        }
+        } catch (e) { return false; }
     }
 
     auth.onAuthStateChanged(async user => {
@@ -464,22 +440,14 @@
         const authSection = document.getElementById('auth-section');
         const authOverlay = document.getElementById('auth-overlay');
         const subOverlay = document.getElementById('subscription-overlay');
-
         if (user) {
             authOverlay.style.display = 'none';
             authSection.style.display = 'none';
             userInfo.style.display = 'flex';
             userNameSpan.innerText = user.displayName || user.email.split('@')[0];
-
             isSubscribed = await checkSubscriptionStatus(user);
-            
-            if (isSubscribed) {
-                subOverlay.style.display = 'none';
-            }
-            
-            if (currentMode === 'file') renderLoopList('file');
-            else renderLoopList('yt');
-            
+            if (isSubscribed) subOverlay.style.display = 'none';
+            if (currentMode === 'file') renderLoopList('file'); else renderLoopList('yt');
         } else {
             userInfo.style.display = 'none';
             authSection.style.display = 'block';
@@ -622,10 +590,19 @@
             for (let i = 0; i < data.length; i += 100) { if (Math.abs(data[i]) > threshold) { skip = i / audioBuffer.sampleRate; break; } }
             firstSoundTime = skip;
             const bpm = detectBPM(audioBuffer);
-            if (bpm > 0) { originalBpm = Math.round(bpm); updateBpmDisplay(); }
+            if (bpm > 0) { 
+                originalBpm = Math.round(bpm); 
+            } else {
+                originalBpm = 120; // デフォルト
+            }
+            updateBpmDisplay();
             statusEl.innerText = translations[lang].ready;
             if(wavesurfer) wavesurfer.setTime(firstSoundTime);
-        } catch (e) { statusEl.innerText = translations[lang].ready; } finally { tempCtx.close(); }
+        } catch (e) { 
+            statusEl.innerText = translations[lang].ready; 
+            originalBpm = 120; 
+            updateBpmDisplay();
+        } finally { tempCtx.close(); }
     }
 
     function updateBpmDisplay() {
@@ -673,11 +650,7 @@
         if (!isSubscribed) { document.getElementById('subscription-overlay').style.display = 'flex'; return; }
         initAudioContext();
         if (isRecording) {
-            if (mediaRecorder) mediaRecorder.stop();
-            if (wavesurfer.isPlaying()) wavesurfer.pause();
-            isRecording = false;
-            document.getElementById('recBtn').classList.remove('recording');
-            document.getElementById('recIcon').innerText = 'mic';
+            stopRecordingProcess();
         } else {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
@@ -707,11 +680,35 @@
         }
     }
 
+    function stopRecordingProcess() {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+        if (wavesurfer.isPlaying()) wavesurfer.pause();
+        isRecording = false;
+        document.getElementById('recBtn').classList.remove('recording');
+        document.getElementById('recIcon').innerText = 'mic';
+    }
+
     function playRecording() {
         if (!recWavesurfer || !recWavesurfer.getDuration()) return;
         initAudioContext();
-        if (recWavesurfer.isPlaying()) { recWavesurfer.pause(); wavesurfer.pause(); } 
-        else { wavesurfer.setTime(lastRecStartPos); recWavesurfer.setTime(0); wavesurfer.play(); recWavesurfer.play(); }
+        if (recWavesurfer.isPlaying()) { 
+            recWavesurfer.pause(); wavesurfer.pause(); 
+        } 
+        else { 
+            // 録音データと元の音源の再生位置を同期させる
+            const currentWS = wavesurfer.getCurrentTime();
+            const offset = currentWS - lastRecStartPos;
+            
+            // 録音範囲外で再生しようとした場合は先頭に戻す
+            if (offset < 0 || offset >= recWavesurfer.getDuration()) {
+                wavesurfer.setTime(lastRecStartPos);
+                recWavesurfer.setTime(0);
+            } else {
+                recWavesurfer.setTime(offset);
+            }
+            wavesurfer.play(); 
+            recWavesurfer.play(); 
+        }
         updateRecPlayBtnUI();
     }
 
@@ -928,11 +925,17 @@
             document.getElementById('currentTime').innerText = fmt(t);
             const r = wsRegions.getRegions()[0];
             if(r && t >= r.end) { 
-                wavesurfer.setTime(r.start); 
-                if (isSpeedUpEnabled) { 
-                    const s = document.getElementById('speed'); 
-                    s.value = Math.min(1.5, parseFloat(s.value) + 0.05).toFixed(2); 
-                    applySettings(); 
+                if (isRecording) {
+                    // 録音中はループせず停止
+                    stopRecordingProcess();
+                } else {
+                    // 通常再生時は既存のループ/スピードアップ処理
+                    wavesurfer.setTime(r.start); 
+                    if (isSpeedUpEnabled) { 
+                        const s = document.getElementById('speed'); 
+                        s.value = Math.min(1.5, parseFloat(s.value) + 0.05).toFixed(2); 
+                        applySettings(); 
+                    }
                 }
             }
         });
