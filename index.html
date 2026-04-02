@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.4.4 - SPEED SYNC</title>
+    <title>AMS Practice Player v1.4.5 - LAYOUT OPTIMIZED</title>
     
     <meta name="apple-mobile-web-app-title" content="AMS Player">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -124,14 +124,45 @@
         .mode-tabs { display: flex; justify-content: center; gap: 4px; margin-bottom: 15px; background: var(--panel-bg); padding: 4px; border-radius: 10px; border: 1px solid var(--border-color); }
         .tab-btn { background: transparent; border: none; color: var(--text-dim); padding: 8px; cursor: pointer; border-radius: 6px; font-size: 0.75rem; flex: 1; transition: all 0.3s ease; position: relative; }
         .tab-btn.active { background: var(--primary-color); color: #121212; font-weight: bold; }
-        .clear-btn-ja { background: #333; border: none; color: var(--text-main); padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .clear-btn-ja { background: #333; border: none; color: var(--text-main); padding: 6px 10px; border-radius: 20px; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; gap: 4px; flex: 1; justify-content: center; white-space: nowrap; }
         #ytPlayerContainer { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); background: #000; }
         #ytPlayerContainer iframe { position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; }
         .loop-badge { background: #252525; padding: 6px 10px; border-radius: 20px; display: flex; align-items: center; gap: 6px; border: 1px solid var(--border-color); cursor: pointer; position: relative; }
         .loop-list-container { margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 10px; display: flex; flex-wrap: wrap; gap: 10px; }
         .adj-btn { background: #333; border: none; color: #fff; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
         .loop-btn-main { background: var(--panel-bg); color: var(--text-main); border: 1px solid var(--primary-color); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
-        .speedup-select { background: #333; color: var(--text-main); border: 1px solid var(--border-color); border-radius: 20px; padding: 5px 10px; font-size: 0.75rem; outline: none; transition: opacity 0.3s; }
+        
+        /* 均等配置用のコンテナ */
+        .action-row-container { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            gap: 8px; 
+            margin-bottom: 15px; 
+            width: 100%;
+        }
+        .speedup-group { 
+            display: flex; 
+            align-items: center; 
+            gap: 5px; 
+            background: #252525; 
+            padding: 4px 8px; 
+            border-radius: 20px; 
+            border: 1px solid var(--border-color);
+            flex: 1;
+            justify-content: center;
+        }
+        .speedup-label { font-size: 0.65rem; color: var(--text-dim); white-space: nowrap; }
+        .speedup-select { 
+            background: transparent; 
+            color: var(--primary-color); 
+            border: none; 
+            font-size: 0.75rem; 
+            font-weight: bold;
+            outline: none; 
+            cursor: pointer;
+            transition: opacity 0.3s; 
+        }
         .speedup-select:disabled { opacity: 0.3; cursor: not-allowed; }
     </style>
 </head>
@@ -239,16 +270,20 @@
             </div>
         </div>
 
-        <div class="clear-btn-container" style="display:flex; justify-content:center; gap:10px; margin-bottom:10px; align-items:center;">
-            <button class="clear-btn-ja" onclick="wsRegions.clearRegions()" id="clearRangeBtn"><span class="material-icons" style="font-size:16px;">layers_clear</span> 範囲解除</button>
-            <button class="clear-btn-ja" onclick="saveLoop('file')" id="saveLoopBtn" style="border: 1px solid var(--primary-color);"><span class="material-icons" style="font-size:16px;">bookmark_add</span> ループ保存</button>
-            <select id="speedUpCount" class="speedup-select" disabled>
-                <option value="1">x1</option><option value="2">x2</option><option value="3">x3</option>
-                <option value="4">x4</option><option value="5">x5</option><option value="6">x6</option>
-                <option value="7">x7</option><option value="8">x8</option><option value="9">x9</option>
-                <option value="10">x10</option>
-            </select>
+        <div class="action-row-container">
+            <button class="clear-btn-ja" onclick="wsRegions.clearRegions()" id="clearRangeBtn"><span class="material-icons" style="font-size:14px;">layers_clear</span> 選択解除</button>
+            <button class="clear-btn-ja" onclick="saveLoop('file')" id="saveLoopBtn" style="border: 1px solid var(--primary-color);"><span class="material-icons" style="font-size:14px;">bookmark_add</span> ループ保存</button>
+            <div class="speedup-group">
+                <span class="speedup-label" id="speedUpLabel">速度回数</span>
+                <select id="speedUpCount" class="speedup-select" disabled>
+                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                    <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                    <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                    <option value="10">10</option>
+                </select>
+            </div>
         </div>
+
         <div id="loopListFile" class="loop-list-container"></div>
         
         <div class="transport-controls">
@@ -276,8 +311,8 @@
                 </div>
             </div>
             <div class="row" id="recControls" style="display:none; justify-content:center; gap:8px; margin-top:4px;">
-                <button class="clear-btn-ja rec-action-btn" onclick="playRecording()" id="playRecBtn"><span class="material-icons" style="font-size:14px;">play_circle</span> 録音再生</button>
-                <button class="clear-btn-ja rec-action-btn" onclick="deleteRecording()" style="color:#ff5555;"><span class="material-icons" style="font-size:14px;">delete</span> 削除</button>
+                <button class="clear-btn-ja rec-action-btn" onclick="playRecording()" id="playRecBtn" style="flex:none; padding:6px 15px;"><span class="material-icons" style="font-size:14px;">play_circle</span> 録音再生</button>
+                <button class="clear-btn-ja rec-action-btn" onclick="deleteRecording()" style="flex:none; padding:6px 15px; color:#ff5555;"><span class="material-icons" style="font-size:14px;">delete</span> 削除</button>
             </div>
         </div>
 
@@ -327,7 +362,7 @@
             </div>
             <div class="row" style="justify-content: center; gap: 10px;">
                 <button id="toggleLoopBtn" class="tab-btn" style="width:140px;" onclick="toggleLoop()">LOOP OFF</button>
-                <button class="clear-btn-ja" onclick="saveLoop('yt')" id="saveLoopBtnYT" style="border: 1px solid var(--primary-color); border-radius: 6px; padding: 8px 12px;">
+                <button class="clear-btn-ja" onclick="saveLoop('yt')" id="saveLoopBtnYT" style="border: 1px solid var(--primary-color); border-radius: 6px; padding: 8px 12px; flex:none;">
                     <span class="material-icons" style="font-size:16px;">bookmark_add</span> SAVE
                 </button>
             </div>
@@ -476,9 +511,9 @@
     const translations = {
         ja: {
             langTitle: "言語設定", helpTitle: "ヘルプ & ガイド", guideFile: "Audio Fileモード ガイド", guideYT: "YouTubeモード ガイド",
-            close: "閉じる", fit: "全体表示", clear: "範囲解除", ready: "準備完了", analyzing: "解析中...",
+            close: "閉じる", fit: "全体表示", clear: "選択解除", ready: "準備完了", analyzing: "解析中...",
             setStart: "開始位置", setEnd: "終了位置", loopOff: "ループ OFF", loopOn: "ループ ON",
-            fileSelect: "ファイルを選択", saveLoop: "ループ保存",
+            fileSelect: "ファイルを選択", saveLoop: "ループ保存", speedUpLabel: "速度回数",
             recPlay: "録音再生", recStop: "再生停止",
             guideFileContent: "<b>【Audio File Mode】ガイド</b><ul><li>録音機能: 再生しながら録音できます。範囲指定時は終わりで自動停止します。</li><li>音量調整: メイン音源と録音音声を個別に調整可能。</li><li>ソロ(S): 録音音響のみを再生。</li></ul>",
             guideYTContent: "<b>【YouTube Mode】ガイド</b><ul><li>読み込み: URLを貼り付けてLOAD。</li><li>ループ: SET START/ENDで区間指定。</li><li>SAVE: ループを複数保存。</li></ul>"
@@ -487,7 +522,7 @@
             langTitle: "Language Settings", helpTitle: "Help & Guide", guideFile: "Audio File Mode Guide", guideYT: "YouTube Mode Guide",
             close: "Close", fit: "FIT", clear: "Clear Loop", ready: "READY", analyzing: "ANALYZING...",
             setStart: "SET START", setEnd: "SET END", loopOff: "LOOP OFF", loopOn: "LOOP ON",
-            fileSelect: "Select Audio File", saveLoop: "Save Loop",
+            fileSelect: "Select Audio File", saveLoop: "Save Loop", speedUpLabel: "Auto Speed",
             recPlay: "Play Rec", recStop: "Stop Rec",
             guideFileContent: "<b>【Audio File Mode】Guide</b><ul><li>Recording: Record while playing. Stops automatically at end of range.</li><li>Volume: Adjust Main/Rec levels.</li><li>Solo(S): Listen only to recording.</li></ul>",
             guideYTContent: "<b>【YouTube Mode】Guide</b><ul><li>Load: Paste URL and LOAD.</li><li>Loop: Press START/END.</li><li>SAVE: Store multiple loops.</li></ul>"
@@ -514,8 +549,9 @@
         document.getElementById('closeBtn1').innerText = t.close;
         document.getElementById('closeBtn2').innerText = t.close;
         document.getElementById('resetZoomBtn').innerText = t.fit;
-        document.getElementById('clearRangeBtn').innerHTML = `<span class="material-icons" style="font-size:16px;">layers_clear</span> ${t.clear}`;
-        document.getElementById('saveLoopBtn').innerHTML = `<span class="material-icons" style="font-size:16px;">bookmark_add</span> ${t.saveLoop}`;
+        document.getElementById('clearRangeBtn').innerHTML = `<span class="material-icons" style="font-size:14px;">layers_clear</span> ${t.clear}`;
+        document.getElementById('saveLoopBtn').innerHTML = `<span class="material-icons" style="font-size:14px;">bookmark_add</span> ${t.saveLoop}`;
+        document.getElementById('speedUpLabel').innerText = t.speedUpLabel;
         document.getElementById('setStartBtn').innerText = t.setStart;
         document.getElementById('setEndBtn').innerText = t.setEnd;
         document.getElementById('guideFileContent').innerHTML = t.guideFileContent;
@@ -582,11 +618,8 @@
             if (!isSubscribed) { document.getElementById('subscription-overlay').style.display = 'flex'; return; }
             isSpeedUpEnabled = !isSpeedUpEnabled; 
             document.getElementById('speedUpToggleBtn').classList.toggle('active', isSpeedUpEnabled); 
-            
-            // スピードアップON/OFFに合わせてセレクトボックスを制御
             const selectEl = document.getElementById('speedUpCount');
             selectEl.disabled = !isSpeedUpEnabled;
-            
             currentLoopCount = 0;
         }
     }
