@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.4.7 - UI VISIBILITY FIXED</title>
+    <title>AMS Practice Player v1.5.0 - FULL GUIDE EDITION</title>
     
     <meta name="apple-mobile-web-app-title" content="AMS Player">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -118,7 +118,15 @@
         .menu-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
         .menu-section-title { font-size: 0.75rem; color: var(--primary-color); text-transform: uppercase; letter-spacing: 1px; margin: 15px 0 10px; display: block; }
         .menu-item { display: flex; align-items: center; gap: 12px; color: var(--text-main); padding: 10px; text-decoration: none; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: background 0.2s; font-size: 0.9rem; }
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 500px; background: var(--panel-bg); border: 1px solid var(--primary-color); border-radius: 16px; z-index: 4000; padding: 20px; box-shadow: 0 0 50px rgba(0,0,0,1); max-height: 80vh; overflow-y: auto; }
+        
+        /* ガイドモーダル内のスタイル調整 */
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 500px; background: var(--panel-bg); border: 1px solid var(--primary-color); border-radius: 16px; z-index: 4000; padding: 20px; box-shadow: 0 0 50px rgba(0,0,0,1); max-height: 85vh; overflow-y: auto; }
+        .guide-box-inner { color: var(--text-main); line-height: 1.6; font-size: 0.85rem; }
+        .guide-box-inner b { color: var(--primary-color); font-size: 1rem; display: block; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
+        .guide-box-inner ul { padding-left: 18px; margin: 10px 0; }
+        .guide-box-inner li { margin-bottom: 8px; }
+        .guide-box-inner .guide-sub { color: var(--primary-color); font-weight: bold; margin-top: 15px; display: block; font-size: 0.9rem; }
+
         .title-area { text-align: center; margin-bottom: 15px; }
         .title-area h2 { color: var(--primary-color); font-size: 0.9rem; letter-spacing: 4px; margin: 0; font-weight: bold; text-transform: uppercase; }
         .mode-tabs { display: flex; justify-content: center; gap: 4px; margin-bottom: 15px; background: var(--panel-bg); padding: 4px; border-radius: 10px; border: 1px solid var(--border-color); }
@@ -132,7 +140,6 @@
         .adj-btn { background: #333; border: none; color: #fff; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
         .loop-btn-main { background: var(--panel-bg); color: var(--text-main); border: 1px solid var(--primary-color); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
         
-        /* 修正箇所: YouTubeループボタンの視認性強化 */
         .yt-loop-btn-ui {
             width: 140px;
             padding: 8px;
@@ -535,8 +542,24 @@
             setStart: "開始位置", setEnd: "終了位置", loopOff: "LOOP OFF", loopOn: "LOOP ON",
             fileSelect: "ファイルを選択", saveLoop: "ループ保存", speedUpLabel: "速度回数",
             recPlay: "録音再生", recStop: "再生停止",
-            guideFileContent: "<b>【Audio File Mode】ガイド</b><ul><li>録音機能: 再生しながら録音できます。範囲指定時は終わりで自動停止します。</li><li>音量調整: メイン音源と録音音声を個別に調整可能。</li><li>ソロ(S): 録音音響のみを再生。</li></ul>",
-            guideYTContent: "<b>【YouTube Mode】ガイド</b><ul><li>読み込み: URLを貼り付けてLOAD。</li><li>ループ: SET START/ENDで区間指定。</li><li>SAVE: ループを複数保存。</li></ul>"
+            guideFileContent: `<b>【Audio File Mode】フルガイド</b>
+                <span class="guide-sub">1. ファイル読み込み</span>
+                <ul><li>端末内の音楽ファイルを選択して解析。読み込み時にBPMが自動算出されます。</li></ul>
+                <span class="guide-sub">2. ABループ (範囲指定)</span>
+                <ul><li>波形をドラッグして範囲を選択。再生中、範囲の終端で自動的に始端へ戻ります。</li><li>「選択解除」でループを解除。「ループ保存」で楽曲ごとに複数の範囲を保存し、下のリストから瞬時に切り替え可能です。</li></ul>
+                <span class="guide-sub">3. BPMとPitchの変更</span>
+                <ul><li>BPMスライダーで速度を変更（0.5x〜1.5x）。</li><li>Pitchスライダーでキーを半音単位で変更（±6）。※Pitch変更にはサブスクが必要です。</li></ul>
+                <span class="guide-sub">4. 自動スピードアップ機能</span>
+                <ul><li>「⚡(ボルト)」ボタンをONにし「速度回数」を選択。ループを指定回数繰り返すごとに、自動でBPMが+0.05ずつ上がります（元のBPMまで）。</li></ul>
+                <span class="guide-sub">5. セルフ録音チェック</span>
+                <ul><li>「mic」ボタンで、再生しながら自分の音を録音。</li><li>録音データは波形の下に表示され、メイン音源と録音の音量を個別に調整できます。</li><li>「S(ソロ)」ボタンをONにすると、録音した音だけを聴くことができます。</li></ul>`,
+            guideYTContent: `<b>【YouTube Mode】フルガイド</b>
+                <span class="guide-sub">1. 動画読み込み</span>
+                <ul><li>YouTubeのURLを貼り付けて「LOAD」をタップ。</li><li>読み込んだ動画は「RECENT HISTORY」に保存され、履歴から素早く再読み込みできます。</li></ul>
+                <span class="guide-sub">2. ABループ設定</span>
+                <ul><li>「SET START」と「SET END」ボタンで現在の再生位置をループ範囲に設定。</li><li>「-1s / +1s」ボタンで、開始・終了位置を1秒単位で微調整できます。</li><li>「LOOP ON/OFF」ボタンでループの有効/無効を切り替えます。</li></ul>
+                <span class="guide-sub">3. ループの保存</span>
+                <ul><li>「SAVE」ボタンで設定したループ範囲を保存。</li><li>保存されたループは動画ごとにリスト化され、数字アイコンをタップするだけで瞬時に呼び出せます。</li></ul>`
         },
         en: {
             langTitle: "Language Settings", helpTitle: "Help & Guide", guideFile: "Audio File Mode Guide", guideYT: "YouTube Mode Guide",
@@ -544,8 +567,24 @@
             setStart: "SET START", setEnd: "SET END", loopOff: "LOOP OFF", loopOn: "LOOP ON",
             fileSelect: "Select Audio File", saveLoop: "Save Loop", speedUpLabel: "Auto Speed",
             recPlay: "Play Rec", recStop: "Stop Rec",
-            guideFileContent: "<b>【Audio File Mode】Guide</b><ul><li>Recording: Record while playing. Stops automatically at end of range.</li><li>Volume: Adjust Main/Rec levels.</li><li>Solo(S): Listen only to recording.</li></ul>",
-            guideYTContent: "<b>【YouTube Mode】Guide</b><ul><li>Load: Paste URL and LOAD.</li><li>Loop: Press START/END.</li><li>SAVE: Store multiple loops.</li></ul>"
+            guideFileContent: `<b>【Audio File Mode】Full Guide</b>
+                <span class="guide-sub">1. Load Audio</span>
+                <ul><li>Select a file to analyze BPM automatically.</li></ul>
+                <span class="guide-sub">2. AB Loop</span>
+                <ul><li>Drag waveform to select range. Use "Save Loop" to store segments.</li></ul>
+                <span class="guide-sub">3. BPM & Pitch</span>
+                <ul><li>Adjust speed (0.5x-1.5x) and Pitch (±6). *Pitch requires subscription.</li></ul>
+                <span class="guide-sub">4. Auto Speed Up</span>
+                <ul><li>Enable "Bolt" and set loop count to automatically increase BPM by +0.05 per interval.</li></ul>
+                <span class="guide-sub">5. Recording</span>
+                <ul><li>Record while playing. Adjust Main/Rec volume or use "Solo(S)" to hear only the recording.</li></ul>`,
+            guideYTContent: `<b>【YouTube Mode】Full Guide</b>
+                <span class="guide-sub">1. Load Video</span>
+                <ul><li>Paste URL and tap LOAD. Recently viewed videos are saved in History.</li></ul>
+                <span class="guide-sub">2. AB Loop</span>
+                <ul><li>Use SET START/END to define range. Fine-tune with -1s/+1s buttons.</li><li>Toggle LOOP ON/OFF to control repetition.</li></ul>
+                <span class="guide-sub">3. Save Loops</span>
+                <ul><li>Save multiple loop ranges per video and recall them instantly via the loop list.</li></ul>`
         }
     };
 
@@ -820,19 +859,12 @@
         const videoId = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.includes('be/') ? url.split('be/')[1].split('?')[0] : null;
         if (videoId) {
             currentYTId = videoId; document.getElementById('loopListYT').innerHTML = ""; 
-            
             loopStart = 0; loopEnd = 0; isLooping = false;
             document.getElementById('loopStartTxt').innerText = "00:00";
             document.getElementById('loopEndTxt').innerText = "00:00";
-            
-            // ループボタンのリセット
             const b = document.getElementById('toggleLoopBtn');
             const lang = document.getElementById('langSelect').value || 'ja';
-            if(b) {
-                b.innerText = translations[lang].loopOff;
-                b.classList.remove('active');
-            }
-
+            if(b) { b.innerText = translations[lang].loopOff; b.classList.remove('active'); }
             if (ytPlayer && ytPlayer.loadVideoById) ytPlayer.loadVideoById(videoId);
             else ytPlayer = new YT.Player('player', { videoId: videoId, events: { 'onReady': () => { updateYTInfo(); }, 'onStateChange': onPlayerStateChange } });
             urlInput.value = "";
@@ -908,10 +940,7 @@
         isLooping = !isLooping; 
         const lang = document.getElementById('langSelect').value;
         const b = document.getElementById('toggleLoopBtn'); 
-        if(b) { 
-            b.innerText = isLooping ? translations[lang].loopOn : translations[lang].loopOff; 
-            b.classList.toggle('active', isLooping); 
-        }
+        if(b) { b.innerText = isLooping ? translations[lang].loopOn : translations[lang].loopOff; b.classList.toggle('active', isLooping); }
     };
 
     function saveLoop(mode) {
@@ -975,13 +1004,10 @@
         document.getElementById('audioFile').onchange = async e => { 
             const file = e.target.files[0];
             if(file) { 
-                initAudioContext();
-                currentFileName = file.name; 
-                document.getElementById('fileSelectBtn').innerText = currentFileName;
+                initAudioContext(); currentFileName = file.name; document.getElementById('fileSelectBtn').innerText = currentFileName;
                 const blob = new Blob([file], { type: file.type });
                 if (currentObjectURL) URL.revokeObjectURL(currentObjectURL);
-                currentObjectURL = URL.createObjectURL(blob); 
-                wavesurfer.load(currentObjectURL);
+                currentObjectURL = URL.createObjectURL(blob); wavesurfer.load(currentObjectURL);
                 wavesurfer.once('decode', () => { analyzeAudio(blob); renderLoopList('file'); });
             } 
         };
@@ -994,18 +1020,14 @@
                 if (media.detune !== undefined) { media.detune = p * 100; wavesurfer.setPlaybackRate(s); } 
                 else { if (p !== 0) { media.preservesPitch = false; wavesurfer.setPlaybackRate(s * Math.pow(2, p / 12)); } else wavesurfer.setPlaybackRate(s); }
             }
-            updateBpmDisplay(); 
-            document.getElementById('pitchTxt').innerText = (p > 0 ? "+" : "") + p; 
-            applyVolumes();
+            updateBpmDisplay(); document.getElementById('pitchTxt').innerText = (p > 0 ? "+" : "") + p; applyVolumes();
         };
 
         wavesurfer.on('ready', () => { document.getElementById('totalTime').innerText = fmt(wavesurfer.getDuration()); applySettings(); });
         recWavesurfer.on('finish', () => { wavesurfer.pause(); updateRecPlayBtnUI(); });
         
         document.getElementById('speed').oninput = applySettings;
-        document.getElementById('pitch').onmousedown = document.getElementById('pitch').ontouchstart = (e) => {
-            if (!isSubscribed) { e.preventDefault(); document.getElementById('subscription-overlay').style.display = 'flex'; }
-        };
+        document.getElementById('pitch').onmousedown = document.getElementById('pitch').ontouchstart = (e) => { if (!isSubscribed) { e.preventDefault(); document.getElementById('subscription-overlay').style.display = 'flex'; } };
         document.getElementById('pitch').oninput = applySettings;
 
         document.getElementById('playBtn').onclick = async () => {
@@ -1022,27 +1044,17 @@
             document.getElementById('playIcon').innerText = 'pause';
             if (recObjectURL && recWavesurfer) {
                 const offset = wavesurfer.getCurrentTime() - lastRecStartPos;
-                if (offset >= 0 && offset < recWavesurfer.getDuration()) {
-                    recWavesurfer.setTime(offset);
-                    recWavesurfer.play();
-                }
+                if (offset >= 0 && offset < recWavesurfer.getDuration()) { recWavesurfer.setTime(offset); recWavesurfer.play(); }
             }
         });
 
-        wavesurfer.on('pause', () => {
-            document.getElementById('playIcon').innerText = 'play_arrow';
-            if (recWavesurfer) recWavesurfer.pause();
-        });
+        wavesurfer.on('pause', () => { document.getElementById('playIcon').innerText = 'play_arrow'; if (recWavesurfer) recWavesurfer.pause(); });
 
         wavesurfer.on('interaction', () => {
             if (recObjectURL && recWavesurfer) {
-                const currentTime = wavesurfer.getCurrentTime();
-                const offset = currentTime - lastRecStartPos;
-                if (offset >= 0 && offset < recWavesurfer.getDuration()) {
-                    recWavesurfer.setTime(offset);
-                } else {
-                    recWavesurfer.setTime(0);
-                }
+                const currentTime = wavesurfer.getCurrentTime(); const offset = currentTime - lastRecStartPos;
+                if (offset >= 0 && offset < recWavesurfer.getDuration()) recWavesurfer.setTime(offset);
+                else recWavesurfer.setTime(0);
                 if (wavesurfer.isPlaying()) recWavesurfer.play();
             }
             currentLoopCount = 0; 
@@ -1050,49 +1062,35 @@
 
         recWavesurfer.on('interaction', () => {
             if (!recObjectURL) return;
-            const recTime = recWavesurfer.getCurrentTime();
-            const targetMainTime = lastRecStartPos + recTime;
-            if (targetMainTime <= wavesurfer.getDuration()) {
-                wavesurfer.setTime(targetMainTime);
-            }
+            const recTime = recWavesurfer.getCurrentTime(); const targetMainTime = lastRecStartPos + recTime;
+            if (targetMainTime <= wavesurfer.getDuration()) wavesurfer.setTime(targetMainTime);
             if (wavesurfer.isPlaying()) wavesurfer.play();
         });
         
         wavesurfer.on('timeupdate', t => {
             document.getElementById('currentTime').innerText = fmt(t);
             if (wavesurfer.isPlaying() && recObjectURL && recWavesurfer && recWavesurfer.isPlaying()) {
-                const expectedRecTime = t - lastRecStartPos;
-                const actualRecTime = recWavesurfer.getCurrentTime();
+                const expectedRecTime = t - lastRecStartPos; const actualRecTime = recWavesurfer.getCurrentTime();
                 if (Math.abs(actualRecTime - expectedRecTime) > 0.2) {
-                    if (expectedRecTime >= 0 && expectedRecTime < recWavesurfer.getDuration()) {
-                        recWavesurfer.setTime(expectedRecTime);
-                    } else {
-                        recWavesurfer.pause();
-                    }
+                    if (expectedRecTime >= 0 && expectedRecTime < recWavesurfer.getDuration()) recWavesurfer.setTime(expectedRecTime);
+                    else recWavesurfer.pause();
                 }
             }
             const r = wsRegions.getRegions()[0];
             if(r && t >= r.end) { 
-                if (isRecording) { 
-                    toggleRecording(); 
-                } else {
+                if (isRecording) { toggleRecording(); } 
+                else {
                     wavesurfer.setTime(r.start); 
                     if (recObjectURL && recWavesurfer) {
                         const loopOffset = r.start - lastRecStartPos;
-                        if (loopOffset >= 0 && loopOffset < recWavesurfer.getDuration()) {
-                            recWavesurfer.setTime(loopOffset);
-                        }
+                        if (loopOffset >= 0 && loopOffset < recWavesurfer.getDuration()) recWavesurfer.setTime(loopOffset);
                     }
                     if (isSpeedUpEnabled) { 
                         currentLoopCount++;
                         const targetCount = parseInt(document.getElementById('speedUpCount').value);
                         if (currentLoopCount >= targetCount) {
-                            const sInput = document.getElementById('speed'); 
-                            const currentVal = parseFloat(sInput.value);
-                            if (currentVal < 1.0) {
-                                sInput.value = Math.min(1.0, currentVal + 0.05).toFixed(2);
-                                applySettings();
-                            }
+                            const sInput = document.getElementById('speed'); const currentVal = parseFloat(sInput.value);
+                            if (currentVal < 1.0) { sInput.value = Math.min(1.0, currentVal + 0.05).toFixed(2); applySettings(); }
                             currentLoopCount = 0;
                         }
                     }
@@ -1101,8 +1099,7 @@
         });
 
         window.resetSetting = (id, val) => { document.getElementById(id).value = val; applySettings(); };
-        changeLanguage(); 
-        renderYTHistory();
+        changeLanguage(); renderYTHistory();
     }
     window.addEventListener('DOMContentLoaded', startApp);
 </script>
