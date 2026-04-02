@@ -125,8 +125,9 @@
         .menu-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
         .menu-section-title { font-size: 0.75rem; color: var(--primary-color); text-transform: uppercase; letter-spacing: 1px; margin: 15px 0 10px; display: block; }
         .menu-item { display: flex; align-items: center; gap: 12px; color: var(--text-main); padding: 10px; text-decoration: none; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: background 0.2s; font-size: 0.9rem; }
-        
-        /* アカウント情報スタイル */
+        .lang-select { width: 100%; background: #000; color: #fff; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; font-size: 0.85rem; outline: none; }
+
+        /* 追加：アカウント情報スタイル */
         .account-box { background: #000; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border-color); }
         .account-info-item { margin-bottom: 10px; font-size: 0.75rem; }
         .account-label { color: var(--text-dim); display: block; margin-bottom: 2px; }
@@ -226,7 +227,7 @@
     </div>
 
     <span class="menu-section-title" id="accountTitle">Account Information</span>
-    <div class="account-box" id="accountInfoBox">
+    <div class="account-box" id="accountInfoBox" style="display:none;">
         <div class="account-info-item">
             <span class="account-label">Name</span>
             <span class="account-val" id="accName">---</span>
@@ -466,23 +467,18 @@
     async function deleteAccount() {
         const user = auth.currentUser;
         if (!user) return;
-        
-        const confirmMsg = document.getElementById('langSelect').value === 'ja' ? 
-            "本当にアカウントを削除しますか？\nこの操作は取り消せません。" : 
-            "Are you sure you want to delete your account?\nThis action cannot be undone.";
-            
-        if (confirm(confirmMsg)) {
+        const lang = document.getElementById('langSelect').value;
+        const msg = lang === 'ja' ? "本当にアカウントを削除しますか？\n全てのデータが消去されます。" : "Are you sure you want to delete your account?\nAll data will be permanently removed.";
+        if (confirm(msg)) {
             try {
-                // データのクリーンアップが必要な場合はここにFirestoreの削除処理を追加
                 await user.delete();
-                alert("Account deleted.");
+                alert(lang === 'ja' ? "削除されました。" : "Account deleted.");
                 location.reload();
             } catch (e) {
                 if (e.code === 'auth/requires-recent-login') {
-                    alert("再ログインが必要です。一度ログアウトしてから再度ログインして実行してください。");
-                } else {
-                    alert("Error deleting account: " + e.message);
-                }
+                    alert(lang === 'ja' ? "再ログインが必要です。" : "Please re-login to perform this action.");
+                    logout();
+                } else { alert("Error: " + e.message); }
             }
         }
     }
@@ -533,38 +529,38 @@
         const authOverlay = document.getElementById('auth-overlay');
         const subOverlay = document.getElementById('subscription-overlay');
         
-        // アカウント情報表示要素
+        // 追加：アカウント表示用要素
+        const accBox = document.getElementById('accountInfoBox');
         const accName = document.getElementById('accName');
         const accEmail = document.getElementById('accEmail');
         const accUid = document.getElementById('accUid');
         const accPlan = document.getElementById('accPlan');
-        const accountBox = document.getElementById('accountInfoBox');
 
         if (user) {
             authOverlay.style.display = 'none';
             authSection.style.display = 'none';
             userInfo.style.display = 'flex';
             userNameSpan.textContent = user.displayName || user.email.split('@')[0];
-            isSubscribed = await checkSubscriptionStatus(user);
             
-            // サイドメニュー内の詳細情報を更新
-            accName.textContent = user.displayName || "No Name Set";
+            // アカウント情報の更新
+            accBox.style.display = 'block';
+            accName.textContent = user.displayName || "Not Set";
             accEmail.textContent = user.email;
             accUid.textContent = user.uid;
+
+            isSubscribed = await checkSubscriptionStatus(user);
             accPlan.textContent = isSubscribed ? "PREMIUM (Active)" : "FREE";
             accPlan.style.color = isSubscribed ? "var(--primary-color)" : "var(--text-dim)";
-            accountBox.style.display = 'block';
 
             if (isSubscribed) subOverlay.style.display = 'none';
         } else {
             authSection.style.display = 'block';
             userInfo.style.display = 'none';
+            accBox.style.display = 'none';
             isSubscribed = false;
-            accountBox.style.display = 'none';
         }
     });
 
-    // --- Core Variables ---
     let wavesurfer, wsRegions, recWavesurfer;
     let audioContext, audioTag, mediaNode;
     let isCountEnabled = true;
@@ -579,18 +575,18 @@
 
     const translations = {
         ja: {
-            authDesc: "アカウントでログイン", googleLoginBtnTxt: "Googleでログイン", authDivider: "または", emailLoginBtnTxt: "ログイン / 新規登録", authCloseBtn: "閉じる",
+            authDesc: "テスト用アカウントでログイン", googleLoginBtnTxt: "Googleでログイン", authDivider: "または", emailLoginBtnTxt: "ログイン / 新規登録", authCloseBtn: "閉じる",
             subDesc: "この機能を利用するには<br>サブスクリプションへの登録が必要です。", subStartBtn: "サブスクリプションを開始する", subCloseBtn: "閉じる", subLogoutBtn: "別のカウントでログイン",
             langTitle: "言語設定", helpTitle: "ヘルプ & ガイド", guideFileTitle: "Audio Fileモード ガイド", guideYTTitle: "YouTubeモード ガイド", privacyMenu: "プライバシーポリシー", legalMenu: "特定商取引法に基づく表記",
             tabFile: "Audio File Mode", tabYT: "YouTube Mode", fileSelectBtn: "ファイルを選択", clearRangeBtn: "選択解除", saveLoopBtn: "ループ保存", speedUpLabel: "速度回数", bpmReset: "Reset", pitchReset: "Reset",
             historyTitle: "再生履歴", historyClearBtn: "全て削除", ytLoadBtnTxt: "読込", recDelBtnTxt: "削除", accountTitle: "アカウント情報", delAccBtnTxt: "アカウント削除"
         },
         en: {
-            authDesc: "Sign in to your account", googleLoginBtnTxt: "Login with Google", authDivider: "OR", emailLoginBtnTxt: "Login / Register", authCloseBtn: "Close",
+            authDesc: "Sign in with test account", googleLoginBtnTxt: "Login with Google", authDivider: "OR", emailLoginBtnTxt: "Login / Register", authCloseBtn: "Close",
             subDesc: "A subscription is required<br>to use this feature.", subStartBtn: "Start Subscription", subCloseBtn: "Close", subLogoutBtn: "Login with another account",
-            langTitle: "Language", helpTitle: "Help & Guide", guideFileTitle: "Audio File Guide", guideYTTitle: "YouTube Guide", privacyMenu: "Privacy Policy", legalMenu: "Legal Notice",
+            langTitle: "Language Settings", helpTitle: "Help & Guide", guideFileTitle: "Audio File Guide", guideYTTitle: "YouTube Guide", privacyMenu: "Privacy Policy", legalMenu: "Legal Notice",
             tabFile: "Audio File Mode", tabYT: "YouTube Mode", fileSelectBtn: "Select File", clearRangeBtn: "Clear Range", saveLoopBtn: "Save Loop", speedUpLabel: "Auto Up", bpmReset: "Reset", pitchReset: "Reset",
-            historyTitle: "HISTORY", historyClearBtn: "Clear", ytLoadBtnTxt: "LOAD", recDelBtnTxt: "Delete", accountTitle: "Account Info", delAccBtnTxt: "Delete Account"
+            historyTitle: "RECENT HISTORY", historyClearBtn: "Clear All", ytLoadBtnTxt: "LOAD", recDelBtnTxt: "Delete", accountTitle: "Account Info", delAccBtnTxt: "Delete Account"
         }
     };
 
@@ -600,6 +596,7 @@
         for(let id in t) { const el = document.getElementById(id); if(el) { if(el.tagName === 'INPUT') el.placeholder = t[id]; else el.innerHTML = t[id]; } }
         const spTxt = document.getElementById('spTxt');
         if (spTxt.textContent.includes('BPM ---')) spTxt.textContent = "BPM ---"; else updateBpmDisplay(document.getElementById('speed').value);
+        updateLoopList();
     }
 
     function toggleMenu(show) {
@@ -638,10 +635,10 @@
         
         wavesurfer.on('ready', () => {
             document.getElementById('loadStatus').textContent = "LOADED";
-            const duration = wavesurfer.getDuration();
-            document.getElementById('totalTime').textContent = formatTime(duration);
+            document.getElementById('totalTime').textContent = formatTime(wavesurfer.getDuration());
             wsRegions.clearRegions();
             updateBpmDisplay(1.0);
+            updateLoopList();
         });
 
         wavesurfer.on('interaction', () => { if (isRecording) toggleRecording(); });
@@ -678,68 +675,37 @@
             }
         });
 
+        wsRegions.on('region-created', (r) => { if(wsRegions.getRegions().length > 1) wsRegions.getRegions()[0].remove(); });
+
+        document.getElementById('speed').addEventListener('input', applySettings);
+        document.getElementById('pitch').addEventListener('input', applySettings);
+        document.getElementById('mainVolume').addEventListener('input', (e) => {
+            const v = parseFloat(e.target.value);
+            wavesurfer.setVolume(v);
+            document.getElementById('mainVolTxt').textContent = Math.round(v * 100) + '%';
+        });
+
+        document.getElementById('zoomSlider').addEventListener('input', (e) => wavesurfer.zoom(parseFloat(e.target.value)));
+        document.getElementById('resetZoomBtn').addEventListener('click', () => { document.getElementById('zoomSlider').value = 100; wavesurfer.zoom(100); });
+        document.getElementById('playBtn').addEventListener('click', () => {
+            wavesurfer.playPause();
+            document.getElementById('playIcon').textContent = wavesurfer.isPlaying() ? 'pause' : 'play_arrow';
+        });
+
         window.resetSetting = (id, val) => { document.getElementById(id).value = val; applySettings(); };
         changeLanguage(); renderYTHistory();
     }
-
-    function formatTime(s) {
-        const m = Math.floor(s / 60);
-        const ss = Math.floor(s % 60);
-        return `${m.toString().padStart(2,'0')}:${ss.toString().padStart(2,'0')}`;
-    }
-
-    function varProp(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-
-    window.addEventListener('DOMContentLoaded', startApp);
-
-    // --- File Mode Logic ---
-    document.getElementById('audioFile').addEventListener('change', function(e) {
-        const file = e.target.result || e.target.files[0];
-        if (file) {
-            initAudioContext();
-            const url = URL.createObjectURL(file);
-            wavesurfer.load(url);
-            document.getElementById('loadStatus').textContent = "LOADING...";
-            document.getElementById('fileSelectBtn').textContent = file.name;
-            deleteRecording();
-        }
-    });
-
-    document.getElementById('playBtn').addEventListener('click', () => {
-        wavesurfer.playPause();
-        const icon = document.getElementById('playIcon');
-        icon.textContent = wavesurfer.isPlaying() ? 'pause' : 'play_arrow';
-    });
-
-    document.getElementById('zoomSlider').addEventListener('input', (e) => {
-        wavesurfer.zoom(parseFloat(e.target.value));
-    });
-
-    document.getElementById('resetZoomBtn').addEventListener('click', () => {
-        document.getElementById('zoomSlider').value = 0;
-        wavesurfer.zoom(0);
-    });
-
-    document.getElementById('mainVolume').addEventListener('input', (e) => {
-        const v = parseFloat(e.target.value);
-        wavesurfer.setVolume(v);
-        document.getElementById('mainVolTxt').textContent = Math.round(v * 100) + '%';
-    });
-
-    document.getElementById('speed').addEventListener('input', applySettings);
-    document.getElementById('pitch').addEventListener('input', applySettings);
 
     function applySettings() {
         const s = parseFloat(document.getElementById('speed').value);
         wavesurfer.setPlaybackRate(s);
         updateBpmDisplay(s);
-        // Pitch modification is handled via Web Audio if complex, but here we assume simple rate
         document.getElementById('pitchTxt').textContent = (document.getElementById('pitch').value > 0 ? '+' : '') + document.getElementById('pitch').value;
     }
 
-    function updateBpmDisplay(s) {
-        document.getElementById('spTxt').textContent = "BPM " + Math.round(s * 100) + "%";
-    }
+    function updateBpmDisplay(s) { document.getElementById('spTxt').textContent = "BPM " + Math.round(s * 100) + "%"; }
+    function formatTime(s) { const m = Math.floor(s / 60); const ss = Math.floor(s % 60); return `${m.toString().padStart(2,'0')}:${ss.toString().padStart(2,'0')}`; }
+    function varProp(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 
     function toggleFeature(type) {
         if (type === 'count') {
@@ -753,7 +719,6 @@
         }
     }
 
-    // --- Recording Logic ---
     async function toggleRecording() {
         if (isRecording) {
             mediaRecorder.stop();
@@ -764,11 +729,9 @@
         } else {
             const regions = wsRegions.getRegions();
             if (regions.length === 0) return alert("録音範囲（ループ範囲）を指定してください。");
-            
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder = new MediaRecorder(stream);
             audioChunks = [];
-            
             mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
             mediaRecorder.onstop = () => {
                 const blob = new Blob(audioChunks, { type: 'audio/ogg; codecs=opus' });
@@ -777,35 +740,24 @@
                 document.getElementById('recControls').style.display = 'flex';
                 document.getElementById('recVolControl').style.display = 'flex';
             };
-
             const startPos = regions[0].start;
             lastRecStartPos = startPos;
-            
             if (isCountEnabled) {
                 let count = 3;
                 const overlay = document.getElementById('countdown-overlay');
                 overlay.style.display = 'block';
                 const timer = setInterval(() => {
                     overlay.textContent = count;
-                    if (count <= 0) {
-                        clearInterval(timer);
-                        overlay.style.display = 'none';
-                        startRecordingProcess(startPos);
-                    }
+                    if (count <= 0) { clearInterval(timer); overlay.style.display = 'none'; startRecordingProcess(startPos); }
                     count--;
                 }, 800);
-            } else {
-                startRecordingProcess(startPos);
-            }
+            } else { startRecordingProcess(startPos); }
         }
     }
 
     function startRecordingProcess(pos) {
-        wavesurfer.setTime(pos);
-        wavesurfer.play();
-        mediaRecorder.start();
-        isRecording = true;
-        document.getElementById('recBtn').classList.add('recording');
+        wavesurfer.setTime(pos); wavesurfer.play(); mediaRecorder.start();
+        isRecording = true; document.getElementById('recBtn').classList.add('recording');
         document.getElementById('recIcon').textContent = 'stop';
         document.getElementById('rec-waveform-wrapper').style.display = 'block';
     }
@@ -817,7 +769,17 @@
             cursorColor: '#fff', height: 60, responsive: true, interact: false
         });
         recWavesurfer.load(url);
+        recWavesurfer.on('ready', () => {
+            const v = parseFloat(document.getElementById('recVolume').value);
+            recWavesurfer.setVolume(v);
+        });
     }
+
+    document.getElementById('recVolume').addEventListener('input', (e) => {
+        const v = parseFloat(e.target.value);
+        if (recWavesurfer) recWavesurfer.setVolume(v);
+        document.getElementById('recVolTxt').textContent = Math.round(v * 100) + '%';
+    });
 
     function playRecording() { if (recWavesurfer) recWavesurfer.playPause(); }
     function deleteRecording() {
@@ -836,10 +798,177 @@
         wavesurfer.setVolume(isSolo ? 0 : document.getElementById('mainVolume').value);
     }
 
-    // YouTube Logic & History omitted for brevity but should be fully preserved from your original file
-    // ... [YouTube関連の全関数：loadYouTube, toggleLoop, adjustTime, saveLoop, renderYTHistory 等をここに維持] ...
-    
-    // 省略されたYouTube関連の機能も、元のファイルをアップロードする際に完全に維持されます。
+    // --- YouTube Logic ---
+    let ytPlayer, ytLoopInterval;
+    let ytLoop = { active: false, start: 0, end: 0 };
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    window.onYouTubeIframeAPIReady = () => {
+        ytPlayer = new YT.Player('player', {
+            height: '100%', width: '100%', videoId: '',
+            playerVars: { 'playsinline': 1, 'controls': 1, 'rel': 0 },
+            events: { 'onStateChange': onPlayerStateChange }
+        });
+    };
+
+    function onPlayerStateChange(event) {
+        if (event.data == YT.PlayerState.PLAYING) {
+            ytLoopInterval = setInterval(() => {
+                const now = ytPlayer.getCurrentTime();
+                if (ytLoop.active && now >= ytLoop.end) ytPlayer.seekTo(ytLoop.start);
+            }, 100);
+        } else { clearInterval(ytLoopInterval); }
+    }
+
+    function loadYouTube() {
+        const url = document.getElementById('ytUrl').value;
+        const vid = extractVideoId(url);
+        if (vid) {
+            ytPlayer.loadVideoById(vid);
+            saveToHistory(vid);
+            ytLoop = { active: false, start: 0, end: 0 };
+            updateYTLoopUI();
+            updateLoopList();
+        } else alert("Invalid YouTube URL");
+    }
+
+    function extractVideoId(url) {
+        const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length == 11) ? match[2] : null;
+    }
+
+    function setLoopPoint(type) {
+        const now = ytPlayer.getCurrentTime();
+        if (type === 'start') { ytLoop.start = now; if (ytLoop.end <= now) ytLoop.end = now + 5; }
+        else { ytLoop.end = now; if (ytLoop.start >= now) ytLoop.start = Math.max(0, now - 5); }
+        updateYTLoopUI();
+    }
+
+    function adjustTime(type, amt) {
+        if (type === 'start') ytLoop.start = Math.max(0, ytLoop.start + amt);
+        else ytLoop.end = Math.max(ytLoop.start + 1, ytLoop.end + amt);
+        updateYTLoopUI();
+    }
+
+    function updateYTLoopUI() {
+        document.getElementById('loopStartTxt').textContent = formatTime(ytLoop.start);
+        document.getElementById('loopEndTxt').textContent = formatTime(ytLoop.end);
+        const btn = document.getElementById('toggleLoopBtn');
+        btn.textContent = ytLoop.active ? "LOOP ON" : "LOOP OFF";
+        btn.classList.toggle('active', ytLoop.active);
+    }
+
+    function toggleLoop() {
+        ytLoop.active = !ytLoop.active;
+        if (ytLoop.active) ytPlayer.seekTo(ytLoop.start);
+        updateYTLoopUI();
+    }
+
+    // --- Loop Saving Logic ---
+    function saveLoop(mode) {
+        const user = auth.currentUser;
+        if (!user) { alert("Please login to save loops."); openAuthOverlay(); return; }
+        
+        let loopData = { userId: user.uid, mode: mode, createdAt: new Date() };
+        if (mode === 'file') {
+            const regions = wsRegions.getRegions();
+            if (regions.length === 0) return alert("Select a range first.");
+            const r = regions[0];
+            loopData.fileName = document.getElementById('fileSelectBtn').textContent;
+            loopData.start = r.start; loopData.end = r.end;
+        } else {
+            const vid = ytPlayer.getVideoData().video_id;
+            if (!vid) return alert("Load a video first.");
+            loopData.videoId = vid;
+            loopData.videoTitle = ytPlayer.getVideoData().title;
+            loopData.start = ytLoop.start; loopData.end = ytLoop.end;
+        }
+
+        db.collection('Loops').add(loopData).then(() => { updateLoopList(); }).catch(e => alert("Error: " + e.message));
+    }
+
+    function updateLoopList() {
+        const user = auth.currentUser;
+        if (!user) { document.getElementById('loopListFile').innerHTML = ''; document.getElementById('loopListYT').innerHTML = ''; return; }
+        db.collection('Loops').where('userId', '==', user.uid).orderBy('createdAt', 'desc').get().then(snap => {
+            const fileList = document.getElementById('loopListFile');
+            const ytList = document.getElementById('loopListYT');
+            fileList.innerHTML = ''; ytList.innerHTML = '';
+            snap.forEach(doc => {
+                const data = doc.data();
+                const badge = document.createElement('div');
+                badge.className = 'loop-badge';
+                badge.innerHTML = `<span class="material-icons" style="font-size:14px;">play_circle</span> ${formatTime(data.start)} - ${formatTime(data.end)}`;
+                
+                const delBtn = document.createElement('span');
+                delBtn.className = 'material-icons';
+                delBtn.style = "font-size:14px; color:#666;";
+                delBtn.textContent = 'cancel';
+                delBtn.onclick = (e) => { e.stopPropagation(); deleteLoop(doc.id); };
+                badge.appendChild(delBtn);
+
+                badge.onclick = () => {
+                    if (data.mode === 'file') {
+                        if (document.getElementById('fileSelectBtn').textContent === data.fileName) {
+                            wsRegions.clearRegions();
+                            wsRegions.addRegion({ start: data.start, end: data.end, color: 'rgba(212, 163, 115, 0.3)' });
+                            wavesurfer.setTime(data.start);
+                        } else alert("Please load the original file: " + data.fileName);
+                    } else {
+                        switchMode('yt');
+                        ytPlayer.loadVideoById(data.videoId, data.start);
+                        ytLoop = { active: true, start: data.start, end: data.end };
+                        updateYTLoopUI();
+                    }
+                };
+                if (data.mode === 'file') fileList.appendChild(badge); else ytList.appendChild(badge);
+            });
+        });
+    }
+
+    function deleteLoop(id) { if (confirm("Delete this loop?")) db.collection('Loops').doc(id).delete().then(() => updateLoopList()); }
+
+    // --- History Logic ---
+    function saveToHistory(vid) {
+        let history = JSON.parse(localStorage.getItem('yt_history') || '[]');
+        history = [vid, ...history.filter(id => id !== vid)].slice(0, 10);
+        localStorage.setItem('yt_history', JSON.stringify(history));
+        renderYTHistory();
+    }
+    function renderYTHistory() {
+        const history = JSON.parse(localStorage.getItem('yt_history') || '[]');
+        const container = document.getElementById('ytHistoryContainer');
+        const list = document.getElementById('ytHistoryList');
+        if (history.length === 0) { container.style.display = 'none'; return; }
+        container.style.display = 'block';
+        list.innerHTML = history.map(vid => `<img src="https://img.youtube.com/vi/${vid}/default.jpg" data-vid="${vid}" style="height:50px; border-radius:4px; cursor:pointer; border:1px solid var(--border-color);">`).join('');
+    }
+    function handleHistoryClick(e) { if (e.target.dataset.vid) { ytPlayer.loadVideoById(e.target.dataset.vid); ytLoop.active = false; updateYTLoopUI(); } }
+    function clearYTHistory() { localStorage.removeItem('yt_history'); renderYTHistory(); }
+
+    function showGuide(type) {
+        closeModals();
+        if (type === 'file') {
+            document.getElementById('guideFileContent').innerHTML = `<b>Audio File MODE GUIDE</b><ul><li><b>ABループ:</b> 波形をドラッグして範囲を選択。末尾に達すると自動で先頭に戻ります。</li><li><b>カウントイン:</b> <span class="material-icons" style="font-size:16px;">timer</span>有効時、録音開始前に3秒のカウントが入ります。</li><li><b>録音機能:</b> 選択範囲を再生しながら自分の音を録音。Sボタン（ソロ）で原曲をミュートして確認できます。</li><li><b>速度/ピッチ:</b> BPM（速度）やピッチをリアルタイムに変更可能。</li></ul>`;
+            document.getElementById('guideModalFile').style.display = 'block';
+        } else {
+            document.getElementById('guideYTContent').innerHTML = `<b>YouTube MODE GUIDE</b><ul><li><b>読込:</b> YouTubeのURLを入力してLOAD。履歴からも選べます。</li><li><b>ABループ:</b> 再生中にSET START/ENDで範囲を指定。微調整ボタンで1秒刻みの調整が可能。</li><li><b>ループ保存:</b> 気に入った範囲を保存。ログインすれば後で呼び出せます。</li></ul><span class="guide-note">※YouTubeモードはプレミアム機能です。</span>`;
+            document.getElementById('guideModalYT').style.display = 'block';
+        }
+    }
+    function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+
+    // Privacy & Legal Texts
+    const privacyText = `<h3>プライバシーポリシー</h3><p>AMS Player（以下「当アプリ」）は、Google Firebaseを使用してユーザー認証およびデータの保存を行っています。</p><h3>収集する情報</h3><ul><li>メールアドレス（ログイン時）</li><li>ユーザーが保存したループ設定</li></ul><h3>利用目的</h3><p>保存されたループ設定の同期およびサブスクリプション状態の確認にのみ利用します。収集した情報を第三者に提供することはありません。</p>`;
+    const legalText = `<h3>特定商取引法に基づく表記</h3><p><b>運営者:</b> 佐藤 浩</p><p><b>所在地:</b> 東京都町田市（詳細は請求により遅滞なく提供します）</p><p><b>提供時期:</b> 決済完了後、即時利用可能</p><p><b>返品・返金:</b> デジタルコンテンツの性質上、購入後の返金はできません。</p><p><b>解約:</b> 次回更新日までに手続きを完了してください。</p>`;
+    document.getElementById('privacyPolicyInner').innerHTML = privacyText + `<button class="clear-btn-ja" onclick="togglePolicy('privacy', false)" style="width:100%; margin-top:20px;">閉じる</button>`;
+    document.getElementById('legalNoticeInner').innerHTML = legalText + `<button class="clear-btn-ja" onclick="togglePolicy('legal', false)" style="width:100%; margin-top:20px;">閉じる</button>`;
+
+    window.addEventListener('DOMContentLoaded', startApp);
 </script>
 </body>
 </html>
