@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.3.6 - Subscription Edition</title>
+    <title>AMS Practice Player v1.3.7 - Subscription Edition</title>
     
     <meta name="apple-mobile-web-app-title" content="AMS Player">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -590,11 +590,7 @@
             for (let i = 0; i < data.length; i += 100) { if (Math.abs(data[i]) > threshold) { skip = i / audioBuffer.sampleRate; break; } }
             firstSoundTime = skip;
             const bpm = detectBPM(audioBuffer);
-            if (bpm > 0) { 
-                originalBpm = Math.round(bpm); 
-            } else {
-                originalBpm = 120; // デフォルト
-            }
+            originalBpm = (bpm > 0) ? Math.round(bpm) : 120;
             updateBpmDisplay();
             statusEl.innerText = translations[lang].ready;
             if(wavesurfer) wavesurfer.setTime(firstSoundTime);
@@ -673,7 +669,8 @@
                 };
                 const region = wsRegions.getRegions()[0];
                 const startPos = region ? region.start : wavesurfer.getCurrentTime();
-                wavesurfer.setTime(startPos); lastRecStartPos = startPos;
+                wavesurfer.setTime(startPos); 
+                lastRecStartPos = startPos; // 録音開始位置を記憶
                 await runCountdown(); mediaRecorder.start(); await wavesurfer.play();
                 isRecording = true; document.getElementById('recBtn').classList.add('recording'); document.getElementById('recIcon').innerText = 'stop';
             } catch (err) { alert("マイクを許可してください"); }
@@ -695,15 +692,17 @@
             recWavesurfer.pause(); wavesurfer.pause(); 
         } 
         else { 
-            // 録音データと元の音源の再生位置を同期させる
             const currentWS = wavesurfer.getCurrentTime();
+            // 現在のメイン音源の位置が、録音開始位置よりどれだけ進んでいるかを計算（オフセット）
             const offset = currentWS - lastRecStartPos;
             
-            // 録音範囲外で再生しようとした場合は先頭に戻す
+            // 録音の再生開始位置を正確に同期させる
             if (offset < 0 || offset >= recWavesurfer.getDuration()) {
+                // 録音範囲より前、または後ろで再生ボタンが押された場合は録音の最初から再生
                 wavesurfer.setTime(lastRecStartPos);
                 recWavesurfer.setTime(0);
             } else {
+                // 波形の途中の場合は、そのズレの分だけ録音データの再生位置をスキップする
                 recWavesurfer.setTime(offset);
             }
             wavesurfer.play(); 
@@ -901,6 +900,8 @@
             applySettings(); 
             requestAnimationFrame(() => { wavesurfer.drawBuffer(); });
         });
+        
+        // 録音データ再生が終わったらメイン音源も止める
         recWavesurfer.on('finish', () => { wavesurfer.pause(); updateRecPlayBtnUI(); });
         
         document.getElementById('speed').oninput = applySettings;
@@ -911,7 +912,10 @@
 
         document.getElementById('playBtn').onclick = async () => {
             initAudioContext(); 
-            if (wavesurfer.isPlaying()) { wavesurfer.pause(); } 
+            if (wavesurfer.isPlaying()) { 
+                wavesurfer.pause(); 
+                if (recWavesurfer.isPlaying()) recWavesurfer.pause(); 
+            } 
             else {
                 const current = wavesurfer.getCurrentTime(), region = wsRegions.getRegions()[0];
                 if (isCountEnabled && region && (current < region.start || current >= region.end)) wavesurfer.setTime(region.start);
@@ -920,17 +924,20 @@
         };
 
         wavesurfer.on('play', () => document.getElementById('playIcon').innerText = 'pause');
-        wavesurfer.on('pause', () => { document.getElementById('playIcon').innerText = 'play_arrow'; });
+        wavesurfer.on('pause', () => { 
+            document.getElementById('playIcon').innerText = 'play_arrow'; 
+            if (recWavesurfer.isPlaying()) recWavesurfer.pause();
+            updateRecPlayBtnUI();
+        });
+
         wavesurfer.on('timeupdate', t => {
             document.getElementById('currentTime').innerText = fmt(t);
             const r = wsRegions.getRegions()[0];
             if(r && t >= r.end) { 
                 if (isRecording) {
-                    // 録音中はループせず停止
-                    stopRecordingProcess();
+                    stopRecordingProcess(); // 録音中は範囲末尾で自動停止
                 } else {
-                    // 通常再生時は既存のループ/スピードアップ処理
-                    wavesurfer.setTime(r.start); 
+                    wavesurfer.setTime(r.start); // 通常時はループ
                     if (isSpeedUpEnabled) { 
                         const s = document.getElementById('speed'); 
                         s.value = Math.min(1.5, parseFloat(s.value) + 0.05).toFixed(2); 
