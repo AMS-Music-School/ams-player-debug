@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.3.7 - Subscription Edition</title>
+    <title>AMS Practice Player v1.3.8 - TEST EDITION</title>
     
-    <meta name="apple-mobile-web-app-title" content="AMS Player">
+    <meta name="apple-mobile-web-app-title" content="AMS Player TEST">
     <meta name="apple-mobile-web-app-capable" content="yes">
     
     <link rel="icon" href="icon.png?v=1.2.1" type="image/png">
@@ -137,8 +137,8 @@
 
 <div id="auth-overlay">
     <div class="login-card">
-        <div class="header-logo" style="font-size: 1.5rem; margin-bottom: 10px;">AMS PLAYER</div>
-        <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom:20px;">アカウントにログインしてください</p>
+        <div class="header-logo" style="font-size: 1.5rem; margin-bottom: 10px;">AMS PLAYER TEST</div>
+        <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom:20px;">テスト用アカウントでログイン</p>
         <button class="google-btn" onclick="loginWithGoogle()">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="G">
             Googleでログイン
@@ -155,7 +155,7 @@
 
 <div id="subscription-overlay">
     <div class="login-card">
-        <div class="header-logo" style="font-size: 1.5rem; margin-bottom: 10px;">PREMIUM PLAN</div>
+        <div class="header-logo" style="font-size: 1.5rem; margin-bottom: 10px;">PREMIUM PLAN (TEST)</div>
         <p style="font-size: 0.9rem; color: var(--text-main);">この機能を利用するには<br>サブスクリプションへの登録が必要です。</p>
         <button class="subscribe-btn" onclick="redirectToCheckout()">
             サブスクリプションを開始する
@@ -166,7 +166,7 @@
 </div>
 
 <header>
-    <div class="header-logo">AMS PLAYER</div>
+    <div class="header-logo">AMS PLAYER <span style="font-size: 10px; color: red;">DEBUG</span></div>
     <div style="display: flex; align-items: center; gap: 10px;">
         <div id="auth-section">
             <button id="headerLoginBtn" class="header-login-btn" onclick="openAuthOverlay()">LOGIN</button>
@@ -329,16 +329,18 @@
 </div>
 
 <script>
-    // --- Firebase Configuration ---
+    // --- 【重要】ここにテスト用プロジェクトのConfigを貼り付けてください ---
     const firebaseConfig = {
-        apiKey: "AIzaSyDI4ReBg15LAaQbd-4slccBHOS9R69sLNU",
-        authDomain: "ams-player-e04bf.firebaseapp.com",
-        projectId: "ams-player-e04bf",
-        storageBucket: "ams-player-e04bf.firebasestorage.app",
-        messagingSenderId: "102274983236",
-        appId: "1:102274983236:web:f4334348391dde42dd6311",
-        measurementId: "G-GYHLQKN6SS"
+        apiKey: "AIzaSyAHaRRponFdRJZMxWwV5kEiBMBrmKswtW0",
+        authDomain: "ams-player-test.firebaseapp.com",
+        projectId: "ams-player-test",
+        storageBucket: "ams-player-test.firebasestorage.app",
+        messagingSenderId: "371056740344",
+        appId: "1:371056740344:web:f440083382c8d97900780d",
+        measurementId: "G-V3VWGESN1Y"
     };
+    // ------------------------------------------------------------------
+
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
@@ -414,24 +416,29 @@
     async function checkSubscriptionStatus(user) {
         if (!user || !user.email) return false;
         try {
-            const schoolRef = db.collection('SchoolMember').doc(user.email);
-            const schoolDoc = await schoolRef.get();
+            const schoolDoc = await db.collection('SchoolMember').doc(user.email).get();
             if (schoolDoc.exists) {
                 const data = schoolDoc.data();
                 if (data.isSubscribed === true || data.isStudent === true) return true;
             }
-            const userRef = db.collection('Users').doc(user.email);
-            const userDoc = await userRef.get();
+            const userDoc = await db.collection('Users').doc(user.email).get();
             if (userDoc.exists) {
                 const userData = userDoc.data();
-                if (userData.isSubscribed === true && userData.expirationDate) {
-                    const now = new Date();
-                    const expiration = userData.expirationDate.toDate();
-                    if (now < expiration) return true;
+                if (userData.isSubscribed === true) {
+                    if (userData.expirationDate) {
+                        const now = new Date();
+                        const expiration = userData.expirationDate.toDate();
+                        if (now < expiration) return true;
+                        return false;
+                    }
+                    return true; 
                 }
             }
             return false;
-        } catch (e) { return false; }
+        } catch (e) {
+            console.error("Check error:", e);
+            return false;
+        }
     }
 
     auth.onAuthStateChanged(async user => {
@@ -440,14 +447,18 @@
         const authSection = document.getElementById('auth-section');
         const authOverlay = document.getElementById('auth-overlay');
         const subOverlay = document.getElementById('subscription-overlay');
+
         if (user) {
             authOverlay.style.display = 'none';
             authSection.style.display = 'none';
             userInfo.style.display = 'flex';
             userNameSpan.innerText = user.displayName || user.email.split('@')[0];
             isSubscribed = await checkSubscriptionStatus(user);
-            if (isSubscribed) subOverlay.style.display = 'none';
-            if (currentMode === 'file') renderLoopList('file'); else renderLoopList('yt');
+            if (isSubscribed) {
+                subOverlay.style.display = 'none';
+            }
+            if (currentMode === 'file') renderLoopList('file');
+            else renderLoopList('yt');
         } else {
             userInfo.style.display = 'none';
             authSection.style.display = 'block';
@@ -463,7 +474,7 @@
             setStart: "開始位置", setEnd: "終了位置", loopOff: "ループ OFF", loopOn: "ループ ON",
             fileSelect: "ファイルを選択", saveLoop: "ループ保存",
             recPlay: "録音再生", recStop: "再生停止",
-            guideFileContent: "<b>【Audio File Mode】ガイド</b><ul><li>録音機能: 再生しながら録音できます。客観的チェックに最適。</li><li>音量調整: メイン音源と録音音声を個別に調整可能。</li><li>ソロ(S): 録音音響のみを再生。</li></ul>",
+            guideFileContent: "<b>【Audio File Mode】ガイド</b><ul><li>録音機能: 再生しながら録音できます。範囲指定時は終わりで自動停止します。</li><li>音量調整: メイン音源と録音音声を個別に調整可能。</li><li>ソロ(S): 録音音響のみを再生。</li></ul>",
             guideYTContent: "<b>【YouTube Mode】ガイド</b><ul><li>読み込み: URLを貼り付けてLOAD。</li><li>ループ: SET START/ENDで区間指定。</li><li>SAVE: ループを複数保存。</li></ul>"
         },
         en: {
@@ -472,7 +483,7 @@
             setStart: "SET START", setEnd: "SET END", loopOff: "LOOP OFF", loopOn: "LOOP ON",
             fileSelect: "Select Audio File", saveLoop: "Save Loop",
             recPlay: "Play Rec", recStop: "Stop Rec",
-            guideFileContent: "<b>【Audio File Mode】Guide</b><ul><li>Recording: Record while playing.</li><li>Volume: Adjust Main/Rec levels.</li><li>Solo(S): Listen only to recording.</li></ul>",
+            guideFileContent: "<b>【Audio File Mode】Guide</b><ul><li>Recording: Record while playing. Stops automatically at end of range.</li><li>Volume: Adjust Main/Rec levels.</li><li>Solo(S): Listen only to recording.</li></ul>",
             guideYTContent: "<b>【YouTube Mode】Guide</b><ul><li>Load: Paste URL and LOAD.</li><li>Loop: Press START/END.</li><li>SAVE: Store multiple loops.</li></ul>"
         }
     };
@@ -590,15 +601,10 @@
             for (let i = 0; i < data.length; i += 100) { if (Math.abs(data[i]) > threshold) { skip = i / audioBuffer.sampleRate; break; } }
             firstSoundTime = skip;
             const bpm = detectBPM(audioBuffer);
-            originalBpm = (bpm > 0) ? Math.round(bpm) : 120;
-            updateBpmDisplay();
+            if (bpm > 0) { originalBpm = Math.round(bpm); updateBpmDisplay(); }
             statusEl.innerText = translations[lang].ready;
             if(wavesurfer) wavesurfer.setTime(firstSoundTime);
-        } catch (e) { 
-            statusEl.innerText = translations[lang].ready; 
-            originalBpm = 120; 
-            updateBpmDisplay();
-        } finally { tempCtx.close(); }
+        } catch (e) { statusEl.innerText = translations[lang].ready; } finally { tempCtx.close(); }
     }
 
     function updateBpmDisplay() {
@@ -646,7 +652,11 @@
         if (!isSubscribed) { document.getElementById('subscription-overlay').style.display = 'flex'; return; }
         initAudioContext();
         if (isRecording) {
-            stopRecordingProcess();
+            if (mediaRecorder) mediaRecorder.stop();
+            if (wavesurfer.isPlaying()) wavesurfer.pause();
+            isRecording = false;
+            document.getElementById('recBtn').classList.remove('recording');
+            document.getElementById('recIcon').innerText = 'mic';
         } else {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
@@ -669,45 +679,18 @@
                 };
                 const region = wsRegions.getRegions()[0];
                 const startPos = region ? region.start : wavesurfer.getCurrentTime();
-                wavesurfer.setTime(startPos); 
-                lastRecStartPos = startPos; // 録音開始位置を記憶
+                wavesurfer.setTime(startPos); lastRecStartPos = startPos;
                 await runCountdown(); mediaRecorder.start(); await wavesurfer.play();
                 isRecording = true; document.getElementById('recBtn').classList.add('recording'); document.getElementById('recIcon').innerText = 'stop';
             } catch (err) { alert("マイクを許可してください"); }
         }
     }
 
-    function stopRecordingProcess() {
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-        if (wavesurfer.isPlaying()) wavesurfer.pause();
-        isRecording = false;
-        document.getElementById('recBtn').classList.remove('recording');
-        document.getElementById('recIcon').innerText = 'mic';
-    }
-
     function playRecording() {
         if (!recWavesurfer || !recWavesurfer.getDuration()) return;
         initAudioContext();
-        if (recWavesurfer.isPlaying()) { 
-            recWavesurfer.pause(); wavesurfer.pause(); 
-        } 
-        else { 
-            const currentWS = wavesurfer.getCurrentTime();
-            // 現在のメイン音源の位置が、録音開始位置よりどれだけ進んでいるかを計算（オフセット）
-            const offset = currentWS - lastRecStartPos;
-            
-            // 録音の再生開始位置を正確に同期させる
-            if (offset < 0 || offset >= recWavesurfer.getDuration()) {
-                // 録音範囲より前、または後ろで再生ボタンが押された場合は録音の最初から再生
-                wavesurfer.setTime(lastRecStartPos);
-                recWavesurfer.setTime(0);
-            } else {
-                // 波形の途中の場合は、そのズレの分だけ録音データの再生位置をスキップする
-                recWavesurfer.setTime(offset);
-            }
-            wavesurfer.play(); 
-            recWavesurfer.play(); 
-        }
+        if (recWavesurfer.isPlaying()) { recWavesurfer.pause(); wavesurfer.pause(); } 
+        else { wavesurfer.setTime(lastRecStartPos); recWavesurfer.setTime(0); wavesurfer.play(); recWavesurfer.play(); }
         updateRecPlayBtnUI();
     }
 
@@ -876,7 +859,11 @@
                     await wavesurfer.load(currentObjectURL); 
                     analyzeAudio(blob); 
                     renderLoopList('file');
-                    requestAnimationFrame(() => wavesurfer.zoom(Number(document.getElementById('zoomSlider').value)));
+                    // 初回描画バグ対策
+                    setTimeout(() => {
+                        wavesurfer.drawBuffer();
+                        wavesurfer.zoom(Number(document.getElementById('zoomSlider').value));
+                    }, 100);
                 };
                 reader.readAsArrayBuffer(file);
             } 
@@ -898,10 +885,15 @@
         wavesurfer.on('ready', () => { 
             document.getElementById('totalTime').innerText = fmt(wavesurfer.getDuration()); 
             applySettings(); 
-            requestAnimationFrame(() => { wavesurfer.drawBuffer(); });
+            wavesurfer.drawBuffer();
         });
-        
-        // 録音データ再生が終わったらメイン音源も止める
+
+        recWavesurfer.on('interaction', (newTime) => {
+            if (lastRecStartPos !== undefined) {
+                wavesurfer.setTime(lastRecStartPos + newTime);
+            }
+        });
+
         recWavesurfer.on('finish', () => { wavesurfer.pause(); updateRecPlayBtnUI(); });
         
         document.getElementById('speed').oninput = applySettings;
@@ -912,10 +904,7 @@
 
         document.getElementById('playBtn').onclick = async () => {
             initAudioContext(); 
-            if (wavesurfer.isPlaying()) { 
-                wavesurfer.pause(); 
-                if (recWavesurfer.isPlaying()) recWavesurfer.pause(); 
-            } 
+            if (wavesurfer.isPlaying()) { wavesurfer.pause(); } 
             else {
                 const current = wavesurfer.getCurrentTime(), region = wsRegions.getRegions()[0];
                 if (isCountEnabled && region && (current < region.start || current >= region.end)) wavesurfer.setTime(region.start);
@@ -924,20 +913,16 @@
         };
 
         wavesurfer.on('play', () => document.getElementById('playIcon').innerText = 'pause');
-        wavesurfer.on('pause', () => { 
-            document.getElementById('playIcon').innerText = 'play_arrow'; 
-            if (recWavesurfer.isPlaying()) recWavesurfer.pause();
-            updateRecPlayBtnUI();
-        });
-
+        wavesurfer.on('pause', () => { document.getElementById('playIcon').innerText = 'play_arrow'; });
+        
         wavesurfer.on('timeupdate', t => {
             document.getElementById('currentTime').innerText = fmt(t);
             const r = wsRegions.getRegions()[0];
             if(r && t >= r.end) { 
                 if (isRecording) {
-                    stopRecordingProcess(); // 録音中は範囲末尾で自動停止
+                    toggleRecording(); 
                 } else {
-                    wavesurfer.setTime(r.start); // 通常時はループ
+                    wavesurfer.setTime(r.start); 
                     if (isSpeedUpEnabled) { 
                         const s = document.getElementById('speed'); 
                         s.value = Math.min(1.5, parseFloat(s.value) + 0.05).toFixed(2); 
