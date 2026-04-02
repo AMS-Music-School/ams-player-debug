@@ -119,6 +119,15 @@
         .menu-section-title { font-size: 0.75rem; color: var(--primary-color); text-transform: uppercase; letter-spacing: 1px; margin: 15px 0 10px; display: block; }
         .menu-item { display: flex; align-items: center; gap: 12px; color: var(--text-main); padding: 10px; text-decoration: none; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: background 0.2s; font-size: 0.9rem; }
         
+        /* 新設：アカウント情報パネル */
+        .account-panel { background: #181818; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 20px; font-size: 0.8rem; }
+        .account-info-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+        .account-info-label { font-size: 0.65rem; color: var(--primary-color); font-weight: bold; text-transform: uppercase; }
+        .account-info-val { color: var(--text-main); word-break: break-all; font-family: monospace; }
+        .plan-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; margin-top: 4px; }
+        .plan-free { background: #444; color: #fff; }
+        .plan-premium { background: var(--primary-color); color: #121212; }
+
         .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 500px; background: var(--panel-bg); border: 1px solid var(--primary-color); border-radius: 16px; z-index: 4000; padding: 20px; box-shadow: 0 0 50px rgba(0,0,0,1); max-height: 85vh; overflow-y: auto; }
         .guide-box-inner { color: var(--text-main); line-height: 1.6; font-size: 0.85rem; }
         .guide-box-inner b { color: var(--primary-color); font-size: 1rem; display: block; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
@@ -192,7 +201,6 @@
         }
         .speedup-select:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        /* ポリシー用スタイル */
         .policy-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 5000; overflow-y: auto; padding: 20px; }
         .policy-content { background: var(--panel-bg); color: var(--text-main); padding: 25px; border-radius: 15px; max-width: 600px; margin: 30px auto; font-size: 0.85rem; line-height: 1.7; border: 1px solid var(--border-color); }
         .policy-content h3 { color: var(--primary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-top: 20px; font-size: 1rem; }
@@ -254,11 +262,40 @@
             <span class="material-icons">close</span>
         </button>
     </div>
+
+    <span class="menu-section-title" id="accountTitle">Account Info</span>
+    <div class="account-panel">
+        <div id="account-logged-in" style="display:none;">
+            <div class="account-info-row">
+                <span class="account-info-label" id="labelUserName">Username</span>
+                <span class="account-info-val" id="menuUserDisplayName">---</span>
+            </div>
+            <div class="account-info-row">
+                <span class="account-info-label" id="labelEmail">Sign-in Email</span>
+                <span class="account-info-val" id="menuUserEmail">---</span>
+            </div>
+            <div class="account-info-row">
+                <span class="account-info-label">UID</span>
+                <span class="account-info-val" id="menuUserID" style="font-size:0.6rem; opacity:0.6;">---</span>
+            </div>
+            <div class="account-info-row">
+                <span class="account-info-label" id="labelPlan">Plan Status</span>
+                <div id="menuUserPlan"><span class="plan-badge plan-free">FREE</span></div>
+            </div>
+            <button class="logout-btn" onclick="logout()" style="width:100%; margin-top:10px; padding:8px;" id="menuLogoutBtn">Logout</button>
+        </div>
+        <div id="account-logged-out" style="text-align:center; padding:10px 0;">
+            <p style="font-size:0.75rem; color:var(--text-dim); margin-bottom:10px;" id="msgLoginRequired">ログインしていません</p>
+            <button class="header-login-btn" onclick="openAuthOverlay(); toggleMenu(false);" style="width:100%;">LOGIN</button>
+        </div>
+    </div>
+
     <span class="menu-section-title" id="langTitle">Language Settings</span>
     <select id="langSelect" class="lang-select" onchange="changeLanguage()">
         <option value="ja">日本語</option>
         <option value="en">English</option>
     </select>
+    
     <span class="menu-section-title" id="helpTitle">Help & Guide</span>
     <div class="menu-item" onclick="showGuide('file')"><span class="material-icons">description</span><span id="guideFileTitle">Audio Fileモード ガイド</span></div>
     <div class="menu-item" onclick="showGuide('yt')"><span class="material-icons">smart_display</span><span id="guideYTTitle">YouTubeモード ガイド</span></div>
@@ -269,13 +306,11 @@
 </div>
 
 <div id="privacyPolicyModal" class="policy-modal">
-    <div class="policy-content" id="privacyPolicyInner">
-        </div>
+    <div class="policy-content" id="privacyPolicyInner"></div>
 </div>
 
 <div id="legalNoticeModal" class="policy-modal">
-    <div class="policy-content" id="legalNoticeInner">
-        </div>
+    <div class="policy-content" id="legalNoticeInner"></div>
 </div>
 
 <div id="guideModalFile" class="modal"><div class="guide-box-inner" id="guideFileContent"></div><button class="clear-btn-ja" id="closeBtn1" style="width:100%; margin-top:20px;" onclick="closeModals()">閉じる</button></div>
@@ -541,163 +576,222 @@
         const authOverlay = document.getElementById('auth-overlay');
         const subOverlay = document.getElementById('subscription-overlay');
 
+        // メニュー内要素
+        const menuAccLoggedIn = document.getElementById('account-logged-in');
+        const menuAccLoggedOut = document.getElementById('account-logged-out');
+        const menuUserName = document.getElementById('menuUserDisplayName');
+        const menuUserEmail = document.getElementById('menuUserEmail');
+        const menuUserID = document.getElementById('menuUserID');
+        const menuUserPlan = document.getElementById('menuUserPlan');
+
         if (user) {
             authOverlay.style.display = 'none';
             authSection.style.display = 'none';
             userInfo.style.display = 'flex';
             userNameSpan.innerText = user.displayName || user.email.split('@')[0];
+            
+            // サイドメニュー内の情報更新
+            menuAccLoggedIn.style.display = 'block';
+            menuAccLoggedOut.style.display = 'none';
+            menuUserName.innerText = user.displayName || "No Name";
+            menuUserEmail.innerText = user.email;
+            menuUserID.innerText = user.uid;
+
             isSubscribed = await checkSubscriptionStatus(user);
+            
+            // プラン表示の更新
             if (isSubscribed) {
                 subOverlay.style.display = 'none';
+                menuUserPlan.innerHTML = '<span class="plan-badge plan-premium">PREMIUM</span>';
+            } else {
+                menuUserPlan.innerHTML = '<span class="plan-badge plan-free">FREE</span>';
             }
+            
             if (currentMode === 'file') renderLoopList('file');
             else renderLoopList('yt');
         } else {
             userInfo.style.display = 'none';
             authSection.style.display = 'block';
             subOverlay.style.display = 'none';
+            
+            // サイドメニュー内の情報更新 (未ログイン)
+            menuAccLoggedIn.style.display = 'none';
+            menuAccLoggedOut.style.display = 'block';
+            
             isSubscribed = false;
         }
     });
 
     const translations = {
         ja: {
-            langTitle: "言語設定", helpTitle: "ヘルプ & ガイド", guideFile: "Audio Fileモード ガイド", guideYT: "YouTubeモード ガイド",
-            close: "閉じる", fit: "全体表示", clear: "選択解除", ready: "準備完了", analyzing: "解析中...",
-            setStart: "開始位置", setEnd: "終了位置", loopOff: "LOOP OFF", loopOn: "LOOP ON",
-            fileSelect: "ファイルを選択", saveLoop: "ループ保存", speedUpLabel: "速度回数",
-            recPlay: "録音再生", recStop: "再生停止",
-            privacyMenu: "Privacy Policy", legalMenu: "特定商取引法に基づく表記",
-            authDesc: "テスト用アカウントでログイン", googleBtn: "Googleでログイン", authDiv: "または", authEmail: "ログイン / 新規登録",
-            subDesc: "この機能を利用するには<br>サブスクリプションへの登録が必要です。", subStart: "サブスクリプションを開始する", subLogout: "別のカウントでログイン",
-            historyTitle: "最近の履歴", historyClear: "すべて消去", ytLoad: "読み込む", recDel: "削除",
+            accountTitle: "アカウント情報",
+            labelUserName: "ユーザー名",
+            labelEmail: "サインインアドレス",
+            labelPlan: "現在のプラン",
+            msgLoginRequired: "ログインしていません",
+            langTitle: "言語設定",
+            helpTitle: "ヘルプ & ガイド",
+            guideFile: "Audio Fileモード ガイド",
+            guideYT: "YouTubeモード ガイド",
+            close: "閉じる",
+            fit: "全体表示",
+            clear: "選択解除",
+            ready: "準備完了",
+            analyzing: "解析中...",
+            setStart: "開始位置",
+            setEnd: "終了位置",
+            loopOff: "LOOP OFF",
+            loopOn: "LOOP ON",
+            fileSelect: "ファイルを選択",
+            saveLoop: "ループ保存",
+            speedUpLabel: "速度回数",
+            recPlay: "録音再生",
+            recStop: "再生停止",
+            privacyMenu: "Privacy Policy",
+            legalMenu: "特定商取引法に基づく表記",
+            authDesc: "テスト用アカウントでログイン",
+            googleBtn: "Googleでログイン",
+            authDiv: "または",
+            authEmail: "ログイン / 新規登録",
+            subDesc: "この機能を利用するには<br>サブスクリプションへの登録が必要です。",
+            subStart: "サブスクリプションを開始する",
+            subLogout: "別のカウントでログイン",
+            historyTitle: "最近の履歴",
+            historyClear: "すべて消去",
+            ytLoad: "読み込む",
+            recDel: "削除",
             privacyInner: `<h2 style="color:var(--primary-color); margin-top:0;">プライバシーポリシー</h2>
-                <p>Anderson Studios（以下「当スタジオ」）が運営する「AMS Music School」は、提供するアプリケーション「AMS Practice Player」（以下「本アプリ」）における個人情報の取扱いについて、以下の通り定めます。</p>
-                <h3>1. 取得する情報</h3>
-                <p>本アプリでは、Google認証によるメールアドレス・氏名、およびサービス利用に必要な決済ステータス（Square経由）を取得します。</p>
-                <h3>2. 利用目的</h3>
-                <p>取得した情報は、アカウント認証、サブスクリプション管理、ユーザーサポート、および本アプリの機能提供のみに利用します。</p>
-                <h3>3. 第三者提供</h3>
-                <p>法令に基づく場合を除き、同意なく第三者に提供しません。本アプリはインフラとしてGoogle Firebase、決済としてSquareを利用します。</p>
-                <h3>4. お問い合わせ</h3>
-                <p>運営：Anderson Studios (AMS Music School)<br>連絡先：ams.guitar.school@gmail.com</p>
-                <button class="clear-btn-ja" style="width:100%; margin-top:20px;" onclick="togglePolicy('privacy', false)">閉じる</button>`,
+            <p>Anderson Studios（以下「当スタジオ」）が運営する「AMS Music School」は、提供するアプリケーション「AMS Practice Player」（以下「本アプリ」）における個人情報の取扱いについて、以下の通り定めます。</p>
+            <h3>1. 取得する情報</h3>
+            <p>本アプリでは、Google認証によるメールアドレス・氏名、およびサービス利用に必要な決済ステータス（Square経由）を取得します。</p>
+            <h3>2. 利用目的</h3>
+            <p>取得した情報は、アカウント認証、サブスクリプション管理、ユーザーサポート、および本アプリの機能提供のみに利用します。</p>
+            <h3>3. 第三者提供</h3>
+            <p>法令に基づく場合を除き、同意なく第三者に提供しません。本アプリはインフラとしてGoogle Firebase、決済としてSquareを利用します。</p>
+            <h3>4. お問い合わせ</h3>
+            <p>運営：Anderson Studios (AMS Music School)<br>連絡先：ams.guitar.school@gmail.com</p>
+            <button class="clear-btn-ja" style="width:100%; margin-top:20px;" onclick="togglePolicy('privacy', false)">閉じる</button>`,
             legalInner: `<h2 style="color:var(--primary-color); margin-top:0;">特定商取引法に基づく表記</h2>
-                <h3>運営者名</h3><p>芦田幸一 (Anderson Studios / AMS Music School)</p>
-                <h3>連絡先</h3><p>ams.guitar.school@gmail.com</p>
-                <h3>販売価格</h3><p>購入手続きの際に画面に表示される金額（税込）</p>
-                <h3>代金の支払時期および方法</h3><p>Square決済（クレジットカード等）による即時決済。サブスクリプションは各更新日に課金されます。</p>
-                <h3>役務の提供時期</h3><p>決済完了後、直ちにご利用いただけます。</p>
-                <h3>解約・返金ポリシー</h3>
-                <p>・商品の性質上、決済完了後の返金・返品は原則としてお受けできません。<br>・サブスクリプションの解約はいつでも可能です。解約後も有効期限までは引き続きサービスをご利用いただけます。<br>・日割り計算による返金は行っておりません。</p>
-                <button class="clear-btn-ja" style="width:100%; margin-top:20px;" onclick="togglePolicy('legal', false)">閉じる</button>`,
+            <h3>運営者名</h3><p>芦田幸一 (Anderson Studios / AMS Music School)</p>
+            <h3>連絡先</h3><p>ams.guitar.school@gmail.com</p>
+            <h3>販売価格</h3><p>購入手続きの際に画面に表示される金額（税込）</p>
+            <h3>代金の支払時期および方法</h3><p>Square決済（クレジットカード等）による即時決済。サブスクリプションは各更新日に課金されます。</p>
+            <h3>役務の提供時期</h3><p>決済完了後、直ちにご利用いただけます。</p>
+            <h3>解約・返金ポリシー</h3>
+            <p>・商品の性質上、決済完了後の返金・返品は原則としてお受けできません。<br>・サブスクリプションの解約はいつでも可能です。解約後も有効期限までは引き続きサービスをご利用いただけます。<br>・日割り計算による返金は行っておりません。</p>
+            <button class="clear-btn-ja" style="width:100%; margin-top:20px;" onclick="togglePolicy('legal', false)">閉じる</button>`,
             guideFileContent: `<b>【Audio File Mode】フルガイド</b>
-                <span class="guide-sub">1. ファイル読み込み</span>
-                <ul><li>端末内の音楽ファイルを選択して解析。読み込み時にBPMが自動算出されます。</li></ul>
-                <span class="guide-sub">2. ABループ (範囲指定)</span>
-                <ul><li>波形をドラッグして範囲を選択。再生中、範囲の終端で自動的に始端へ戻ります。</li><li>「選択解除」でループを解除。「ループ保存」で楽曲ごとに複数の範囲を保存し、下のリストから瞬時に切り替え可能です。</li></ul>
-                <span class="guide-sub">3. BPMとPitchの変更</span>
-                <ul><li>BPMスライダーで速度を変更（0.5x〜1.5x）。</li><li>Pitchスライダーでキーを半音単位で変更（±6）。※Pitch変更にはサブスクが必要です。</li></ul>
-                <span class="guide-sub">4. 自動スピードアップ機能</span>
-                <ul><li>「⚡(ボルト)」ボタンをONにし「速度回数」を選択。ループを指定回数繰り返すごとに、自動でBPMが+0.05ずつ上がります（元のBPMまで）。</li></ul>
-                <span class="guide-sub">5. セルフ録音チェック</span>
-                <ul><li>「mic」ボタンで、再生しながら自分の音を録音。</li><li>録音データは波形の下に表示され、メイン音源と録音の音量を個別に調整できます。</li><li>「S(ソロ)」ボタンをONにすると、録音した音だけを聴くことができます。</li>
-                <li class="guide-note">※正確な録音と同期には、PCとオーディオインターフェースの利用を推奨します。</li>
-                <li class="guide-note">※モバイル端末（スマホ・タブレット）ではブラウザの仕様により、録音動作が不安定になる場合があります。</li></ul>`,
+            <span class="guide-sub">1. ファイル読み込み</span>
+            <ul><li>端末内の音楽ファイルを選択して解析。読み込み時にBPMが自動算出されます。</li></ul>
+            <span class="guide-sub">2. ABループ (範囲指定)</span>
+            <ul><li>波形をドラッグして範囲を選択。再生中、範囲の終端で自動的に始端へ戻ります。</li><li>「選択解除」でループを解除できます。</li></ul>
+            <span class="guide-sub">3. BPMとPitchの調整</span>
+            <ul><li>音程を変えずに速度のみを変更可能。また音程(キー)の変更も可能です。</li></ul>
+            <span class="guide-sub">4. カウントイン & 速度自動アップ</span>
+            <ul><li>「タイマー」ボタン有効時、再生開始前に5秒のカウントが入ります。</li><li>「稲妻」ボタン有効時、ループを指定回数繰り返すと速度が自動で0.05ずつ上がります。</li></ul>
+            <span class="guide-sub">5. セルフ録音チェック</span>
+            <ul><li>「マイク」ボタンで自分の演奏を録音。録音後は自分の音だけを再生して確認できます。</li><li>「S」ボタン(Solo)をONにすると、原曲を消して自分の録音のみを聴けます。</li></ul>
+            <span class="guide-note">※ 録音データは一時的なもので保存されません。</span>`,
             guideYTContent: `<b>【YouTube Mode】フルガイド</b>
-                <span class="guide-sub">1. 動画読み込み</span>
-                <ul><li>YouTubeのURLを貼り付けて「LOAD」をタップ。</li><li>読み込んだ動画は「RECENT HISTORY」に保存され、履歴から素早く再読み込みできます。</li></ul>
-                <span class="guide-sub">2. ABループ設定</span>
-                <ul><li>「SET START」と「SET END」ボタンで現在の再生位置をループ範囲に設定。</li><li>「-1s / +1s」ボタンで、開始・終了位置を1秒単位で微調整できます。</li><li>「LOOP ON/OFF」ボタンでループの有効/無効を切り替えます。</li></ul>
-                <span class="guide-sub">3. ループの保存</span>
-                <ul><li>「SAVE」ボタンで設定したループ範囲を保存。</li><li>保存されたループは動画ごとにリスト化され、数字アイコンをタップするだけで瞬時に呼び出せます。</li></ul>`
+            <span class="guide-sub">1. 動画の読み込み</span>
+            <ul><li>YouTubeのURLを貼り付けて「LOAD」をタップ。</li></ul>
+            <span class="guide-sub">2. ループ範囲の設定</span>
+            <ul><li>再生しながら「SET START」「SET END」で範囲を指定。</li><li>「-1s」「+1s」ボタンで1秒単位の微調整が可能です。</li></ul>
+            <span class="guide-sub">3. ループの保存</span>
+            <ul><li>設定した範囲を「SAVE」で保存可能。保存したリストをタップすれば瞬時にその範囲を呼び出せます。</li></ul>
+            <span class="guide-note">※ YouTubeの仕様により、速度・キーの変更には対応していません。</span>`
         },
         en: {
-            langTitle: "Language Settings", helpTitle: "Help & Guide", guideFile: "Audio File Mode Guide", guideYT: "YouTube Mode Guide",
-            close: "Close", fit: "FIT", clear: "Clear Loop", ready: "READY", analyzing: "ANALYZING...",
-            setStart: "SET START", setEnd: "SET END", loopOff: "LOOP OFF", loopOn: "LOOP ON",
-            fileSelect: "Select Audio File", saveLoop: "Save Loop", speedUpLabel: "Auto Speed",
-            recPlay: "Play Rec", recStop: "Stop Rec",
-            privacyMenu: "Privacy Policy", legalMenu: "Commercial Transactions Act",
-            authDesc: "Login with test account", googleBtn: "Login with Google", authDiv: "OR", authEmail: "Login / Register",
-            subDesc: "Subscription is required to use this feature.", subStart: "Start Subscription", subLogout: "Login with another account",
-            historyTitle: "Recent History", historyClear: "Clear All", ytLoad: "LOAD", recDel: "Delete",
+            accountTitle: "Account Info",
+            labelUserName: "Username",
+            labelEmail: "Sign-in Email",
+            labelPlan: "Plan Status",
+            msgLoginRequired: "Not logged in",
+            langTitle: "Language Settings",
+            helpTitle: "Help & Guide",
+            guideFile: "Audio File Mode Guide",
+            guideYT: "YouTube Mode Guide",
+            close: "CLOSE",
+            fit: "FIT",
+            clear: "CLEAR",
+            ready: "READY",
+            analyzing: "Analyzing...",
+            setStart: "SET START",
+            setEnd: "SET END",
+            loopOff: "LOOP OFF",
+            loopOn: "LOOP ON",
+            fileSelect: "Select File",
+            saveLoop: "SAVE LOOP",
+            speedUpLabel: "Auto Up",
+            recPlay: "Play Rec",
+            recStop: "Stop Rec",
+            privacyMenu: "Privacy Policy",
+            legalMenu: "Legal Terms",
+            authDesc: "Login with test account",
+            googleBtn: "Login with Google",
+            authDiv: "OR",
+            authEmail: "Login / Register",
+            subDesc: "Subscription is required<br>to use this feature.",
+            subStart: "Start Subscription",
+            subLogout: "Login with another account",
+            historyTitle: "RECENT HISTORY",
+            historyClear: "Clear All",
+            ytLoad: "LOAD",
+            recDel: "DEL",
             privacyInner: `<h2 style="color:var(--primary-color); margin-top:0;">Privacy Policy</h2>
-                <p>Anderson Studios ("We/Us") operating as "AMS Music School" establishes this Privacy Policy regarding the handling of personal information in the "AMS Practice Player" ("App").</p>
-                <h3>1. Collected Information</h3>
-                <p>The App collects email addresses and names via Google Authentication, and payment statuses via Square for subscription management.</p>
-                <h3>2. Purpose of Use</h3>
-                <p>Collected information is used solely for authentication, subscription management, user support, and delivering App features.</p>
-                <h3>3. Third-Party Sharing</h3>
-                <p>We do not share information with third parties without consent, except as required by law. The App utilizes Google Firebase and Square.</p>
-                <h3>4. Contact</h3>
-                <p>Operator: Anderson Studios (AMS Music School)<br>Contact: ams.guitar.school@gmail.com</p>
-                <button class="clear-btn-ja" style="width:100%; margin-top:20px;" onclick="togglePolicy('privacy', false)">Close</button>`,
+            <p>Operated by Anderson Studios (AMS Music School).</p>
+            <h3>1. Data Collection</h3><p>We collect email/name via Google and subscription status via Square.</p>
+            <h3>2. Purpose</h3><p>Used only for authentication and subscription management.</p>
+            <button class="clear-btn-ja" style="width:100%; margin-top:20px;" onclick="togglePolicy('privacy', false)">Close</button>`,
             legalInner: `<h2 style="color:var(--primary-color); margin-top:0;">Legal Notice</h2>
-                <h3>Operator</h3><p>Koichi Ashida (Anderson Studios / AMS Music School)</p>
-                <h3>Contact</h3><p>ams.guitar.school@gmail.com</p>
-                <h3>Pricing</h3><p>Displayed during the purchase process (Tax included).</p>
-                <h3>Payment</h3><p>Immediate payment via Square (Credit Card, etc.). Subscriptions are billed on each renewal date.</p>
-                <h3>Delivery</h3><p>Service is available immediately after payment completion.</p>
-                <h3>Refund Policy</h3>
-                <p>・Due to the nature of digital services, refunds are generally not accepted after payment.<br>・Subscriptions can be canceled at any time. The service remains active until the end of the current billing period.<br>・No pro-rated refunds are provided.</p>
-                <button class="clear-btn-ja" style="width:100%; margin-top:20px;" onclick="togglePolicy('legal', false)">Close</button>`,
-            guideFileContent: `<b>【Audio File Mode】Full Guide</b>
-                <span class="guide-sub">1. Load Audio</span>
-                <ul><li>Select a file to analyze BPM automatically.</li></ul>
-                <span class="guide-sub">2. AB Loop</span>
-                <ul><li>Drag waveform to select range. Use "Save Loop" to store segments.</li></ul>
-                <span class="guide-sub">3. BPM & Pitch</span>
-                <ul><li>Adjust speed (0.5x-1.5x) and Pitch (±6). *Pitch requires subscription.</li></ul>
-                <span class="guide-sub">4. Auto Speed Up</span>
-                <ul><li>Enable "Bolt" and set loop count to automatically increase BPM by +0.05 per interval.</li></ul>
-                <span class="guide-sub">5. Recording</span>
-                <ul><li>Record while playing. Adjust Main/Rec volume or use "Solo(S)" to hear only the recording.</li>
-                <li class="guide-note">*Using a PC and Audio Interface is highly recommended for stable sync.</li>
-                <li class="guide-note">*Mobile devices may experience unstable recording due to browser limitations.</li></ul>`,
-            guideYTContent: `<b>【YouTube Mode】Full Guide</b>
-                <span class="guide-sub">1. Load Video</span>
-                <ul><li>Paste URL and tap LOAD. Recently viewed videos are saved in History.</li></ul>
-                <span class="guide-sub">2. AB Loop</span>
-                <ul><li>Use SET START/END to define range. Fine-tune with -1s/+1s buttons.</li><li>Toggle LOOP ON/OFF to control repetition.</li></ul>
-                <span class="guide-sub">3. Save Loops</span>
-                <ul><li>Save multiple loop ranges per video and recall them instantly via the loop list.</li></ul>`
+            <h3>Operator</h3><p>Koichi Ashida (Anderson Studios)</p>
+            <h3>Price</h3><p>As displayed on screen.</p>
+            <button class="clear-btn-ja" style="width:100%; margin-top:20px;" onclick="togglePolicy('legal', false)">Close</button>`,
+            guideFileContent: `<b>【Audio File Mode】Guide</b>
+            <ul><li>Load audio files and set loops.</li><li>Adjust BPM/Pitch and record yourself.</li></ul>`,
+            guideYTContent: `<b>【YouTube Mode】Guide</b>
+            <ul><li>Paste URL and set loop points.</li><li>Save loops for quick access.</li></ul>`
         }
     };
 
-    let wavesurfer, wsRegions, recWavesurfer, ytPlayer, loopInterval;
-    let loopStart = 0, loopEnd = 0, isLooping = false, currentMode = 'file';
-    let audioCtx, firstSoundTime = 0, originalBpm = 120;
-    let currentObjectURL = null, currentFileName = "", currentYTId = "";
-    let isCountEnabled = true, isSpeedUpEnabled = false;
-    let mediaRecorder, recordedChunks = [];
-    let isRecording = false, isSolo = false;
-    let recObjectURL = null, recordedAudioBuffer = null, lastRecStartPos = 0;
-    let currentLoopCount = 0;
+    let wavesurfer, wsRegions, activeRegion = null;
+    let recWavesurfer = null;
+    let mediaRecorder, audioChunks = [];
+    let recObjectURL = null;
+    let isRecording = false;
+    let currentMode = 'file';
+    let lastRecStartPos = 0;
+    let ytPlayer = null;
+    let ytLoopStart = 0, ytLoopEnd = 0, ytLoopEnabled = false;
 
     function changeLanguage() {
-        const lang = document.getElementById('langSelect').value || 'ja';
-        const t = translations[lang] || translations['ja'];
+        const lang = document.getElementById('langSelect').value;
+        const t = translations[lang];
         
-        // メニュー類
+        // アカウント情報ラベル
+        document.getElementById('accountTitle').innerText = t.accountTitle;
+        document.getElementById('labelUserName').innerText = t.labelUserName;
+        document.getElementById('labelEmail').innerText = t.labelEmail;
+        document.getElementById('labelPlan').innerText = t.labelPlan;
+        if(document.getElementById('msgLoginRequired')) document.getElementById('msgLoginRequired').innerText = t.msgLoginRequired;
+
         document.getElementById('langTitle').innerText = t.langTitle;
         document.getElementById('helpTitle').innerText = t.helpTitle;
         document.getElementById('guideFileTitle').innerText = t.guideFile;
         document.getElementById('guideYTTitle').innerText = t.guideYT;
         document.getElementById('privacyMenu').innerText = t.privacyMenu;
         document.getElementById('legalMenu').innerText = t.legalMenu;
-
-        // ボタン・ラベル
-        document.getElementById('closeBtn1').innerText = t.close;
-        document.getElementById('closeBtn2').innerText = t.close;
         document.getElementById('resetZoomBtn').innerText = t.fit;
         document.getElementById('clearRangeBtn').innerHTML = `<span class="material-icons" style="font-size:14px;">layers_clear</span> ${t.clear}`;
         document.getElementById('saveLoopBtn').innerHTML = `<span class="material-icons" style="font-size:14px;">bookmark_add</span> ${t.saveLoop}`;
         document.getElementById('speedUpLabel').innerText = t.speedUpLabel;
-        document.getElementById('setStartBtn').innerText = t.setStart;
-        document.getElementById('setEndBtn').innerText = t.setEnd;
-        
-        // ログイン・サブスク画面
+        document.getElementById('fileSelectBtn').innerText = t.fileSelect;
+        document.getElementById('privacyPolicyInner').innerHTML = t.privacyInner;
+        document.getElementById('legalNoticeInner').innerHTML = t.legalInner;
+        document.getElementById('guideFileContent').innerHTML = t.guideFileContent;
+        document.getElementById('guideYTContent').innerHTML = t.guideYTContent;
+        document.getElementById('closeBtn1').innerText = t.close;
+        document.getElementById('closeBtn2').innerText = t.close;
         document.getElementById('authDesc').innerText = t.authDesc;
         document.getElementById('googleLoginBtnTxt').innerText = t.googleBtn;
         document.getElementById('authDivider').innerText = t.authDiv;
@@ -705,92 +799,32 @@
         document.getElementById('authCloseBtn').innerText = t.close;
         document.getElementById('subDesc').innerHTML = t.subDesc;
         document.getElementById('subStartBtn').innerText = t.subStart;
-        document.getElementById('subCloseBtn').innerText = t.close;
         document.getElementById('subLogoutBtn').innerText = t.subLogout;
-
-        // YouTube関連
-        document.getElementById('ytLoadBtnTxt').innerText = t.ytLoad;
+        document.getElementById('subCloseBtn').innerText = t.close;
         document.getElementById('historyTitle').innerText = t.historyTitle;
         document.getElementById('historyClearBtn').innerText = t.historyClear;
-
-        // ガイド・ポリシー内容
-        document.getElementById('guideFileContent').innerHTML = t.guideFileContent;
-        document.getElementById('guideYTContent').innerHTML = t.guideYTContent;
-        document.getElementById('privacyPolicyInner').innerHTML = t.privacyInner;
-        document.getElementById('legalNoticeInner').innerHTML = t.legalInner;
-
-        const fileLabel = document.getElementById('fileSelectBtn');
-        if (fileLabel.innerText.includes("ファイル") || fileLabel.innerText.includes("Select")) fileLabel.innerText = t.fileSelect;
+        document.getElementById('ytLoadBtnTxt').innerText = t.ytLoad;
+        document.getElementById('recDelBtnTxt').innerHTML = `<span class="material-icons" style="font-size:14px;">delete</span> ${t.recDel}`;
         
-        const loadS = document.getElementById('loadStatus');
-        if (loadS.innerText.includes("READY") || loadS.innerText.includes("準備")) loadS.innerText = t.ready;
-        
-        const b = document.getElementById('toggleLoopBtn');
-        if(b) b.innerText = isLooping ? t.loopOn : t.loopOff;
-
-        const recDel = document.getElementById('recDelBtnTxt');
-        if(recDel) recDel.innerHTML = `<span class="material-icons" style="font-size:14px;">delete</span> ${t.recDel}`;
-
-        updateRecPlayBtnUI();
+        if (wavesurfer && !wavesurfer.isReady) document.getElementById('loadStatus').innerText = t.ready;
+        if (ytPlayer) updateYTLoopUI();
+        if (currentMode === 'file') renderLoopList('file');
+        else renderLoopList('yt');
     }
 
-    function updateRecPlayBtnUI() {
-        const lang = document.getElementById('langSelect').value;
-        const t = translations[lang] || translations['ja'];
-        const btn = document.getElementById('playRecBtn');
-        if (recWavesurfer && recWavesurfer.isPlaying()) btn.innerHTML = `<span class="material-icons" style="font-size:14px;">stop_circle</span> ${t.recStop}`;
-        else if(btn) btn.innerHTML = `<span class="material-icons" style="font-size:14px;">play_circle</span> ${t.recPlay}`;
+    function toggleMenu(show) {
+        document.getElementById('sideMenu').classList.toggle('open', show);
+        document.getElementById('menuOverlay').style.display = show ? 'block' : 'none';
     }
 
-    function toggleMenu(isOpen) {
-        document.getElementById('sideMenu').classList.toggle('open', isOpen);
-        document.getElementById('menuOverlay').style.display = isOpen ? 'block' : 'none';
+    function showGuide(mode) {
+        closeModals();
+        document.getElementById(mode === 'file' ? 'guideModalFile' : 'guideModalYT').style.display = 'block';
+        toggleMenu(false);
     }
-
-    function showGuide(type) {
-        toggleMenu(false); closeModals();
-        if (type === 'file') document.getElementById('guideModalFile').style.display = 'block';
-        if (type === 'yt') document.getElementById('guideModalYT').style.display = 'block';
-        document.getElementById('menuOverlay').style.display = 'block';
-    }
-
     function closeModals() {
         document.getElementById('guideModalFile').style.display = 'none';
         document.getElementById('guideModalYT').style.display = 'none';
-        document.getElementById('menuOverlay').style.display = 'none';
-    }
-
-    function initAudioContext() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        return audioCtx;
-    }
-
-    function toggleSolo() { isSolo = !isSolo; document.getElementById('soloBtn').classList.toggle('active', isSolo); applyVolumes(); }
-
-    function applyVolumes() {
-        if (!wavesurfer) return;
-        const mVol = parseFloat(document.getElementById('mainVolume').value);
-        const rVol = parseFloat(document.getElementById('recVolume').value);
-        if (isSolo) wavesurfer.setMuted(true); else { wavesurfer.setMuted(false); wavesurfer.setVolume(mVol); }
-        if (recWavesurfer && recObjectURL) recWavesurfer.setVolume(rVol); 
-        document.getElementById('mainVolTxt').innerText = Math.round(mVol * 100) + "%";
-        document.getElementById('recVolTxt').innerText = Math.round(rVol * 100) + "%";
-    }
-
-    function toggleFeature(type) {
-        if (type === 'count') { 
-            isCountEnabled = !isCountEnabled; 
-            document.getElementById('countToggleBtn').classList.toggle('active', isCountEnabled); 
-        }
-        else if (type === 'speedup') { 
-            if (!isSubscribed) { document.getElementById('subscription-overlay').style.display = 'flex'; return; }
-            isSpeedUpEnabled = !isSpeedUpEnabled; 
-            document.getElementById('speedUpToggleBtn').classList.toggle('active', isSpeedUpEnabled); 
-            const selectEl = document.getElementById('speedUpCount');
-            selectEl.disabled = !isSpeedUpEnabled;
-            currentLoopCount = 0;
-        }
     }
 
     function switchMode(mode) {
@@ -799,389 +833,73 @@
         document.getElementById('yt-section').classList.toggle('active', mode === 'yt');
         document.getElementById('tab-file').classList.toggle('active', mode === 'file');
         document.getElementById('tab-yt').classList.toggle('active', mode === 'yt');
-        if(mode === 'yt') { if(wavesurfer) wavesurfer.pause(); renderYTHistory(); }
-        if(mode === 'file' && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+        if (wavesurfer && wavesurfer.isPlaying()) wavesurfer.pause();
+        if (ytPlayer && ytPlayer.getPlayerState() === 1) ytPlayer.pauseVideo();
+        renderLoopList(mode);
     }
 
-    async function analyzeAudio(blob) {
-        const lang = document.getElementById('langSelect').value;
-        const statusEl = document.getElementById('loadStatus');
-        statusEl.innerText = translations[lang].analyzing;
-        
-        const ctx = initAudioContext();
-        try {
-            const arrayBuffer = await blob.arrayBuffer();
-            const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-            
-            const data = audioBuffer.getChannelData(0);
-            let skip = 0; const threshold = 0.015;
-            for (let i = 0; i < data.length; i += 100) { 
-                if (Math.abs(data[i]) > threshold) { 
-                    skip = i / audioBuffer.sampleRate; 
-                    break; 
-                } 
-            }
-            firstSoundTime = skip;
-
-            const bpm = detectBPM(audioBuffer);
-            if (bpm > 0) { 
-                originalBpm = Math.round(bpm); 
-            } else { 
-                originalBpm = 120; 
-            }
-            
-            updateBpmDisplay();
-            statusEl.innerText = translations[lang].ready;
-            if(wavesurfer) wavesurfer.setTime(firstSoundTime);
-        } catch (e) { 
-            console.error("Analysis error:", e);
-            statusEl.innerText = translations[lang].ready; 
+    function initAudioContext() {
+        if (window.AudioContext || window.webkitAudioContext) {
+            const context = new (window.AudioContext || window.webkitAudioContext)();
+            if (context.state === 'suspended') context.resume();
         }
     }
-
-    function updateBpmDisplay() {
-        const currentSpeed = parseFloat(document.getElementById('speed').value);
-        const currentBpm = Math.round(originalBpm * currentSpeed);
-        const bpmEl = document.getElementById('spTxt');
-        if (bpmEl) {
-            bpmEl.innerText = "BPM " + (originalBpm > 0 ? currentBpm : "---");
-        }
-    }
-
-    function detectBPM(buffer) {
-        const data = buffer.getChannelData(0), sampleRate = buffer.sampleRate, step = 200, energy = [];
-        for (let i = 0; i < data.length; i += step) {
-            let sum = 0; for(let j=0; j<step && (i+j)<data.length; j++) sum += data[i+j] * data[i+j];
-            energy.push(Math.sqrt(sum/step));
-        }
-        let bestBpm = 0, maxCorrelation = 0;
-        const minInterval = Math.floor((60 / 200) * (sampleRate / step)), maxInterval = Math.floor((60 / 60) * (sampleRate / step));
-        for (let interval = minInterval; interval <= maxInterval; interval++) {
-            let correlation = 0; for (let i = 0; i < Math.min(energy.length - interval, 10000); i++) correlation += energy[i] * energy[i + interval];
-            if (correlation > maxCorrelation) { maxCorrelation = correlation; bestBpm = 60 / (interval * step / sampleRate); }
-        }
-        return (bestBpm < 50 || bestBpm > 250) ? 0 : bestBpm;
-    }
-
-    function playBeep(isLast) {
-        const ctx = initAudioContext();
-        const osc = ctx.createOscillator(), gain = ctx.createGain();
-        osc.frequency.setValueAtTime(isLast ? 880 : 440, ctx.currentTime);
-        gain.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.start(); osc.stop(ctx.currentTime + 0.1);
-    }
-
-    async function runCountdown() {
-        if (!isCountEnabled) return true;
-        const currentSpeed = parseFloat(document.getElementById('speed').value);
-        const interval = 60000 / (originalBpm * currentSpeed);
-        const overlay = document.getElementById('countdown-overlay');
-        overlay.style.display = 'block';
-        for (let i = 1; i <= 4; i++) { overlay.innerText = i; playBeep(i === 4); await new Promise(r => setTimeout(r, interval)); }
-        overlay.style.display = 'none'; return true;
-    }
-
-    async function toggleRecording() {
-        if (!isSubscribed) { document.getElementById('subscription-overlay').style.display = 'flex'; return; }
-        initAudioContext();
-        if (isRecording) {
-            if (mediaRecorder) mediaRecorder.stop();
-            if (wavesurfer.isPlaying()) wavesurfer.pause();
-            isRecording = false;
-            document.getElementById('recBtn').classList.remove('recording');
-            document.getElementById('recIcon').innerText = 'mic';
-        } else {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
-                const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
-                mediaRecorder = new MediaRecorder(stream, { mimeType });
-                recordedChunks = [];
-                mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
-                mediaRecorder.onstop = async () => {
-                    const blob = new Blob(recordedChunks, { type: mimeType });
-                    if (recObjectURL) URL.revokeObjectURL(recObjectURL);
-                    recObjectURL = URL.createObjectURL(blob);
-                    const arrayBuffer = await blob.arrayBuffer();
-                    const ctx = initAudioContext();
-                    recordedAudioBuffer = await ctx.decodeAudioData(arrayBuffer);
-                    document.getElementById('rec-waveform-wrapper').style.display = 'block';
-                    document.getElementById('recVolControl').style.display = 'flex';
-                    document.getElementById('recControls').style.display = 'flex';
-                    await recWavesurfer.load(recObjectURL); applyVolumes(); updateRecPlayBtnUI();
-                    stream.getTracks().forEach(track => track.stop());
-                };
-                const region = wsRegions.getRegions()[0];
-                const startPos = region ? region.start : wavesurfer.getCurrentTime();
-                wavesurfer.setTime(startPos); lastRecStartPos = startPos;
-                await runCountdown(); mediaRecorder.start(); await wavesurfer.play();
-                isRecording = true; document.getElementById('recBtn').classList.add('recording'); document.getElementById('recIcon').innerText = 'stop';
-            } catch (err) { alert("マイクを許可してください"); }
-        }
-    }
-
-    function playRecording() {
-        if (!recWavesurfer || !recObjectURL) return;
-        initAudioContext();
-        if (recWavesurfer.isPlaying()) { 
-            recWavesurfer.pause(); 
-            wavesurfer.pause(); 
-        } 
-        else { 
-            const currentTime = wavesurfer.getCurrentTime();
-            const offset = currentTime - lastRecStartPos;
-            if (offset >= 0 && offset < recWavesurfer.getDuration()) {
-                recWavesurfer.setTime(offset);
-                wavesurfer.play(); 
-                recWavesurfer.play();
-            } else {
-                wavesurfer.setTime(lastRecStartPos);
-                recWavesurfer.setTime(0);
-                wavesurfer.play();
-                recWavesurfer.play();
-            }
-        }
-        updateRecPlayBtnUI();
-    }
-
-    function deleteRecording() {
-        if (confirm("削除しますか？")) {
-            document.getElementById('rec-waveform-wrapper').style.display = 'none';
-            document.getElementById('recControls').style.display = 'none';
-            document.getElementById('recVolControl').style.display = 'none';
-            if (recWavesurfer) { recWavesurfer.pause(); recWavesurfer.empty(); }
-            if (recObjectURL) { URL.revokeObjectURL(recObjectURL); recObjectURL = null; }
-            recordedAudioBuffer = null;
-            isSolo = false; document.getElementById('soloBtn').classList.remove('active');
-            applyVolumes();
-        }
-    }
-
-    const tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
-    document.head.appendChild(tag);
-
-    function loadYouTube(manualUrl = null) {
-        initAudioContext();
-        const urlInput = document.getElementById('ytUrl'); const url = manualUrl || urlInput.value;
-        if (!url) return;
-        const videoId = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.includes('be/') ? url.split('be/')[1].split('?')[0] : null;
-        if (videoId) {
-            currentYTId = videoId; document.getElementById('loopListYT').innerHTML = ""; 
-            loopStart = 0; loopEnd = 0; isLooping = false;
-            document.getElementById('loopStartTxt').innerText = "00:00";
-            document.getElementById('loopEndTxt').innerText = "00:00";
-            const b = document.getElementById('toggleLoopBtn');
-            const lang = document.getElementById('langSelect').value || 'ja';
-            if(b) { b.innerText = translations[lang].loopOff; b.classList.remove('active'); }
-            if (ytPlayer && ytPlayer.loadVideoById) ytPlayer.loadVideoById(videoId);
-            else ytPlayer = new YT.Player('player', { videoId: videoId, events: { 'onReady': () => { updateYTInfo(); }, 'onStateChange': onPlayerStateChange } });
-            urlInput.value = "";
-        }
-    }
-
-    function saveToHistory(id, title) {
-        let history = JSON.parse(localStorage.getItem('ams_yt_history') || "[]");
-        history = history.filter(item => item.id !== id);
-        history.unshift({ id: id, title: title || id, url: `https://www.youtube.com/watch?v=${id}`, time: Date.now() });
-        if (history.length > 20) history.pop();
-        localStorage.setItem('ams_yt_history', JSON.stringify(history)); 
-        renderYTHistory();
-    }
-
-    function renderYTHistory() {
-        const historyList = document.getElementById('ytHistoryList');
-        const container = document.getElementById('ytHistoryContainer');
-        if(!historyList || !container) return;
-        const history = JSON.parse(localStorage.getItem('ams_yt_history') || "[]");
-        if (history.length === 0) { container.style.display = 'none'; return; }
-        container.style.display = 'block'; historyList.innerHTML = "";
-        history.forEach(item => {
-            const card = document.createElement('div');
-            card.style = "background: #252525; border: 1px solid #333; border-radius: 6px; padding: 8px 12px; min-width: 180px; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer;";
-            card.setAttribute('data-url', item.url);
-            card.innerHTML = `<span style="font-size:0.7rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#e0e0e0;">${item.title}</span><span class="material-icons" style="color:#ff5555; font-size:16px;" onclick="event.stopPropagation(); deleteHistoryItem('${item.id}')">cancel</span>`;
-            historyList.appendChild(card);
-        });
-    }
-
-    function handleHistoryClick(event) {
-        const card = event.target.closest('div[data-url]');
-        if (card) {
-            if (!isSubscribed) { document.getElementById('subscription-overlay').style.display = 'flex'; return; }
-            loadYouTube(card.getAttribute('data-url'));
-        }
-    }
-
-    window.deleteHistoryItem = (id) => {
-        let history = JSON.parse(localStorage.getItem('ams_yt_history') || "[]");
-        history = history.filter(item => item.id !== id);
-        localStorage.setItem('ams_yt_history', JSON.stringify(history)); renderYTHistory();
-    };
-
-    window.clearYTHistory = () => { if (confirm("履歴を削除しますか？")) { localStorage.removeItem('ams_yt_history'); renderYTHistory(); } };
-
-    function updateYTInfo() {
-        const data = ytPlayer.getVideoData();
-        if (data && data.video_id) { saveToHistory(data.video_id, data.title); renderLoopList('yt'); }
-    }
-
-    function onPlayerStateChange(e) {
-        if (e.data === YT.PlayerState.PLAYING) {
-            updateYTInfo();
-            loopInterval = setInterval(() => { if (isLooping && ytPlayer.getCurrentTime() >= loopEnd) ytPlayer.seekTo(loopStart); }, 200);
-        } else clearInterval(loopInterval);
-    }
-
-    const fmt = (s) => `${Math.floor(s/60).toString().padStart(2,'0')}:${Math.floor(s%60).toString().padStart(2,'0')}`;
-    window.setLoopPoint = (t) => {
-        const now = ytPlayer.getCurrentTime();
-        if (t === 'start') { loopStart = Math.floor(now); document.getElementById('loopStartTxt').innerText = fmt(loopStart); }
-        else { loopEnd = Math.ceil(now); document.getElementById('loopEndTxt').innerText = fmt(loopEnd); }
-    };
-
-    window.adjustTime = (t, a) => {
-        if (t === 'start') { loopStart = Math.max(0, loopStart + a); document.getElementById('loopStartTxt').innerText = fmt(loopStart); ytPlayer.seekTo(loopStart); }
-        else { loopEnd = Math.max(loopStart + 1, loopEnd + a); document.getElementById('loopEndTxt').innerText = fmt(loopEnd); }
-    };
-
-    window.toggleLoop = () => { 
-        isLooping = !isLooping; 
-        const lang = document.getElementById('langSelect').value;
-        const b = document.getElementById('toggleLoopBtn'); 
-        if(b) { b.innerText = isLooping ? translations[lang].loopOn : translations[lang].loopOff; b.classList.toggle('active', isLooping); }
-    };
-
-    function saveLoop(mode) {
-        if (!isSubscribed) { document.getElementById('subscription-overlay').style.display = 'flex'; return; }
-        let start, end, key;
-        if (mode === 'file') {
-            const regions = wsRegions.getRegions(); if (regions.length === 0) return alert("範囲を指定してください");
-            start = regions[0].start; end = regions[0].end; key = currentFileName;
-        } else {
-            if (!currentYTId) return; start = loopStart; end = loopEnd; key = currentYTId; if (start >= end) return alert("範囲が不正です");
-        }
-        let storageKey = mode === 'file' ? 'ams_loops' : 'ams_yt_loops';
-        let allLoops = JSON.parse(localStorage.getItem(storageKey) || "{}");
-        if (!allLoops[key]) allLoops[key] = []; allLoops[key].push({ start, end });
-        localStorage.setItem(storageKey, JSON.stringify(allLoops)); renderLoopList(mode);
-    }
-
-    function getCircleNum(n) { const circles = ["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩"]; return circles[n-1] || `(${n})`; }
-
-    function renderLoopList(mode) {
-        const container = mode === 'file' ? document.getElementById('loopListFile') : document.getElementById('loopListYT');
-        const key = mode === 'file' ? currentFileName : currentYTId;
-        const storageKey = mode === 'file' ? 'ams_loops' : 'ams_yt_loops';
-        if(!container) return; container.innerHTML = ""; if (!key) return;
-        let allLoops = JSON.parse(localStorage.getItem(storageKey) || "{}");
-        (allLoops[key] || []).forEach((loop, index) => {
-            const badge = document.createElement('div'); badge.className = 'loop-badge';
-            badge.onclick = () => applyStoredLoop(mode, loop.start, loop.end);
-            badge.innerHTML = `<span class="badge-num">${getCircleNum(index + 1)}</span><span class="material-icons badge-del" onclick="event.stopPropagation(); deleteLoop('${mode}', ${index})">cancel</span>`;
-            container.appendChild(badge);
-        });
-    }
-
-    window.applyStoredLoop = (mode, start, end) => {
-        if (!isSubscribed) { document.getElementById('subscription-overlay').style.display = 'flex'; return; }
-        initAudioContext();
-        if (mode === 'file') { wsRegions.clearRegions(); wsRegions.addRegion({ start, end, color: 'rgba(212, 163, 115, 0.2)' }); wavesurfer.setTime(start); } 
-        else { loopStart = start; loopEnd = end; document.getElementById('loopStartTxt').innerText = fmt(start); document.getElementById('loopEndTxt').innerText = fmt(end); ytPlayer.seekTo(start); if (!isLooping) toggleLoop(); }
-    };
-
-    window.deleteLoop = (mode, index) => {
-        const storageKey = mode === 'file' ? 'ams_loops' : 'ams_yt_loops';
-        const key = mode === 'file' ? currentFileName : currentYTId;
-        let allLoops = JSON.parse(localStorage.getItem(storageKey) || "{}");
-        if (allLoops[key]) { allLoops[key].splice(index, 1); localStorage.setItem(storageKey, JSON.stringify(allLoops)); renderLoopList(mode); }
-    };
 
     function startApp() {
-        wavesurfer = WaveSurfer.create({ container: '#waveform', waveColor: '#333', progressColor: '#d4a373', height: 120, barWidth: 2, normalize: true });
-        recWavesurfer = WaveSurfer.create({ container: '#rec-waveform', waveColor: '#552222', progressColor: '#ff4444', height: 80, barWidth: 2, normalize: true });
-        wsRegions = wavesurfer.registerPlugin(WaveSurfer.Regions.create());
-        wsRegions.enableDragSelection({ color: 'rgba(212, 163, 115, 0.2)' });
-        
-        wsRegions.on('region-created', r => { if(wsRegions.getRegions().length > 1) wsRegions.getRegions()[0].remove(); wavesurfer.setTime(r.start); currentLoopCount = 0; });
-        
-        document.getElementById('zoomSlider').oninput = (e) => wavesurfer.zoom(Number(e.target.value));
-        document.getElementById('resetZoomBtn').onclick = () => { wavesurfer.zoom(0); document.getElementById('zoomSlider').value = 100; };
-        document.getElementById('mainVolume').oninput = applyVolumes;
-        document.getElementById('recVolume').oninput = applyVolumes;
-
-        document.getElementById('audioFile').onchange = async e => { 
-            const file = e.target.files[0];
-            if(file) { 
-                initAudioContext(); currentFileName = file.name; document.getElementById('fileSelectBtn').innerText = currentFileName;
-                const blob = new Blob([file], { type: file.type });
-                if (currentObjectURL) URL.revokeObjectURL(currentObjectURL);
-                currentObjectURL = URL.createObjectURL(blob); wavesurfer.load(currentObjectURL);
-                wavesurfer.once('decode', () => { analyzeAudio(blob); renderLoopList('file'); });
-            } 
-        };
-
-        const applySettings = () => {
-            const s = parseFloat(document.getElementById('speed').value), p = parseInt(document.getElementById('pitch').value);
-            const media = wavesurfer.getMediaElement();
-            if (media) {
-                media.preservesPitch = true;
-                if (media.detune !== undefined) { media.detune = p * 100; wavesurfer.setPlaybackRate(s); } 
-                else { if (p !== 0) { media.preservesPitch = false; wavesurfer.setPlaybackRate(s * Math.pow(2, p / 12)); } else wavesurfer.setPlaybackRate(s); }
-            }
-            updateBpmDisplay(); document.getElementById('pitchTxt').innerText = (p > 0 ? "+" : "") + p; applyVolumes();
-        };
-
-        wavesurfer.on('ready', () => { document.getElementById('totalTime').innerText = fmt(wavesurfer.getDuration()); applySettings(); });
-        recWavesurfer.on('finish', () => { wavesurfer.pause(); updateRecPlayBtnUI(); });
-        
-        document.getElementById('speed').oninput = applySettings;
-        document.getElementById('pitch').onmousedown = document.getElementById('pitch').ontouchstart = (e) => { if (!isSubscribed) { e.preventDefault(); document.getElementById('subscription-overlay').style.display = 'flex'; } };
-        document.getElementById('pitch').oninput = applySettings;
-
-        document.getElementById('playBtn').onclick = async () => {
-            initAudioContext(); 
-            if (wavesurfer.isPlaying()) { wavesurfer.pause(); } 
-            else {
-                const current = wavesurfer.getCurrentTime(), region = wsRegions.getRegions()[0];
-                if (isCountEnabled && region && (current < region.start || current >= region.end)) wavesurfer.setTime(region.start);
-                await runCountdown(); applySettings(); wavesurfer.play();
-            }
-        };
-
-        wavesurfer.on('play', () => {
-            document.getElementById('playIcon').innerText = 'pause';
-            if (recObjectURL && recWavesurfer) {
-                const offset = wavesurfer.getCurrentTime() - lastRecStartPos;
-                if (offset >= 0 && offset < recWavesurfer.getDuration()) { recWavesurfer.setTime(offset); recWavesurfer.play(); }
-            }
+        wavesurfer = WaveSurfer.create({
+            container: '#waveform',
+            waveColor: '#555',
+            progressColor: varColor('--primary-color'),
+            cursorColor: '#fff',
+            cursorWidth: 2,
+            height: 120,
+            hideScrollbar: false,
+            normalize: true,
+            sampleRate: 44100
         });
 
-        wavesurfer.on('pause', () => { document.getElementById('playIcon').innerText = 'play_arrow'; if (recWavesurfer) recWavesurfer.pause(); });
+        wsRegions = wavesurfer.registerPlugin(WaveSurfer.Regions.create());
 
         wavesurfer.on('interaction', () => {
-            if (recObjectURL && recWavesurfer) {
-                const currentTime = wavesurfer.getCurrentTime(); const offset = currentTime - lastRecStartPos;
-                if (offset >= 0 && offset < recWavesurfer.getDuration()) recWavesurfer.setTime(offset);
-                else recWavesurfer.setTime(0);
-                if (wavesurfer.isPlaying()) recWavesurfer.play();
+            initAudioContext();
+            if (isSubscribed) {
+                if (wavesurfer.isPlaying()) wavesurfer.pause();
+                else wavesurfer.play();
+            } else {
+                openSubOverlay();
             }
-            currentLoopCount = 0; 
         });
 
-        recWavesurfer.on('interaction', () => {
-            if (!recObjectURL) return;
-            const recTime = recWavesurfer.getCurrentTime(); const targetMainTime = lastRecStartPos + recTime;
-            if (targetMainTime <= wavesurfer.getDuration()) wavesurfer.setTime(targetMainTime);
-            if (wavesurfer.isPlaying()) wavesurfer.play();
+        wsRegions.on('region-created', (region) => {
+            wsRegions.clearRegions();
+            activeRegion = region;
         });
-        
-        wavesurfer.on('timeupdate', t => {
-            document.getElementById('currentTime').innerText = fmt(t);
-            if (wavesurfer.isPlaying() && recObjectURL && recWavesurfer && recWavesurfer.isPlaying()) {
-                const expectedRecTime = t - lastRecStartPos; const actualRecTime = recWavesurfer.getCurrentTime();
-                if (Math.abs(actualRecTime - expectedRecTime) > 0.2) {
-                    if (expectedRecTime >= 0 && expectedRecTime < recWavesurfer.getDuration()) recWavesurfer.setTime(expectedRecTime);
+
+        wsRegions.on('region-updated', (region) => { activeRegion = region; });
+
+        document.getElementById('audioFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                document.getElementById('loadStatus').innerText = translations[document.getElementById('langSelect').value].analyzing;
+                wavesurfer.load(url);
+                document.getElementById('fileSelectBtn').innerText = file.name;
+            }
+        });
+
+        wavesurfer.on('ready', () => {
+            document.getElementById('loadStatus').innerText = translations[document.getElementById('langSelect').value].ready;
+            document.getElementById('totalTime').innerText = formatTime(wavesurfer.getDuration());
+            applySettings();
+        });
+
+        wavesurfer.on('timeupdate', (t) => {
+            document.getElementById('currentTime').innerText = formatTime(t);
+            if (isRecording && recWavesurfer) {
+                const recTime = t - lastRecStartPos;
+                if (recTime >= 0) {
+                    const expectedRecTime = recTime * parseFloat(document.getElementById('speed').value);
+                    if (expectedRecTime < recWavesurfer.getDuration()) recWavesurfer.setTime(expectedRecTime);
                     else recWavesurfer.pause();
                 }
             }
@@ -1210,6 +928,303 @@
         window.resetSetting = (id, val) => { document.getElementById(id).value = val; applySettings(); };
         changeLanguage(); renderYTHistory();
     }
+
+    function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+    function formatTime(s) { const m = Math.floor(s / 60); const sec = Math.floor(s % 60); return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`; }
+
+    let isCountDownEnabled = true;
+    let isSpeedUpEnabled = false;
+    let currentLoopCount = 0;
+
+    function toggleFeature(type) {
+        if (type === 'count') {
+            isCountDownEnabled = !isCountDownEnabled;
+            document.getElementById('countToggleBtn').classList.toggle('active', isCountDownEnabled);
+        } else {
+            isSpeedUpEnabled = !isSpeedUpEnabled;
+            document.getElementById('speedUpToggleBtn').classList.toggle('active', isSpeedUpEnabled);
+            document.getElementById('speedUpCount').disabled = !isSpeedUpEnabled;
+            currentLoopCount = 0;
+        }
+    }
+
+    function openSubOverlay() { document.getElementById('subscription-overlay').style.display = 'flex'; }
+
+    document.getElementById('playBtn').addEventListener('click', () => {
+        if (!isSubscribed) return openSubOverlay();
+        if (wavesurfer.isPlaying()) { wavesurfer.pause(); } 
+        else {
+            if (isCountDownEnabled) { startCountdown(() => wavesurfer.play()); } 
+            else { wavesurfer.play(); }
+        }
+    });
+
+    function startCountdown(callback) {
+        const overlay = document.getElementById('countdown-overlay');
+        overlay.style.display = 'block';
+        let count = 3; overlay.innerText = count;
+        const timer = setInterval(() => {
+            count--;
+            if (count > 0) { overlay.innerText = count; } 
+            else { clearInterval(timer); overlay.style.display = 'none'; callback(); }
+        }, 1000);
+    }
+
+    wavesurfer.on('play', () => document.getElementById('playIcon').innerText = 'pause');
+    wavesurfer.on('pause', () => document.getElementById('playIcon').innerText = 'play_arrow');
+
+    function applySettings() {
+        const s = parseFloat(document.getElementById('speed').value);
+        const p = parseInt(document.getElementById('pitch').value);
+        wavesurfer.setPlaybackRate(s, true);
+        const pitchShift = Math.pow(2, p / 12);
+        if (wavesurfer.mediaContainer) {
+            const media = wavesurfer.getActivePlugins().find(p => p.name === 'media');
+            if (media) media.setPlaybackRate(s * pitchShift);
+        }
+        document.getElementById('spTxt').innerText = `BPM ${(120 * s).toFixed(0)}`;
+        document.getElementById('pitchTxt').innerText = p > 0 ? `+${p}` : p;
+    }
+
+    document.getElementById('speed').addEventListener('input', applySettings);
+    document.getElementById('pitch').addEventListener('input', applySettings);
+    document.getElementById('mainVolume').addEventListener('input', (e) => {
+        wavesurfer.setVolume(e.target.value);
+        document.getElementById('mainVolTxt').innerText = `${Math.round(e.target.value * 100)}%`;
+    });
+    document.getElementById('zoomSlider').addEventListener('input', (e) => wavesurfer.zoom(e.target.value));
+    document.getElementById('resetZoomBtn').addEventListener('click', () => {
+        document.getElementById('zoomSlider').value = 10;
+        wavesurfer.zoom(10);
+    });
+
+    async function toggleRecording() {
+        if (!isSubscribed) return openSubOverlay();
+        if (isRecording) {
+            mediaRecorder.stop();
+            isRecording = false;
+            document.getElementById('recBtn').classList.remove('recording');
+            document.getElementById('recIcon').innerText = 'mic';
+            wavesurfer.pause();
+        } else {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(audioChunks, { type: 'audio/wav' });
+                recObjectURL = URL.createObjectURL(blob);
+                showRecWaveform(recObjectURL);
+                document.getElementById('recControls').style.display = 'flex';
+                document.getElementById('recVolControl').style.display = 'flex';
+            };
+            lastRecStartPos = wavesurfer.getCurrentTime();
+            mediaRecorder.start();
+            isRecording = true;
+            document.getElementById('recBtn').classList.add('recording');
+            document.getElementById('recIcon').innerText = 'stop';
+            wavesurfer.play();
+        }
+    }
+
+    function showRecWaveform(url) {
+        document.getElementById('rec-waveform-wrapper').style.display = 'block';
+        if (recWavesurfer) recWavesurfer.destroy();
+        recWavesurfer = WaveSurfer.create({
+            container: '#rec-waveform',
+            waveColor: varColor('--recording-red'),
+            progressColor: '#fff',
+            height: 60,
+            interact: true
+        });
+        recWavesurfer.load(url);
+    }
+
+    function playRecording() {
+        if (!recWavesurfer) return;
+        const btn = document.getElementById('playRecBtn');
+        const lang = document.getElementById('langSelect').value;
+        if (recWavesurfer.isPlaying()) {
+            recWavesurfer.pause();
+            btn.innerHTML = `<span class="material-icons" style="font-size:14px;">play_circle</span> ${translations[lang].recPlay}`;
+        } else {
+            recWavesurfer.play();
+            btn.innerHTML = `<span class="material-icons" style="font-size:14px;">stop_circle</span> ${translations[lang].recStop}`;
+        }
+    }
+    
+    function deleteRecording() {
+        if(confirm("録音データを削除しますか？")) {
+            if(recWavesurfer) recWavesurfer.destroy();
+            recWavesurfer = null;
+            recObjectURL = null;
+            document.getElementById('rec-waveform-wrapper').style.display = 'none';
+            document.getElementById('recControls').style.display = 'none';
+            document.getElementById('recVolControl').style.display = 'none';
+        }
+    }
+
+    let isSolo = false;
+    function toggleSolo() {
+        isSolo = !isSolo;
+        document.getElementById('soloBtn').classList.toggle('active', isSolo);
+        wavesurfer.setVolume(isSolo ? 0 : document.getElementById('mainVolume').value);
+    }
+
+    document.getElementById('recVolume').addEventListener('input', (e) => {
+        if (recWavesurfer) recWavesurfer.setVolume(e.target.value);
+        document.getElementById('recVolTxt').innerText = `${Math.round(e.target.value * 100)}%`;
+    });
+
+    function saveLoop(mode) {
+        if (!auth.currentUser) return alert("保存するにはログインが必要です");
+        let loopData;
+        if (mode === 'file') {
+            const region = wsRegions.getRegions()[0];
+            if (!region) return alert("ループ範囲を選択してください");
+            loopData = { start: region.start, end: region.end, name: `Loop ${formatTime(region.start)}` };
+        } else {
+            if (ytLoopEnd <= ytLoopStart) return alert("有効な範囲を設定してください");
+            loopData = { start: ytLoopStart, end: ytLoopEnd, name: `YT Loop ${formatTime(ytLoopStart)}`, videoId: currentYTId };
+        }
+        db.collection('Users').doc(auth.currentUser.email).collection('Loops').add({ ...loopData, mode, createdAt: new Date() })
+          .then(() => renderLoopList(mode));
+    }
+
+    async function renderLoopList(mode) {
+        const container = document.getElementById(mode === 'file' ? 'loopListFile' : 'loopListYT');
+        container.innerHTML = '';
+        if (!auth.currentUser) return;
+        const snaps = await db.collection('Users').doc(auth.currentUser.email).collection('Loops').where('mode', '==', mode).orderBy('createdAt', 'desc').get();
+        snaps.forEach(doc => {
+            const data = doc.data();
+            const badge = document.createElement('div');
+            badge.className = 'loop-badge';
+            badge.innerHTML = `<span class="material-icons" style="font-size:14px; color:var(--primary-color);">play_circle</span><span>${formatTime(data.start)} - ${formatTime(data.end)}</span>`;
+            badge.onclick = () => {
+                if (mode === 'file') {
+                    wsRegions.clearRegions();
+                    wsRegions.addRegion({ start: data.start, end: data.end, color: 'rgba(212, 163, 115, 0.3)' });
+                    wavesurfer.setTime(data.start);
+                } else {
+                    if (data.videoId !== currentYTId) {
+                        currentYTId = data.videoId;
+                        ytPlayer.loadVideoById(currentYTId);
+                    }
+                    ytLoopStart = data.start; ytLoopEnd = data.end; ytLoopEnabled = true;
+                    ytPlayer.seekTo(ytLoopStart); updateYTLoopUI();
+                }
+            };
+            const del = document.createElement('span');
+            del.className = 'material-icons';
+            del.style = 'font-size:14px; margin-left:5px; opacity:0.5;';
+            del.innerText = 'cancel';
+            del.onclick = (e) => { e.stopPropagation(); doc.ref.delete().then(() => renderLoopList(mode)); };
+            badge.appendChild(del);
+            container.appendChild(badge);
+        });
+    }
+
+    function loadYouTube() {
+        if (!isSubscribed) return openSubOverlay();
+        const url = document.getElementById('ytUrl').value;
+        const videoId = extractYTId(url);
+        if (videoId) {
+            currentYTId = videoId;
+            if (!ytPlayer) {
+                const tag = document.createElement('script');
+                tag.src = "https://www.youtube.com/iframe_api";
+                const firstScriptTag = document.getElementsByTagName('script')[0];
+                firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+            } else {
+                ytPlayer.loadVideoById(videoId);
+            }
+            saveToHistory(videoId);
+        }
+    }
+
+    function extractYTId(url) {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    let currentYTId = '';
+    window.onYouTubeIframeAPIReady = () => {
+        ytPlayer = new YT.Player('player', {
+            height: '100%', width: '100%', videoId: currentYTId,
+            playerVars: { 'playsinline': 1, 'controls': 1, 'rel': 0 },
+            events: { 'onStateChange': onPlayerStateChange }
+        });
+    };
+
+    function onPlayerStateChange(event) {
+        if (event.data === YT.PlayerState.PLAYING) {
+            setInterval(() => {
+                const now = ytPlayer.getCurrentTime();
+                if (ytLoopEnabled && now >= ytLoopEnd) ytPlayer.seekTo(ytLoopStart);
+            }, 100);
+        }
+    }
+
+    function setLoopPoint(type) {
+        const now = ytPlayer.getCurrentTime();
+        if (type === 'start') { ytLoopStart = now; document.getElementById('loopStartTxt').innerText = formatTime(now); } 
+        else { ytLoopEnd = now; document.getElementById('loopEndTxt').innerText = formatTime(now); }
+    }
+
+    function adjustTime(type, amt) {
+        if (type === 'start') { ytLoopStart = Math.max(0, ytLoopStart + amt); document.getElementById('loopStartTxt').innerText = formatTime(ytLoopStart); } 
+        else { ytLoopEnd = Math.max(0, ytLoopEnd + amt); document.getElementById('loopEndTxt').innerText = formatTime(ytLoopEnd); }
+    }
+
+    function toggleLoop() {
+        ytLoopEnabled = !ytLoopEnabled;
+        updateYTLoopUI();
+    }
+
+    function updateYTLoopUI() {
+        const btn = document.getElementById('toggleLoopBtn');
+        const lang = document.getElementById('langSelect').value;
+        if (ytLoopEnabled) {
+            btn.classList.add('active');
+            btn.innerText = translations[lang].loopOn;
+        } else {
+            btn.classList.remove('active');
+            btn.innerText = translations[lang].loopOff;
+        }
+    }
+
+    function saveToHistory(id) {
+        let history = JSON.parse(localStorage.getItem('ytHistory') || '[]');
+        history = [id, ...history.filter(x => x !== id)].slice(0, 10);
+        localStorage.setItem('ytHistory', JSON.stringify(history));
+        renderYTHistory();
+    }
+
+    function renderYTHistory() {
+        const history = JSON.parse(localStorage.getItem('ytHistory') || '[]');
+        const container = document.getElementById('ytHistoryList');
+        const wrapper = document.getElementById('ytHistoryContainer');
+        if (history.length === 0) { wrapper.style.display = 'none'; return; }
+        wrapper.style.display = 'block';
+        container.innerHTML = history.map(id => `<img src="https://img.youtube.com/vi/${id}/default.jpg" data-id="${id}" style="height:50px; border-radius:4px; cursor:pointer; border:1px solid var(--border-color);">`).join('');
+    }
+
+    function handleHistoryClick(e) {
+        if (e.target.dataset.id) {
+            const id = e.target.dataset.id;
+            currentYTId = id;
+            if(ytPlayer) ytPlayer.loadVideoById(id);
+            else loadYouTube();
+        }
+    }
+
+    function clearYTHistory() {
+        localStorage.removeItem('ytHistory');
+        renderYTHistory();
+    }
+
     window.addEventListener('DOMContentLoaded', startApp);
 </script>
 </body>
