@@ -329,7 +329,6 @@
 </div>
 
 <script>
-    // --- 【重要】ここにテスト用プロジェクトのConfigを貼り付けてください ---
     const firebaseConfig = {
         apiKey: "AIzaSyAHaRRponFdRJZMxWwV5kEiBMBrmKswtW0",
         authDomain: "ams-player-test.firebaseapp.com",
@@ -339,7 +338,6 @@
         appId: "1:371056740344:web:f440083382c8d97900780d",
         measurementId: "G-V3VWGESN1Y"
     };
-    // ------------------------------------------------------------------
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -588,45 +586,87 @@
         if(mode === 'file' && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
     }
 
+    // --- BPM解析 修正箇所 ---
     async function analyzeAudio(blob) {
         const lang = document.getElementById('langSelect').value;
         const statusEl = document.getElementById('loadStatus');
-        statusEl.innerText = translations[lang].analyzing;
-        const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
+        statusEl.innerText = translations[lang].analyzing || "ANALYZING...";
+        
         try {
+            const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
             const arrayBuffer = await blob.arrayBuffer();
-            const audioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
+            // データ破壊を防ぐためスライスをデコード
+            const audioBuffer = await tempCtx.decodeAudioData(arrayBuffer.slice(0));
+            
+            // 無音カット位置の検出
             const data = audioBuffer.getChannelData(0);
             let skip = 0; const threshold = 0.015;
-            for (let i = 0; i < data.length; i += 100) { if (Math.abs(data[i]) > threshold) { skip = i / audioBuffer.sampleRate; break; } }
+            for (let i = 0; i < data.length; i += 100) { 
+                if (Math.abs(data[i]) > threshold) { skip = i / audioBuffer.sampleRate; break; } 
+            }
             firstSoundTime = skip;
+            
+            // BPM検知実行
             const bpm = detectBPM(audioBuffer);
-            if (bpm > 0) { originalBpm = Math.round(bpm); updateBpmDisplay(); }
+            if (bpm > 0) { 
+                originalBpm = Math.round(bpm); 
+                updateBpmDisplay(); 
+            }
+            
             statusEl.innerText = translations[lang].ready;
             if(wavesurfer) wavesurfer.setTime(firstSoundTime);
-        } catch (e) { statusEl.innerText = translations[lang].ready; } finally { tempCtx.close(); }
+            tempCtx.close();
+        } catch (e) { 
+            console.error("Analysis Error:", e);
+            statusEl.innerText = translations[lang].ready; 
+        }
     }
 
     function updateBpmDisplay() {
         const currentSpeed = parseFloat(document.getElementById('speed').value);
         const currentBpm = Math.round(originalBpm * currentSpeed);
-        document.getElementById('spTxt').innerText = "BPM " + currentBpm;
+        const display = document.getElementById('spTxt');
+        if(display) display.innerText = "BPM " + currentBpm;
     }
 
     function detectBPM(buffer) {
-        const data = buffer.getChannelData(0), sampleRate = buffer.sampleRate, step = 200, energy = [];
+        const data = buffer.getChannelData(0);
+        const sampleRate = buffer.sampleRate;
+        const step = 441; // 10ms at 44.1khz
+        const energy = [];
+        
+        // 1. エネルギー変換
         for (let i = 0; i < data.length; i += step) {
-            let sum = 0; for(let j=0; j<step && (i+j)<data.length; j++) sum += data[i+j] * data[i+j];
-            energy.push(Math.sqrt(sum/step));
+            let sum = 0;
+            for (let j = 0; j < step && (i + j) < data.length; j++) {
+                sum += data[i + j] * data[i + j];
+            }
+            energy.push(Math.sqrt(sum / step));
         }
-        let bestBpm = 0, maxCorrelation = 0;
-        const minInterval = Math.floor((60 / 200) * (sampleRate / step)), maxInterval = Math.floor((60 / 60) * (sampleRate / step));
+
+        // 2. 自己相関によるBPM推測
+        let bestBpm = 0;
+        let maxCorrelation = 0;
+        const minInterval = Math.floor((60 / 220) * (sampleRate / step)); // 220 BPM
+        const maxInterval = Math.floor((60 / 60) * (sampleRate / step));  // 60 BPM
+
         for (let interval = minInterval; interval <= maxInterval; interval++) {
-            let correlation = 0; for (let i = 0; i < Math.min(energy.length - interval, 10000); i++) correlation += energy[i] * energy[i + interval];
-            if (correlation > maxCorrelation) { maxCorrelation = correlation; bestBpm = 60 / (interval * step / sampleRate); }
+            let correlation = 0;
+            const limit = Math.min(energy.length - interval, 3000); // 先頭30秒程度で計算
+            for (let i = 0; i < limit; i++) {
+                correlation += energy[i] * energy[i + interval];
+            }
+            if (correlation > maxCorrelation) {
+                maxCorrelation = correlation;
+                bestBpm = 60 / (interval * step / sampleRate);
+            }
         }
-        return (bestBpm < 50 || bestBpm > 250) ? 0 : bestBpm;
+        
+        // 異常値チェック
+        if (bestBpm < 50 || bestBpm > 250) return 120;
+        return bestBpm;
     }
+    // --- 修正箇所終了 ---
 
     function playBeep(isLast) {
         const ctx = initAudioContext();
@@ -859,7 +899,6 @@
                     await wavesurfer.load(currentObjectURL); 
                     analyzeAudio(blob); 
                     renderLoopList('file');
-                    // 初回描画バグ対策
                     setTimeout(() => {
                         wavesurfer.drawBuffer();
                         wavesurfer.zoom(Number(document.getElementById('zoomSlider').value));
