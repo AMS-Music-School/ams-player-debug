@@ -588,6 +588,7 @@
         if(mode === 'file' && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
     }
 
+    // --- 解析ロジック修正点：UI更新を強制実行 ---
     async function analyzeAudio(blob) {
         const lang = document.getElementById('langSelect').value;
         const statusEl = document.getElementById('loadStatus');
@@ -607,6 +608,8 @@
             } else {
                 originalBpm = 120;
             }
+            
+            // 修正：数値確定後にUIを即時更新
             updateBpmDisplay();
             
             statusEl.innerText = translations[lang].ready;
@@ -857,24 +860,29 @@
         document.getElementById('mainVolume').oninput = applyVolumes;
         document.getElementById('recVolume').oninput = applyVolumes;
 
+        // 修正：ファイル選択時の読み込み完了イベントを確実にキャッチ
         document.getElementById('audioFile').onchange = async e => { 
             const file = e.target.files[0];
             if(file) { 
                 initAudioContext();
                 currentFileName = file.name; document.getElementById('fileSelectBtn').innerText = currentFileName;
-                const reader = new FileReader();
-                reader.onload = async (event) => {
-                    const blob = new Blob([event.target.result], { type: file.type });
-                    currentObjectURL = URL.createObjectURL(blob); 
-                    await wavesurfer.load(currentObjectURL); 
-                    await analyzeAudio(blob); 
-                    renderLoopList('file');
-                    setTimeout(() => {
-                        wavesurfer.drawBuffer();
-                        wavesurfer.zoom(Number(document.getElementById('zoomSlider').value));
-                    }, 100);
-                };
-                reader.readAsArrayBuffer(file);
+                
+                // 修正：ArrayBufferとして読み込み、波形ロードとBPM解析を並行実行
+                const arrayBuffer = await file.arrayBuffer();
+                const blob = new Blob([arrayBuffer], { type: file.type });
+                currentObjectURL = URL.createObjectURL(blob); 
+                
+                // 波形描画を待機
+                await wavesurfer.load(currentObjectURL); 
+                
+                // 解析を実行（引数に元データを渡す）
+                await analyzeAudio(blob); 
+                
+                renderLoopList('file');
+                setTimeout(() => {
+                    wavesurfer.drawBuffer();
+                    wavesurfer.zoom(Number(document.getElementById('zoomSlider').value));
+                }, 100);
             } 
         };
 
