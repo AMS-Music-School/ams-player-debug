@@ -329,7 +329,7 @@
 </div>
 
 <script>
-    // --- 【Firebase 設定】 ---
+    // --- 【重要】ここにテスト用プロジェクトのConfigを貼り付けてください ---
     const firebaseConfig = {
         apiKey: "AIzaSyAHaRRponFdRJZMxWwV5kEiBMBrmKswtW0",
         authDomain: "ams-player-test.firebaseapp.com",
@@ -339,7 +339,7 @@
         appId: "1:371056740344:web:f440083382c8d97900780d",
         measurementId: "G-V3VWGESN1Y"
     };
-    // ----------------------
+    // ------------------------------------------------------------------
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -859,6 +859,7 @@
                     await wavesurfer.load(currentObjectURL); 
                     analyzeAudio(blob); 
                     renderLoopList('file');
+                    // 初回描画バグ対策
                     setTimeout(() => {
                         wavesurfer.drawBuffer();
                         wavesurfer.zoom(Number(document.getElementById('zoomSlider').value));
