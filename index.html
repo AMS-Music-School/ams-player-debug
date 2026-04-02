@@ -609,7 +609,7 @@
 
     function updateBpmDisplay() {
         const currentSpeed = parseFloat(document.getElementById('speed').value);
-        const currentBpm = Math.round(originalBpm * currentSpeed);
+        const currentBpm = originalBpm ? Math.round(originalBpm * currentSpeed) : '---';
         document.getElementById('spTxt').innerText = "BPM " + currentBpm;
     }
 
@@ -857,7 +857,7 @@
                     const blob = new Blob([event.target.result], { type: file.type });
                     currentObjectURL = URL.createObjectURL(blob); 
                     await wavesurfer.load(currentObjectURL); 
-                    analyzeAudio(blob); 
+                    analyzeAudio(file); 
                     renderLoopList('file');
                     // 初回描画バグ対策
                     setTimeout(() => {
