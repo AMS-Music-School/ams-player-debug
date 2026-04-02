@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AMS Practice Player v1.3.8 - TEST EDITION</title>
+    <title>AMS Practice Player v1.3.9 - TEST EDITION</title>
     
     <meta name="apple-mobile-web-app-title" content="AMS Player TEST">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -131,6 +131,7 @@
         .loop-list-container { margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 10px; display: flex; flex-wrap: wrap; gap: 10px; }
         .adj-btn { background: #333; border: none; color: #fff; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
         .loop-btn-main { background: var(--panel-bg); color: var(--text-main); border: 1px solid var(--primary-color); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
+        .rep-select { background: var(--panel-bg); color: var(--primary-color); border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.7rem; padding: 2px; height: 24px; margin-left: -10px; z-index: 10; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -249,6 +250,17 @@
             <button class="btn-ctrl play-main" id="playBtn"><span class="material-icons" id="playIcon" style="font-size:35px;">play_arrow</span></button>
             <button class="btn-ctrl" onclick="wavesurfer.skip(5)"><span class="material-icons">forward_5</span></button>
             <button class="btn-ctrl" id="speedUpToggleBtn" onclick="toggleFeature('speedup')"><span class="material-icons">speed</span></button>
+            <select id="speedUpReps" class="rep-select">
+                <option value="2">x2</option>
+                <option value="3">x3</option>
+                <option value="4">x4</option>
+                <option value="5">x5</option>
+                <option value="6">x6</option>
+                <option value="7">x7</option>
+                <option value="8">x8</option>
+                <option value="9">x9</option>
+                <option value="10">x10</option>
+            </select>
         </div>
 
         <div class="panel panel-rec">
@@ -496,6 +508,7 @@
     let mediaRecorder, recordedChunks = [];
     let isRecording = false, isSolo = false;
     let recObjectURL = null, recordedAudioBuffer = null, lastRecStartPos = 0;
+    let currentLoopIteration = 0; // スピードアップ用のカウンタ
 
     function changeLanguage() {
         const lang = document.getElementById('langSelect').value || 'ja';
@@ -575,6 +588,7 @@
             if (!isSubscribed) { document.getElementById('subscription-overlay').style.display = 'flex'; return; }
             isSpeedUpEnabled = !isSpeedUpEnabled; 
             document.getElementById('speedUpToggleBtn').classList.toggle('active', isSpeedUpEnabled); 
+            currentLoopIteration = 0; // 切り替え時にリセット
         }
     }
 
@@ -840,7 +854,11 @@
         recWavesurfer = WaveSurfer.create({ container: '#rec-waveform', waveColor: '#552222', progressColor: '#ff4444', height: 80, barWidth: 2, normalize: true });
         wsRegions = wavesurfer.registerPlugin(WaveSurfer.Regions.create());
         wsRegions.enableDragSelection({ color: 'rgba(212, 163, 115, 0.2)' });
-        wsRegions.on('region-created', r => { if(wsRegions.getRegions().length > 1) wsRegions.getRegions()[0].remove(); wavesurfer.setTime(r.start); });
+        wsRegions.on('region-created', r => { 
+            if(wsRegions.getRegions().length > 1) wsRegions.getRegions()[0].remove(); 
+            wavesurfer.setTime(r.start); 
+            currentLoopIteration = 0; // 範囲指定変更時もカウンタリセット
+        });
         
         document.getElementById('zoomSlider').oninput = (e) => wavesurfer.zoom(Number(e.target.value));
         document.getElementById('resetZoomBtn').onclick = () => { wavesurfer.zoom(0); document.getElementById('zoomSlider').value = 100; };
@@ -859,7 +877,6 @@
                     await wavesurfer.load(currentObjectURL); 
                     analyzeAudio(blob); 
                     renderLoopList('file');
-                    // 初回描画バグ対策
                     setTimeout(() => {
                         wavesurfer.drawBuffer();
                         wavesurfer.zoom(Number(document.getElementById('zoomSlider').value));
@@ -924,9 +941,23 @@
                 } else {
                     wavesurfer.setTime(r.start); 
                     if (isSpeedUpEnabled) { 
-                        const s = document.getElementById('speed'); 
-                        s.value = Math.min(1.5, parseFloat(s.value) + 0.05).toFixed(2); 
-                        applySettings(); 
+                        currentLoopIteration++;
+                        const maxReps = parseInt(document.getElementById('speedUpReps').value);
+                        
+                        // 指定回数に達したらスピードアップ
+                        if (currentLoopIteration >= maxReps) {
+                            const s = document.getElementById('speed'); 
+                            let nextSpeed = parseFloat(s.value) + 0.05;
+                            
+                            // 上限を1.0(元のBPM)までに制限
+                            if (nextSpeed > 1.0) {
+                                nextSpeed = 1.0;
+                            }
+                            
+                            s.value = nextSpeed.toFixed(2); 
+                            applySettings(); 
+                            currentLoopIteration = 0; // カウンタリセット
+                        }
                     }
                 }
             }
