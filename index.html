@@ -239,7 +239,6 @@
     </div>
 </div>
 
-<!-- アカウント情報モーダル -->
 <div id="accountModal" class="account-modal">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <span style="color:var(--primary-color); font-weight:bold; font-size:1rem;" id="accountModalTitle">アカウント情報</span>
@@ -280,7 +279,6 @@
         </button>
     </div>
     
-    <!-- アカウント情報メニュー項目 (クリックでモーダル表示) -->
     <div class="menu-item" onclick="openAccountModal()">
         <span class="material-icons">account_circle</span>
         <span id="accountMenuItem">アカウント情報</span>
@@ -448,7 +446,7 @@
 </div>
 
 <script>
-    // ==================== Firebase & 全機能維持 + アカウント情報モーダル ====================
+    // ==================== Firebase & 全機能維持 + クラウド同期 ====================
     const firebaseConfig = {
         apiKey: "AIzaSyAHaRRponFdRJZMxWwV5kEiBMBrmKswtW0",
         authDomain: "ams-player-test.firebaseapp.com",
@@ -465,6 +463,41 @@
 
     let isSubscribed = false;
 
+    // クラウドへのデータ保存（同期）関数
+    async function syncToCloud() {
+        const user = auth.currentUser;
+        if (!user) return;
+        try {
+            const ytHistory = JSON.parse(localStorage.getItem('ams_yt_history') || "[]");
+            const ams_loops = JSON.parse(localStorage.getItem('ams_loops') || "{}");
+            const ams_yt_loops = JSON.parse(localStorage.getItem('ams_yt_loops') || "{}");
+            await db.collection('Users').doc(user.uid).set({
+                ytHistory: ytHistory,
+                ams_loops: ams_loops,
+                ams_yt_loops: ams_yt_loops,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        } catch (e) {
+            console.error("Cloud sync error:", e);
+        }
+    }
+
+    // クラウドからのデータ復元関数
+    async function syncFromCloud(user) {
+        if (!user) return;
+        try {
+            const doc = await db.collection('Users').doc(user.uid).get();
+            if (doc.exists) {
+                const data = doc.data();
+                if (data.ytHistory) localStorage.setItem('ams_yt_history', JSON.stringify(data.ytHistory));
+                if (data.ams_loops) localStorage.setItem('ams_loops', JSON.stringify(data.ams_loops));
+                if (data.ams_yt_loops) localStorage.setItem('ams_yt_loops', JSON.stringify(data.ams_yt_loops));
+            }
+        } catch (e) {
+            console.error("Cloud load error:", e);
+        }
+    }
+
     function openAuthOverlay() { document.getElementById('auth-overlay').style.display = 'flex'; }
     function closeAuthOverlay() { document.getElementById('auth-overlay').style.display = 'none'; }
     function closeSubOverlay() { document.getElementById('subscription-overlay').style.display = 'none'; }
@@ -477,46 +510,12 @@
 
     async function checkSubscriptionStatus(user) { if (!user || !user.email) return false; try { const schoolDoc = await db.collection('SchoolMember').doc(user.email).get(); if (schoolDoc.exists) { const data = schoolDoc.data(); if (data.isSubscribed === true || data.isStudent === true) return true; } const userDoc = await db.collection('Users').doc(user.email).get(); if (userDoc.exists) { const userData = userDoc.data(); if (userData.isSubscribed === true) { if (userData.expirationDate) { const now = new Date(); const expiration = userData.expirationDate.toDate(); if (now < expiration) return true; return false; } return true; } } return false; } catch (e) { console.error("Check error:", e); return false; } }
 
-    // アカウントモーダル開閉・表示更新
-    function openAccountModal() {
-        const user = auth.currentUser;
-        if (!user) { alert("ログインしていません。先にログインしてください。"); toggleMenu(false); openAuthOverlay(); return; }
-        updateAccountModalUI(user);
-        document.getElementById('accountModal').style.display = 'block';
-        toggleMenu(false);
-    }
+    function openAccountModal() { const user = auth.currentUser; if (!user) { alert("ログインしていません。先にログインしてください。"); toggleMenu(false); openAuthOverlay(); return; } updateAccountModalUI(user); document.getElementById('accountModal').style.display = 'block'; toggleMenu(false); }
     function closeAccountModal() { document.getElementById('accountModal').style.display = 'none'; }
     
-    async function updateAccountModalUI(user) {
-        if (!user) return;
-        document.getElementById('accountDisplayName').innerText = user.displayName || user.email?.split('@')[0] || "No Name";
-        document.getElementById('accountEmail').innerText = user.email || "No Email";
-        document.getElementById('accountUid').innerText = user.uid;
-        const subStatus = await checkSubscriptionStatus(user);
-        document.getElementById('accountPlan').innerHTML = subStatus ? '<span style="color:#d4a373;">PREMIUM</span>' : 'FREE';
-        const lang = document.getElementById('langSelect').value;
-        const t = translations[lang] || translations['ja'];
-        document.getElementById('deleteAccText').innerText = lang === 'ja' ? 'アカウント削除' : 'Delete Account';
-        document.getElementById('accNameLabel').innerText = lang === 'ja' ? 'アカウント名' : 'Display Name';
-        document.getElementById('accEmailLabel').innerText = lang === 'ja' ? 'メールアドレス' : 'Email';
-        document.getElementById('accUidLabel').innerText = 'UID';
-        document.getElementById('accPlanLabel').innerText = lang === 'ja' ? 'プラン' : 'Plan';
-        document.getElementById('accountModalTitle').innerText = lang === 'ja' ? 'アカウント情報' : 'Account Info';
-        document.getElementById('accountCloseBtn').innerText = lang === 'ja' ? '閉じる' : 'Close';
-        document.getElementById('accountMenuItem').innerText = lang === 'ja' ? 'アカウント情報' : 'Account Info';
-    }
+    async function updateAccountModalUI(user) { if (!user) return; document.getElementById('accountDisplayName').innerText = user.displayName || user.email?.split('@')[0] || "No Name"; document.getElementById('accountEmail').innerText = user.email || "No Email"; document.getElementById('accountUid').innerText = user.uid; const subStatus = await checkSubscriptionStatus(user); document.getElementById('accountPlan').innerHTML = subStatus ? '<span style="color:#d4a373;">PREMIUM</span>' : 'FREE'; const lang = document.getElementById('langSelect').value; const t = translations[lang] || translations['ja']; document.getElementById('deleteAccText').innerText = lang === 'ja' ? 'アカウント削除' : 'Delete Account'; document.getElementById('accNameLabel').innerText = lang === 'ja' ? 'アカウント名' : 'Display Name'; document.getElementById('accEmailLabel').innerText = lang === 'ja' ? 'メールアドレス' : 'Email'; document.getElementById('accUidLabel').innerText = 'UID'; document.getElementById('accPlanLabel').innerText = lang === 'ja' ? 'プラン' : 'Plan'; document.getElementById('accountModalTitle').innerText = lang === 'ja' ? 'アカウント情報' : 'Account Info'; document.getElementById('accountCloseBtn').innerText = lang === 'ja' ? '閉じる' : 'Close'; document.getElementById('accountMenuItem').innerText = lang === 'ja' ? 'アカウント情報' : 'Account Info'; }
 
-    async function deleteUserAccount() {
-        const user = auth.currentUser;
-        if (!user) return alert("ログインしていません");
-        const confirmed = confirm("アカウントを完全に削除します。すべての保存データ（ループ、履歴など）が消去され、元に戻せません。本当に削除しますか？");
-        if (!confirmed) return;
-        try {
-            await user.delete();
-            alert("アカウントを削除しました。ページをリロードします。");
-            location.reload();
-        } catch (error) { alert("削除エラー: " + error.message + "\n再度ログインしてからお試しください。"); }
-    }
+    async function deleteUserAccount() { const user = auth.currentUser; if (!user) return alert("ログインしていません"); const confirmed = confirm("アカウントを完全に削除します。すべての保存データ（ループ、履歴など）が消去され、元に戻せません。本当に削除しますか？"); if (!confirmed) return; try { await db.collection('Users').doc(user.uid).delete(); await user.delete(); alert("アカウントを削除しました。ページをリロードします。"); location.reload(); } catch (error) { alert("削除エラー: " + error.message + "\n再度ログインしてからお試しください。"); } }
 
     auth.onAuthStateChanged(async user => {
         const userInfo = document.getElementById('userInfoDisplay'), userNameSpan = document.getElementById('userName'), authSection = document.getElementById('auth-section'), authOverlay = document.getElementById('auth-overlay'), subOverlay = document.getElementById('subscription-overlay');
@@ -525,7 +524,9 @@
             userNameSpan.innerText = user.displayName || user.email.split('@')[0];
             isSubscribed = await checkSubscriptionStatus(user);
             if (isSubscribed) subOverlay.style.display = 'none';
+            await syncFromCloud(user);
             if (currentMode === 'file') renderLoopList('file'); else renderLoopList('yt');
+            renderYTHistory();
             await updateAccountModalUI(user);
         } else { userInfo.style.display = 'none'; authSection.style.display = 'block'; subOverlay.style.display = 'none'; isSubscribed = false; }
     });
@@ -576,22 +577,26 @@
     function deleteRecording() { if (confirm("削除しますか？")) { document.getElementById('rec-waveform-wrapper').style.display = 'none'; document.getElementById('recControls').style.display = 'none'; document.getElementById('recVolControl').style.display = 'none'; if (recWavesurfer) { recWavesurfer.pause(); recWavesurfer.empty(); } if (recObjectURL) { URL.revokeObjectURL(recObjectURL); recObjectURL = null; } recordedAudioBuffer = null; isSolo = false; document.getElementById('soloBtn').classList.remove('active'); applyVolumes(); } }
     const tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(tag);
     function loadYouTube(manualUrl = null) { initAudioContext(); const urlInput = document.getElementById('ytUrl'); const url = manualUrl || urlInput.value; if (!url) return; const videoId = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.includes('be/') ? url.split('be/')[1].split('?')[0] : null; if (videoId) { currentYTId = videoId; document.getElementById('loopListYT').innerHTML = ""; loopStart = 0; loopEnd = 0; isLooping = false; document.getElementById('loopStartTxt').innerText = "00:00"; document.getElementById('loopEndTxt').innerText = "00:00"; const b = document.getElementById('toggleLoopBtn'); const lang = document.getElementById('langSelect').value || 'ja'; if(b) { b.innerText = translations[lang].loopOff; b.classList.remove('active'); } if (ytPlayer && ytPlayer.loadVideoById) ytPlayer.loadVideoById(videoId); else ytPlayer = new YT.Player('player', { videoId: videoId, events: { 'onReady': () => { updateYTInfo(); }, 'onStateChange': onPlayerStateChange } }); urlInput.value = ""; } }
-    function saveToHistory(id, title) { let history = JSON.parse(localStorage.getItem('ams_yt_history') || "[]"); history = history.filter(item => item.id !== id); history.unshift({ id: id, title: title || id, url: `https://www.youtube.com/watch?v=${id}`, time: Date.now() }); if (history.length > 20) history.pop(); localStorage.setItem('ams_yt_history', JSON.stringify(history)); renderYTHistory(); }
+    
+    // 履歴・ループ操作 (操作ごとにクラウド同期を実行)
+    function saveToHistory(id, title) { let history = JSON.parse(localStorage.getItem('ams_yt_history') || "[]"); history = history.filter(item => item.id !== id); history.unshift({ id: id, title: title || id, url: `https://www.youtube.com/watch?v=${id}`, time: Date.now() }); if (history.length > 20) history.pop(); localStorage.setItem('ams_yt_history', JSON.stringify(history)); renderYTHistory(); syncToCloud(); }
     function renderYTHistory() { const historyList = document.getElementById('ytHistoryList'); const container = document.getElementById('ytHistoryContainer'); if(!historyList || !container) return; const history = JSON.parse(localStorage.getItem('ams_yt_history') || "[]"); if (history.length === 0) { container.style.display = 'none'; return; } container.style.display = 'block'; historyList.innerHTML = ""; history.forEach(item => { const card = document.createElement('div'); card.style = "background: #252525; border: 1px solid #333; border-radius: 6px; padding: 8px 12px; min-width: 180px; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer;"; card.setAttribute('data-url', item.url); card.innerHTML = `<span style="font-size:0.7rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#e0e0e0;">${item.title}</span><span class="material-icons" style="color:#ff5555; font-size:16px;" onclick="event.stopPropagation(); deleteHistoryItem('${item.id}')">cancel</span>`; historyList.appendChild(card); }); }
     function handleHistoryClick(event) { const card = event.target.closest('div[data-url]'); if (card) { if (!isSubscribed) { document.getElementById('subscription-overlay').style.display = 'flex'; return; } loadYouTube(card.getAttribute('data-url')); } }
-    window.deleteHistoryItem = (id) => { let history = JSON.parse(localStorage.getItem('ams_yt_history') || "[]"); history = history.filter(item => item.id !== id); localStorage.setItem('ams_yt_history', JSON.stringify(history)); renderYTHistory(); };
-    window.clearYTHistory = () => { if (confirm("履歴を削除しますか？")) { localStorage.removeItem('ams_yt_history'); renderYTHistory(); } };
+    window.deleteHistoryItem = (id) => { let history = JSON.parse(localStorage.getItem('ams_yt_history') || "[]"); history = history.filter(item => item.id !== id); localStorage.setItem('ams_yt_history', JSON.stringify(history)); renderYTHistory(); syncToCloud(); };
+    window.clearYTHistory = () => { if (confirm("履歴を削除しますか？")) { localStorage.removeItem('ams_yt_history'); renderYTHistory(); syncToCloud(); } };
     function updateYTInfo() { const data = ytPlayer.getVideoData(); if (data && data.video_id) { saveToHistory(data.video_id, data.title); renderLoopList('yt'); } }
     function onPlayerStateChange(e) { if (e.data === YT.PlayerState.PLAYING) { updateYTInfo(); loopInterval = setInterval(() => { if (isLooping && ytPlayer.getCurrentTime() >= loopEnd) ytPlayer.seekTo(loopStart); }, 200); } else clearInterval(loopInterval); }
     const fmt = (s) => `${Math.floor(s/60).toString().padStart(2,'0')}:${Math.floor(s%60).toString().padStart(2,'0')}`;
     window.setLoopPoint = (t) => { const now = ytPlayer.getCurrentTime(); if (t === 'start') { loopStart = Math.floor(now); document.getElementById('loopStartTxt').innerText = fmt(loopStart); } else { loopEnd = Math.ceil(now); document.getElementById('loopEndTxt').innerText = fmt(loopEnd); } };
     window.adjustTime = (t, a) => { if (t === 'start') { loopStart = Math.max(0, loopStart + a); document.getElementById('loopStartTxt').innerText = fmt(loopStart); ytPlayer.seekTo(loopStart); } else { loopEnd = Math.max(loopStart + 1, loopEnd + a); document.getElementById('loopEndTxt').innerText = fmt(loopEnd); } };
     window.toggleLoop = () => { isLooping = !isLooping; const lang = document.getElementById('langSelect').value; const b = document.getElementById('toggleLoopBtn'); if(b) { b.innerText = isLooping ? translations[lang].loopOn : translations[lang].loopOff; b.classList.toggle('active', isLooping); } };
-    function saveLoop(mode) { if (!isSubscribed) { document.getElementById('subscription-overlay').style.display = 'flex'; return; } let start, end, key; if (mode === 'file') { const regions = wsRegions.getRegions(); if (regions.length === 0) return alert("範囲を指定してください"); start = regions[0].start; end = regions[0].end; key = currentFileName; } else { if (!currentYTId) return; start = loopStart; end = loopEnd; key = currentYTId; if (start >= end) return alert("範囲が不正です"); } let storageKey = mode === 'file' ? 'ams_loops' : 'ams_yt_loops'; let allLoops = JSON.parse(localStorage.getItem(storageKey) || "{}"); if (!allLoops[key]) allLoops[key] = []; allLoops[key].push({ start, end }); localStorage.setItem(storageKey, JSON.stringify(allLoops)); renderLoopList(mode); }
+    
+    function saveLoop(mode) { if (!isSubscribed) { document.getElementById('subscription-overlay').style.display = 'flex'; return; } let start, end, key; if (mode === 'file') { const regions = wsRegions.getRegions(); if (regions.length === 0) return alert("範囲を指定してください"); start = regions[0].start; end = regions[0].end; key = currentFileName; } else { if (!currentYTId) return; start = loopStart; end = loopEnd; key = currentYTId; if (start >= end) return alert("範囲が不正です"); } let storageKey = mode === 'file' ? 'ams_loops' : 'ams_yt_loops'; let allLoops = JSON.parse(localStorage.getItem(storageKey) || "{}"); if (!allLoops[key]) allLoops[key] = []; allLoops[key].push({ start, end }); localStorage.setItem(storageKey, JSON.stringify(allLoops)); renderLoopList(mode); syncToCloud(); }
     function getCircleNum(n) { const circles = ["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩"]; return circles[n-1] || `(${n})`; }
     function renderLoopList(mode) { const container = mode === 'file' ? document.getElementById('loopListFile') : document.getElementById('loopListYT'); const key = mode === 'file' ? currentFileName : currentYTId; const storageKey = mode === 'file' ? 'ams_loops' : 'ams_yt_loops'; if(!container) return; container.innerHTML = ""; if (!key) return; let allLoops = JSON.parse(localStorage.getItem(storageKey) || "{}"); (allLoops[key] || []).forEach((loop, index) => { const badge = document.createElement('div'); badge.className = 'loop-badge'; badge.onclick = () => applyStoredLoop(mode, loop.start, loop.end); badge.innerHTML = `<span class="badge-num">${getCircleNum(index + 1)}</span><span class="material-icons badge-del" onclick="event.stopPropagation(); deleteLoop('${mode}', ${index})">cancel</span>`; container.appendChild(badge); }); }
     window.applyStoredLoop = (mode, start, end) => { if (!isSubscribed) { document.getElementById('subscription-overlay').style.display = 'flex'; return; } initAudioContext(); if (mode === 'file') { wsRegions.clearRegions(); wsRegions.addRegion({ start, end, color: 'rgba(212, 163, 115, 0.2)' }); wavesurfer.setTime(start); } else { loopStart = start; loopEnd = end; document.getElementById('loopStartTxt').innerText = fmt(start); document.getElementById('loopEndTxt').innerText = fmt(end); ytPlayer.seekTo(start); if (!isLooping) toggleLoop(); } };
-    window.deleteLoop = (mode, index) => { const storageKey = mode === 'file' ? 'ams_loops' : 'ams_yt_loops'; const key = mode === 'file' ? currentFileName : currentYTId; let allLoops = JSON.parse(localStorage.getItem(storageKey) || "{}"); if (allLoops[key]) { allLoops[key].splice(index, 1); localStorage.setItem(storageKey, JSON.stringify(allLoops)); renderLoopList(mode); } };
+    window.deleteLoop = (mode, index) => { const storageKey = mode === 'file' ? 'ams_loops' : 'ams_yt_loops'; const key = mode === 'file' ? currentFileName : currentYTId; let allLoops = JSON.parse(localStorage.getItem(storageKey) || "{}"); if (allLoops[key]) { allLoops[key].splice(index, 1); localStorage.setItem(storageKey, JSON.stringify(allLoops)); renderLoopList(mode); syncToCloud(); } };
+    
     function startApp() { wavesurfer = WaveSurfer.create({ container: '#waveform', waveColor: '#333', progressColor: '#d4a373', height: 120, barWidth: 2, normalize: true }); recWavesurfer = WaveSurfer.create({ container: '#rec-waveform', waveColor: '#552222', progressColor: '#ff4444', height: 80, barWidth: 2, normalize: true }); wsRegions = wavesurfer.registerPlugin(WaveSurfer.Regions.create()); wsRegions.enableDragSelection({ color: 'rgba(212, 163, 115, 0.2)' }); wsRegions.on('region-created', r => { if(wsRegions.getRegions().length > 1) wsRegions.getRegions()[0].remove(); wavesurfer.setTime(r.start); currentLoopCount = 0; }); document.getElementById('zoomSlider').oninput = (e) => wavesurfer.zoom(Number(e.target.value)); document.getElementById('resetZoomBtn').onclick = () => { wavesurfer.zoom(0); document.getElementById('zoomSlider').value = 100; }; document.getElementById('mainVolume').oninput = applyVolumes; document.getElementById('recVolume').oninput = applyVolumes; document.getElementById('audioFile').onchange = async e => { const file = e.target.files[0]; if(file) { initAudioContext(); currentFileName = file.name; document.getElementById('fileSelectBtn').innerText = currentFileName; const blob = new Blob([file], { type: file.type }); if (currentObjectURL) URL.revokeObjectURL(currentObjectURL); currentObjectURL = URL.createObjectURL(blob); wavesurfer.load(currentObjectURL); wavesurfer.once('decode', () => { analyzeAudio(blob); renderLoopList('file'); }); } }; const applySettings = () => { const s = parseFloat(document.getElementById('speed').value), p = parseInt(document.getElementById('pitch').value); const media = wavesurfer.getMediaElement(); if (media) { media.preservesPitch = true; if (media.detune !== undefined) { media.detune = p * 100; wavesurfer.setPlaybackRate(s); } else { if (p !== 0) { media.preservesPitch = false; wavesurfer.setPlaybackRate(s * Math.pow(2, p / 12)); } else wavesurfer.setPlaybackRate(s); } } updateBpmDisplay(); document.getElementById('pitchTxt').innerText = (p > 0 ? "+" : "") + p; applyVolumes(); }; wavesurfer.on('ready', () => { document.getElementById('totalTime').innerText = fmt(wavesurfer.getDuration()); applySettings(); }); recWavesurfer.on('finish', () => { wavesurfer.pause(); updateRecPlayBtnUI(); }); document.getElementById('speed').oninput = applySettings; document.getElementById('pitch').onmousedown = document.getElementById('pitch').ontouchstart = (e) => { if (!isSubscribed) { e.preventDefault(); document.getElementById('subscription-overlay').style.display = 'flex'; } }; document.getElementById('pitch').oninput = applySettings; document.getElementById('playBtn').onclick = async () => { initAudioContext(); if (wavesurfer.isPlaying()) { wavesurfer.pause(); } else { const current = wavesurfer.getCurrentTime(), region = wsRegions.getRegions()[0]; if (isCountEnabled && region && (current < region.start || current >= region.end)) wavesurfer.setTime(region.start); await runCountdown(); applySettings(); wavesurfer.play(); } }; wavesurfer.on('play', () => { document.getElementById('playIcon').innerText = 'pause'; if (recObjectURL && recWavesurfer) { const offset = wavesurfer.getCurrentTime() - lastRecStartPos; if (offset >= 0 && offset < recWavesurfer.getDuration()) { recWavesurfer.setTime(offset); recWavesurfer.play(); } } }); wavesurfer.on('pause', () => { document.getElementById('playIcon').innerText = 'play_arrow'; if (recWavesurfer) recWavesurfer.pause(); }); wavesurfer.on('interaction', () => { if (recObjectURL && recWavesurfer) { const currentTime = wavesurfer.getCurrentTime(); const offset = currentTime - lastRecStartPos; if (offset >= 0 && offset < recWavesurfer.getDuration()) recWavesurfer.setTime(offset); else recWavesurfer.setTime(0); if (wavesurfer.isPlaying()) recWavesurfer.play(); } currentLoopCount = 0; }); recWavesurfer.on('interaction', () => { if (!recObjectURL) return; const recTime = recWavesurfer.getCurrentTime(); const targetMainTime = lastRecStartPos + recTime; if (targetMainTime <= wavesurfer.getDuration()) wavesurfer.setTime(targetMainTime); if (wavesurfer.isPlaying()) wavesurfer.play(); }); wavesurfer.on('timeupdate', t => { document.getElementById('currentTime').innerText = fmt(t); if (wavesurfer.isPlaying() && recObjectURL && recWavesurfer && recWavesurfer.isPlaying()) { const expectedRecTime = t - lastRecStartPos; const actualRecTime = recWavesurfer.getCurrentTime(); if (Math.abs(actualRecTime - expectedRecTime) > 0.2) { if (expectedRecTime >= 0 && expectedRecTime < recWavesurfer.getDuration()) recWavesurfer.setTime(expectedRecTime); else recWavesurfer.pause(); } } const r = wsRegions.getRegions()[0]; if(r && t >= r.end) { if (isRecording) { toggleRecording(); } else { wavesurfer.setTime(r.start); if (recObjectURL && recWavesurfer) { const loopOffset = r.start - lastRecStartPos; if (loopOffset >= 0 && loopOffset < recWavesurfer.getDuration()) recWavesurfer.setTime(loopOffset); } if (isSpeedUpEnabled) { currentLoopCount++; const targetCount = parseInt(document.getElementById('speedUpCount').value); if (currentLoopCount >= targetCount) { const sInput = document.getElementById('speed'); const currentVal = parseFloat(sInput.value); if (currentVal < 1.0) { sInput.value = Math.min(1.0, currentVal + 0.05).toFixed(2); applySettings(); } currentLoopCount = 0; } } } } }); window.resetSetting = (id, val) => { document.getElementById(id).value = val; applySettings(); }; changeLanguage(); renderYTHistory(); }
     window.addEventListener('DOMContentLoaded', startApp);
 </script>
